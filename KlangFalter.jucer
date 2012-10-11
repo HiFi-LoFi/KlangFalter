@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2012.10.11beta"
+              bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
+              buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
+              pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
+              pluginManufacturerCode="HiLo" pluginCode="HLKF" pluginChannelConfigs="{1, 1}, {2, 2}, {1, 2}"
+              pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
+              pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="0"
+              pluginAUExportPrefix="KlangFalterAU" pluginAUViewClass="KlangFalterAU_V1"
+              pluginRTASCategory="" companyName="HiFi-LoFi">
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" juceFolder="../Juce/modules"
+               extraCompilerFlags="" extraFrameworks="Accelerate">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="KlangFalter"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
+        <CONFIGURATION name="Release" isDebug="1" optimisation="2" targetName="KlangFalter"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
+      </CONFIGURATIONS>
+    </XCODE_MAC>
+    <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="..\Juce\modules">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="1" optimisation="1" targetName="KlangFalter"/>
+        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
+                       isDebug="1" optimisation="2" targetName="KlangFalter"/>
+      </CONFIGURATIONS>
+    </VS2010>
+  </EXPORTFORMATS>
+  <MAINGROUP id="tWkHhV" name="KlangFalter">
+    <GROUP id="{25281D04-97AD-E16A-DD2E-04A6860714ED}" name="FFTConvolver">
+      <FILE id="Dq7rky" name="AudioFFT.cpp" compile="1" resource="0" file="Source/FFTConvolver/AudioFFT.cpp"/>
+      <FILE id="epp4dB" name="AudioFFT.h" compile="0" resource="0" file="Source/FFTConvolver/AudioFFT.h"/>
+      <FILE id="jU446I" name="Buffer.h" compile="0" resource="0" file="Source/FFTConvolver/Buffer.h"/>
+      <FILE id="VzEPLP" name="Configuration.h" compile="0" resource="0" file="Source/FFTConvolver/Configuration.h"/>
+      <FILE id="wEkTRs" name="FFTConvolver.cpp" compile="1" resource="0"
+            file="Source/FFTConvolver/FFTConvolver.cpp"/>
+      <FILE id="iVHbus" name="FFTConvolver.h" compile="0" resource="0" file="Source/FFTConvolver/FFTConvolver.h"/>
+      <FILE id="Lgz7Ac" name="MultiplyAdd.cpp" compile="1" resource="0" file="Source/FFTConvolver/MultiplyAdd.cpp"/>
+      <FILE id="Cv3iOQ" name="MultiplyAdd.h" compile="0" resource="0" file="Source/FFTConvolver/MultiplyAdd.h"/>
+      <FILE id="jYiAAA" name="Sample.h" compile="0" resource="0" file="Source/FFTConvolver/Sample.h"/>
+      <FILE id="YHYGAU" name="SplitComplex.h" compile="0" resource="0" file="Source/FFTConvolver/SplitComplex.h"/>
+    </GROUP>
+    <GROUP id="{AF9AFB86-5BBB-A92F-6447-4B85AD586F22}" name="UI">
+      <FILE id="esn7nj" name="CustomLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/UI/CustomLookAndFeel.cpp"/>
+      <FILE id="woqAZd" name="CustomLookAndFeel.h" compile="0" resource="0"
+            file="Source/UI/CustomLookAndFeel.h"/>
+      <FILE id="hUJ1AF" name="DecibelScale.cpp" compile="1" resource="0"
+            file="Source/UI/DecibelScale.cpp"/>
+      <FILE id="R6M8dL" name="DecibelScale.h" compile="0" resource="0" file="Source/UI/DecibelScale.h"/>
+      <FILE id="MEN3tl" name="IRBrowserComponent.cpp" compile="1" resource="0"
+            file="Source/UI/IRBrowserComponent.cpp"/>
+      <FILE id="enSkEH" name="IRBrowserComponent.h" compile="0" resource="0"
+            file="Source/UI/IRBrowserComponent.h"/>
+      <FILE id="DYALQh" name="IRComponent.cpp" compile="1" resource="0" file="Source/UI/IRComponent.cpp"/>
+      <FILE id="zpKmUg" name="IRComponent.h" compile="0" resource="0" file="Source/UI/IRComponent.h"/>
+      <FILE id="pNhLHO" name="KlangFalterEditor.cpp" compile="1" resource="0"
+            file="Source/UI/KlangFalterEditor.cpp"/>
+      <FILE id="NYHkDc" name="KlangFalterEditor.h" compile="0" resource="0"
+            file="Source/UI/KlangFalterEditor.h"/>
+      <FILE id="VEaG8F" name="LevelMeter.cpp" compile="1" resource="0" file="Source/UI/LevelMeter.cpp"/>
+      <FILE id="zRwaj0" name="LevelMeter.h" compile="0" resource="0" file="Source/UI/LevelMeter.h"/>
+      <FILE id="dj5ePy" name="SettingsDialogComponent.cpp" compile="1" resource="0"
+            file="Source/UI/SettingsDialogComponent.cpp"/>
+      <FILE id="wgowyX" name="SettingsDialogComponent.h" compile="0" resource="0"
+            file="Source/UI/SettingsDialogComponent.h"/>
+      <FILE id="xM5QfR" name="WaveformComponent.cpp" compile="1" resource="0"
+            file="Source/UI/WaveformComponent.cpp"/>
+      <FILE id="WU2LwP" name="WaveformComponent.h" compile="0" resource="0"
+            file="Source/UI/WaveformComponent.h"/>
+    </GROUP>
+    <FILE id="CCplCO" name="AsyncMultiplyAddEngine.cpp" compile="1" resource="0"
+          file="Source/AsyncMultiplyAddEngine.cpp"/>
+    <FILE id="oFPWI7" name="AsyncMultiplyAddEngine.h" compile="0" resource="0"
+          file="Source/AsyncMultiplyAddEngine.h"/>
+    <FILE id="tP4m4I" name="DecibelScaling.h" compile="0" resource="0"
+          file="Source/DecibelScaling.h"/>
+    <FILE id="gL5qFG" name="DevelopmentApplication.cpp" compile="1" resource="0"
+          file="Source/DevelopmentApplication.cpp"/>
+    <FILE id="dJhcWx" name="Envelope.cpp" compile="1" resource="0" file="Source/Envelope.cpp"/>
+    <FILE id="iWDpt2" name="Envelope.h" compile="0" resource="0" file="Source/Envelope.h"/>
+    <FILE id="piTFx6" name="IRAgent.cpp" compile="1" resource="0" file="Source/IRAgent.cpp"/>
+    <FILE id="SynzbE" name="IRAgent.h" compile="0" resource="0" file="Source/IRAgent.h"/>
+    <FILE id="sS25aG" name="IRManager.cpp" compile="1" resource="0" file="Source/IRManager.cpp"/>
+    <FILE id="z0N8GF" name="IRManager.h" compile="0" resource="0" file="Source/IRManager.h"/>
+    <FILE id="vF7jUl" name="LevelMeasurement.cpp" compile="1" resource="0"
+          file="Source/LevelMeasurement.cpp"/>
+    <FILE id="mYCk2O" name="LevelMeasurement.h" compile="0" resource="0"
+          file="Source/LevelMeasurement.h"/>
+    <FILE id="izDfGd" name="Persistence.cpp" compile="1" resource="0" file="Source/Persistence.cpp"/>
+    <FILE id="zBljGc" name="Persistence.h" compile="0" resource="0" file="Source/Persistence.h"/>
+    <FILE id="hmuxWn" name="PluginProcessor.cpp" compile="1" resource="0"
+          file="Source/PluginProcessor.cpp"/>
+    <FILE id="d8hXbk" name="PluginProcessor.h" compile="0" resource="0"
+          file="Source/PluginProcessor.h"/>
+    <FILE id="dxea9X" name="Settings.cpp" compile="1" resource="0" file="Source/Settings.cpp"/>
+    <FILE id="OsElLF" name="Settings.h" compile="0" resource="0" file="Source/Settings.h"/>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_audio" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
+  </MODULES>
+  <JUCEOPTIONS/>
+</JUCERPROJECT>
