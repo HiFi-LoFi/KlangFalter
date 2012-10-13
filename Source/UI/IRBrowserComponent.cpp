@@ -110,7 +110,7 @@ void IRBrowserComponent::paint(juce::Graphics& g)
     const int width = getWidth();
     const int height = getHeight();
     
-    g.setColour(juce::Colour(0xD0, 0xD0, 0xD0));
+    g.setColour(juce::Colour(0xE5, 0xE5, 0xF0));
     g.fillRect(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height));
     
     g.setColour(juce::Colours::grey);

@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  11 Oct 2012 10:59:02am
+  Creation date:  13 Oct 2012 12:04:16pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -72,10 +72,10 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
 
     addAndMakeVisible (_irTabComponent = new TabbedComponent (TabbedButtonBar::TabsAtTop));
     _irTabComponent->setTabBarDepth (30);
-    _irTabComponent->addTab (L"1-1", Colour (0xffd0d0d0), new IRComponent(), true);
-    _irTabComponent->addTab (L"1-2", Colour (0xffd0d0d0), new IRComponent(), true);
-    _irTabComponent->addTab (L"2-1", Colour (0xffd0d0d0), new IRComponent(), true);
-    _irTabComponent->addTab (L"2-2", Colour (0xffd0d0d0), new IRComponent(), true);
+    _irTabComponent->addTab (L"1-1", Colour (0xffe5e5f0), new IRComponent(), true);
+    _irTabComponent->addTab (L"1-2", Colour (0xffe5e5f0), new IRComponent(), true);
+    _irTabComponent->addTab (L"2-1", Colour (0xffe5e5f0), new IRComponent(), true);
+    _irTabComponent->addTab (L"2-2", Colour (0xffe5e5f0), new IRComponent(), true);
     _irTabComponent->setCurrentTabIndex (0);
 
     addAndMakeVisible (_stretchHeaderLabel = new Label (String::empty,
@@ -91,8 +91,8 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     _stretchSlider->setRange (0, 2, 0);
     _stretchSlider->setSliderStyle (Slider::RotaryVerticalDrag);
     _stretchSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _stretchSlider->setColour (Slider::thumbColourId, Colour (0xffa0a0d8));
-    _stretchSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffa0a0d8));
+    _stretchSlider->setColour (Slider::thumbColourId, Colour (0xff8080c0));
+    _stretchSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xff8080c0));
     _stretchSlider->addListener (this);
 
     addAndMakeVisible (_reverseButton = new ToggleButton (L"ReverseButton"));
@@ -174,8 +174,8 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     _beginSlider->setRange (0, 2, 0);
     _beginSlider->setSliderStyle (Slider::RotaryVerticalDrag);
     _beginSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _beginSlider->setColour (Slider::thumbColourId, Colour (0xffa0a0d8));
-    _beginSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffa0a0d8));
+    _beginSlider->setColour (Slider::thumbColourId, Colour (0xff8080c0));
+    _beginSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xff8080c0));
     _beginSlider->addListener (this);
     _beginSlider->setSkewFactor (0.5);
 
@@ -290,7 +290,7 @@ void KlangFalterEditor::paint (Graphics& g)
     //[UserPrePaint] Add your own custom painting code here..
     //[/UserPrePaint]
 
-    g.fillAll (Colour (0xffe0e0e0));
+    g.fillAll (Colour (0xffa6a6b1));
 
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
@@ -573,7 +573,7 @@ void KlangFalterEditor::timerCallback()
   {
     IRManager& irManager = _processor->getIRManager();
     levelDry1 = _processor->getLevelDry(0);
-    levelDry2 = _processor->getLevelDry(1);    
+    levelDry2 = _processor->getLevelDry(1);
     levelWet00 = irManager.getAgent(0, 0)->getLevel();
     levelWet01 = irManager.getAgent(0, 1)->getLevel();
     levelWet10 = irManager.getAgent(1, 0)->getLevel();
@@ -604,20 +604,20 @@ BEGIN_JUCER_METADATA
                  constructorParams="PluginAudioProcessor* ownerFilter" variableInitialisers="AudioProcessorEditor(ownerFilter)"
                  snapPixels="4" snapActive="1" snapShown="1" overlayOpacity="0.330000013"
                  fixedSize="1" initialWidth="760" initialHeight="330">
-  <BACKGROUND backgroundColour="ffe0e0e0"/>
+  <BACKGROUND backgroundColour="ffa6a6b1"/>
   <GENERICCOMPONENT name="DecibelScale" id="6dd7ac2ee661b784" memberName="_decibelScale"
                     virtualName="" explicitFocusOrder="0" pos="580 36 32 176" class="DecibelScale"
                     params=""/>
   <TABBEDCOMPONENT name="IRTabComponent" id="697fc3546f1ab7f1" memberName="_irTabComponent"
                    virtualName="" explicitFocusOrder="0" pos="12 8 542 204" orientation="top"
                    tabBarDepth="30" initialTab="0">
-    <TAB name="1-1" colour="ffd0d0d0" useJucerComp="1" contentClassName=""
+    <TAB name="1-1" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
-    <TAB name="1-2" colour="ffd0d0d0" useJucerComp="1" contentClassName=""
+    <TAB name="1-2" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
-    <TAB name="2-1" colour="ffd0d0d0" useJucerComp="1" contentClassName=""
+    <TAB name="2-1" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
-    <TAB name="2-2" colour="ffd0d0d0" useJucerComp="1" contentClassName=""
+    <TAB name="2-2" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
   </TABBEDCOMPONENT>
   <LABEL name="" id="ff104b46d553eb03" memberName="_stretchHeaderLabel"
@@ -626,8 +626,8 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="e6fe992b37e74eba" memberName="_stretchSlider" virtualName=""
-          explicitFocusOrder="0" pos="104 240 84 40" thumbcol="ffa0a0d8"
-          rotarysliderfill="ffa0a0d8" min="0" max="2" int="0" style="RotaryVerticalDrag"
+          explicitFocusOrder="0" pos="104 240 84 40" thumbcol="ff8080c0"
+          rotarysliderfill="ff8080c0" min="0" max="2" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <TOGGLEBUTTON name="ReverseButton" id="7f5e152dc8dfd08c" memberName="_reverseButton"
@@ -682,8 +682,8 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="5e1bc6ab0a48dea8" memberName="_beginSlider" virtualName=""
-          explicitFocusOrder="0" pos="16 240 84 40" thumbcol="ffa0a0d8"
-          rotarysliderfill="ffa0a0d8" min="0" max="2" int="0" style="RotaryVerticalDrag"
+          explicitFocusOrder="0" pos="16 240 84 40" thumbcol="ff8080c0"
+          rotarysliderfill="ff8080c0" min="0" max="2" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="0.5"/>
   <LABEL name="" id="b32110895dcec8f5" memberName="_beginLabel" virtualName=""

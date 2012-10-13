@@ -76,19 +76,19 @@ void WaveformComponent::paint(Graphics& g)
   const int width = getWidth();
   const int height = getHeight();
   
+  const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
+  const juce::Font scaleFont = customLookAndFeel.getScaleFont();
+  const juce::Colour scaleColour = customLookAndFeel.getScaleColour();
+  
   // Something to paint?
   if (_maxima.empty())
   {
-    g.setColour(Colours::darkgrey);
+    g.setColour(scaleColour);
     g.drawText("No Impulse Response", 0, 0, width, height, Justification(Justification::centred), false);
     return;
   }
 
   const float w = static_cast<float>(width);
-
-  const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
-  const juce::Font scaleFont = customLookAndFeel.getScaleFont();
-  const juce::Colour scaleColour = customLookAndFeel.getScaleColour();
   
   // Background
   g.setColour(customLookAndFeel.getWaveformBackgroundColour());

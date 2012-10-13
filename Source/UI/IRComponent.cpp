@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  11 Oct 2012 10:42:39am
+  Creation date:  13 Oct 2012 12:01:59pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -122,7 +122,7 @@ void IRComponent::paint (Graphics& g)
     //[UserPrePaint] Add your own custom painting code here..
     //[/UserPrePaint]
 
-    g.fillAll (Colour (0xffd0d0d0));
+    g.fillAll (Colour (0xffe5e5f0));
 
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
@@ -278,7 +278,7 @@ BEGIN_JUCER_METADATA
                  variableInitialisers="" snapPixels="4" snapActive="1" snapShown="1"
                  overlayOpacity="0.330000013" fixedSize="1" initialWidth="540"
                  initialHeight="172">
-  <BACKGROUND backgroundColour="ffd0d0d0"/>
+  <BACKGROUND backgroundColour="ffe5e5f0"/>
   <GENERICCOMPONENT name="WaveformComponent" id="c9f33b0ee0917f49" memberName="_waveformComponent"
                     virtualName="" explicitFocusOrder="0" pos="4 4 532 140" class="WaveformComponent"
                     params=""/>
