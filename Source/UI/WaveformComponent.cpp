@@ -208,20 +208,16 @@ void WaveformComponent::paint(Graphics& g)
     path.closeSubPath();
     DrawablePath drawable;
     drawable.setPath(path);
-    drawable.setFill(FillType(Colour(255, 0, 0)));
-    drawable.draw(g, 32.0f/255.0f);
+    drawable.setFill(FillType(customLookAndFeel.getEnvelopeRestrictionColour()));
+    drawable.draw(g, 1.0f);
   }
-  const Colour nodeColour(255, 148, 148);
-  const Colour nodeColourHighlighted(255, 32, 32);
   for (size_t i=0; i<nodeCount; ++i)
   {
     const float nodeSize = 8.0f;
     const float nodeSize2 = 0.5f * nodeSize;
     const float posX = static_cast<float>(calcEnvelopePosX(_envelope.getX(i)));
     const float posY = static_cast<float>(calcEnvelopePosY(_envelope.getY(i)));
-    g.setColour(Colours::darkgrey);
-    g.fillEllipse(posX-nodeSize2+1, posY-nodeSize2+1, nodeSize, nodeSize);
-    g.setColour(i == _indexHighlighted ? nodeColourHighlighted : nodeColour);
+    g.setColour(customLookAndFeel.getEnvelopeNodeColour(i == _indexHighlighted));
     g.fillEllipse(posX-nodeSize2, posY-nodeSize2, nodeSize, nodeSize);
   }
 }

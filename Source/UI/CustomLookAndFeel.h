@@ -28,9 +28,6 @@ public:
 
   static const CustomLookAndFeel& GetCustomLookAndFeel(juce::Component* component);
 
-  // Waveform
-  juce::Colour getWaveformColour() const;
-
   // Scales
   juce::Font getScaleFont() const;
   juce::Colour getScaleColour() const;
@@ -40,7 +37,12 @@ public:
   juce::Colour getLevelColourClipping() const;
 
   // Waveform
+  juce::Colour getWaveformColour() const;
   juce::Colour getWaveformBackgroundColour() const;
+  
+  // Envelope
+  juce::Colour getEnvelopeRestrictionColour() const;
+  juce::Colour getEnvelopeNodeColour(bool highlighted) const;
   
 private:
   CustomLookAndFeel(const CustomLookAndFeel&);

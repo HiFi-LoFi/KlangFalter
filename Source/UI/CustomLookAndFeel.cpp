@@ -45,18 +45,35 @@ const CustomLookAndFeel& CustomLookAndFeel::GetCustomLookAndFeel(juce::Component
   }
 }
 
+
 // ==============================================
 // Waveform
 // ==============================================
 juce::Colour CustomLookAndFeel::getWaveformColour() const
 {
-  return juce::Colour(64, 192, 64);
+  return juce::Colour(0xAA, 0xAA, 0xF8);
 }
 
 
 juce::Colour CustomLookAndFeel::getWaveformBackgroundColour() const
 {
   return juce::Colour(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+
+// ==============================================
+// Envelope
+// ==============================================
+
+juce::Colour CustomLookAndFeel::getEnvelopeRestrictionColour() const
+{
+  return getEnvelopeNodeColour(false).withAlpha(32.0f/255.0f);
+}
+
+
+juce::Colour CustomLookAndFeel::getEnvelopeNodeColour(bool highlighted) const
+{
+  return highlighted ? juce::Colour(0x40, 0x40, 0xFF) : juce::Colour(0x80, 0x80, 0xFF);
 }
 
 
@@ -80,19 +97,19 @@ juce::Colour CustomLookAndFeel::getScaleColour() const
 
 juce::Colour CustomLookAndFeel::getLevelColourMinusInfDb() const
 {
-  return juce::Colour(0, 168, 0);
+  return juce::Colour(0x40, 0x40, 0xAA);
 }
 
 
 juce::Colour CustomLookAndFeel::getLevelColourMinus40Db() const
 {
-  return juce::Colour(64, 192, 64);
+  return juce::Colour(0x80, 0x80, 0xCC);
 }
 
 
 juce::Colour CustomLookAndFeel::getLevelColourZeroDb() const
 {
-  return juce::Colour(168, 255, 168);
+  return juce::Colour(0xC0, 0xC0, 0xFF);
 }
 
 
