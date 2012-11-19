@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2012.11.01beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2012.11.19beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -32,6 +32,10 @@
   </EXPORTFORMATS>
   <MAINGROUP id="tWkHhV" name="KlangFalter">
     <GROUP id="{25281D04-97AD-E16A-DD2E-04A6860714ED}" name="FFTConvolver">
+      <FILE id="yg70fm" name="TwoStageFFTConvolver.cpp" compile="1" resource="0"
+            file="Source/FFTConvolver/TwoStageFFTConvolver.cpp"/>
+      <FILE id="Z2lYc4" name="TwoStageFFTConvolver.h" compile="0" resource="0"
+            file="Source/FFTConvolver/TwoStageFFTConvolver.h"/>
       <FILE id="Dq7rky" name="AudioFFT.cpp" compile="1" resource="0" file="Source/FFTConvolver/AudioFFT.cpp"/>
       <FILE id="epp4dB" name="AudioFFT.h" compile="0" resource="0" file="Source/FFTConvolver/AudioFFT.h"/>
       <FILE id="jU446I" name="Buffer.h" compile="0" resource="0" file="Source/FFTConvolver/Buffer.h"/>
@@ -73,10 +77,8 @@
       <FILE id="WU2LwP" name="WaveformComponent.h" compile="0" resource="0"
             file="Source/UI/WaveformComponent.h"/>
     </GROUP>
-    <FILE id="CCplCO" name="AsyncMultiplyAddEngine.cpp" compile="1" resource="0"
-          file="Source/AsyncMultiplyAddEngine.cpp"/>
-    <FILE id="oFPWI7" name="AsyncMultiplyAddEngine.h" compile="0" resource="0"
-          file="Source/AsyncMultiplyAddEngine.h"/>
+    <FILE id="CCplCO" name="Convolver.cpp" compile="1" resource="0" file="Source/Convolver.cpp"/>
+    <FILE id="oFPWI7" name="Convolver.h" compile="0" resource="0" file="Source/Convolver.h"/>
     <FILE id="tP4m4I" name="DecibelScaling.h" compile="0" resource="0"
           file="Source/DecibelScaling.h"/>
     <FILE id="gL5qFG" name="DevelopmentApplication.cpp" compile="1" resource="0"

@@ -20,6 +20,7 @@
 
 #include "Configuration.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -59,6 +60,7 @@ public:
       
       if (size > 0)
       {
+        assert(!_data && _size == 0);
         _data = internal::AllocateBuffer<T>(size);
         _size = size;
       }
@@ -73,33 +75,49 @@ public:
   
   void setZero()
   {
-    memset(_data, 0, _size * sizeof(T));
+    ::memset(_data, 0, _size * sizeof(T));
   }
   
   void copyFrom(const Buffer<T>& other)
   {
     assert(_size == other._size);
-    memcpy(_data, other._data, _size * sizeof(T));
+    if (this != &other)
+    {
+      ::memcpy(_data, other._data, _size * sizeof(T));
+    }
   }
-  
-  operator T*()
+
+  T& operator[](size_t index)
   {
-    return _data;
+    assert(_data && index < _size);
+    return _data[index];
   }
-  
-  operator const T*() const
+
+  const T& operator[](size_t index) const
   {
-    return _data;
+    assert(_data && index < _size);
+    return _data[index];
   }
-  
+
+  operator bool() const
+  {
+    return (_data != 0 && _size > 0);
+  }
+
   T* data()
   {
     return _data;
   }
-  
+
   const T* data() const
   {
     return _data;
+  }
+
+  static void Swap(Buffer<T>& a, Buffer<T>& b)
+  {
+    std::swap(a._data, b._data);
+    std::swap(a._size, b._size);
   }
   
 private:

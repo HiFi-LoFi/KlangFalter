@@ -168,7 +168,7 @@ void IRAgent::updateConvolver()
 }
 
 
-void IRAgent::resetIR(const FloatBuffer::Ptr& irBuffer, fftconvolver::FFTConvolver* convolver)
+void IRAgent::resetIR(const FloatBuffer::Ptr& irBuffer, Convolver* convolver)
 {
   {
     ScopedLock lock(_mutex);
@@ -176,7 +176,7 @@ void IRAgent::resetIR(const FloatBuffer::Ptr& irBuffer, fftconvolver::FFTConvolv
   }
 
   {
-    ScopedPointer<fftconvolver::FFTConvolver> conv(convolver);
+    ScopedPointer<Convolver> conv(convolver);
     {
       // Make sure that the convolver mutex is locked as short as
       // possible and that all destruction and deallocation happens
@@ -199,15 +199,15 @@ CriticalSection& IRAgent::getConvolverMutex()
 }
 
 
-fftconvolver::FFTConvolver* IRAgent::getConvolver()
+Convolver* IRAgent::getConvolver()
 {
   return _convolver.get();
 }
                   
 
-void IRAgent::setConvolver(fftconvolver::FFTConvolver* convolver)
+void IRAgent::setConvolver(Convolver* convolver)
 {
-  ScopedPointer<fftconvolver::FFTConvolver> conv(convolver);
+  ScopedPointer<Convolver> conv(convolver);
   {
     // Make sure that the convolver mutex is locked as short as
     // possible and that all destruction and deallocation happens

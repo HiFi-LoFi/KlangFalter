@@ -23,15 +23,14 @@
 #include <cmath>
 
 
-#if defined (__SSE__)
+#if defined (FFTCONVOLVER_USE_SSE)
   #include <xmmintrin.h>
 #endif
 
 
 namespace fftconvolver
 {
-  
-  
+
 void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re, 
                  Sample* FFTCONVOLVER_RESTRICT im,
                  const Sample* FFTCONVOLVER_RESTRICT reA,
@@ -40,7 +39,7 @@ void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re,
                  const Sample* FFTCONVOLVER_RESTRICT imB,
                  const size_t len)
 {
-#if defined(__SSE__)
+#if defined(FFTCONVOLVER_USE_SSE)
   const size_t end4 = 4 * (len / 4);
   for (size_t i=0; i<end4; i+=4)
   {
@@ -91,91 +90,12 @@ void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re,
 #endif
 }
 
-  
-// ==========================================================
-  
-  
-MultiplyAddEngine::MultiplyAddEngine() :
-  _ir(),
-  _audio(),
-  _result()
+
+void MultiplyAdd(SplitComplex& result, const SplitComplex& a, const SplitComplex& b)
 {
+  assert(result.size() == a.size());
+  assert(result.size() == b.size());
+  MultiplyAdd(result.re(), result.im(), a.re(), a.im(), b.re(), b.im(), result.size());
 }
 
-  
-MultiplyAddEngine::~MultiplyAddEngine()
-{
-  clear();
-}
-
-  
-void MultiplyAddEngine::init(const std::vector<SplitComplex*>& ir)
-{ 
-  clear();
-  
-  const size_t segSize = ir.size() > 0 ? ir[0]->size() : 0;
-  
-  _ir.clear();
-  for (size_t i=0; i<ir.size(); ++i)
-  {
-    SplitComplex* splitComplex = new SplitComplex(segSize);
-    splitComplex->copyFrom(*ir[i]);
-    _ir.push_back(splitComplex);
-  }
-  
-  _audio.clear();
-  for (size_t i=0; i<ir.size(); ++i)
-  {
-    SplitComplex* splitComplex = new SplitComplex(segSize);
-    _audio.push_back(splitComplex);
-  }
-  
-  _result.resize(segSize);
-}
-
-  
-void MultiplyAddEngine::setAudio(size_t index, const SplitComplex& audio)
-{
-  assert(index < _audio.size());
-  _audio[index]->copyFrom(audio);
-}
-
-
-void MultiplyAddEngine::multiplyAdd(const std::vector<Pair>& pairs)
-{
-  _result.setZero();
-  for (size_t i=0; i<pairs.size(); ++i)
-  {
-    const SplitComplex* ir = _ir[pairs[i].indexIr];
-    const SplitComplex* audio = _audio[pairs[i].indexAudio];
-    assert(_result.size() == ir->size());
-    assert(_result.size() == audio->size());
-    MultiplyAdd(_result.re(), _result.im(), ir->re(), ir->im(), audio->re(), audio->im(), _result.size());
-  }
-}
-
-  
-const SplitComplex& MultiplyAddEngine::getResult()
-{
-  return _result;
-}
-
-
-void MultiplyAddEngine::clear()
-{
-  for (size_t i=0; i<_ir.size(); ++i)
-  {
-    delete _ir[i];
-  }
-  
-  for (size_t i=0; i<_audio.size(); ++i)
-  {
-    delete _audio[i];
-  }
-  
-  _ir.clear();
-  _audio.clear();
-  _result.clear();
-}
-  
 } // End of namespace fftconvolver

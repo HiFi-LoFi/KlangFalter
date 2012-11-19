@@ -68,29 +68,29 @@ public:
   
   Sample* re()
   {
-    return _re;
+    return _re.data();
   }
   
   const Sample* re() const
   {
-    return _re;
+    return _re.data();
   }
   
   Sample* im()
   {
-    return _im;
+    return _im.data();
   }
   
   const Sample* im() const
   {
-    return _im;
+    return _im.data();
   }
   
   size_t size() const
   {
     return _size;
   }
-  
+    
 private:
   size_t _size;
   SampleBuffer _re;

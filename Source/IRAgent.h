@@ -22,7 +22,7 @@
 
 #include "LevelMeasurement.h"
 
-#include "FFTConvolver/FFTConvolver.h"
+#include "Convolver.h"
 
 #include <vector>
 
@@ -113,11 +113,11 @@ public:
   // Convolver
   void updateConvolver();
   void clearConvolver();
-  void resetIR(const FloatBuffer::Ptr& irBuffer, fftconvolver::FFTConvolver* convolver);
+  void resetIR(const FloatBuffer::Ptr& irBuffer, Convolver* convolver);
   
   CriticalSection& getConvolverMutex();
-  fftconvolver::FFTConvolver* getConvolver();
-  void setConvolver(fftconvolver::FFTConvolver* convolver);
+  Convolver* getConvolver();
+  void setConvolver(Convolver* convolver);
   
   void process(const float* input, float* output, size_t len, float autoGain);
   
@@ -139,7 +139,7 @@ private:
   FloatBuffer::Ptr _irBuffer;
   
   CriticalSection _convolverMutex;
-  ScopedPointer<fftconvolver::FFTConvolver> _convolver;
+  ScopedPointer<Convolver> _convolver;
   
   float _fadeFactor;
   float _fadeIncrement;

@@ -17,7 +17,7 @@
 
 #include "IRManager.h"
 
-#include "AsyncMultiplyAddEngine.h"
+#include "Convolver.h"
 #include "IRAgent.h"
 #include "PluginProcessor.h"
 #include "Settings.h"
@@ -194,11 +194,11 @@ public:
     _irManager.getProcessor().setParameter(PluginAudioProcessor::AutoGain, autoGain);
     for (size_t i=0; i<agents.size(); ++i)
     {
-      juce::ScopedPointer<fftconvolver::FFTConvolver> convolver;
+      juce::ScopedPointer<Convolver> convolver;
       if (buffers[i] != nullptr && buffers[i]->getSize() > 0)
       {
-        convolver = new fftconvolver::FFTConvolver();
-        const bool successInit = convolver->init(convolverBlockSize, buffers[i]->data(), buffers[i]->getSize(), new AsyncMultiplyAddEngine());
+        convolver = new Convolver();
+        const bool successInit = convolver->init(512, convolverBlockSize, buffers[i]->data(), buffers[i]->getSize());
         if (!successInit || threadShouldExit())
         {
           return;

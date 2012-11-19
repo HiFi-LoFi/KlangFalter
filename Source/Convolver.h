@@ -15,32 +15,30 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#ifndef _ASYNCMULTIPLYADD_H
-#define _ASYNCMULTIPLYADD_H
+#ifndef _CONVOLVER_H
+#define _CONVOLVER_H
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "fftconvolver/MultiplyAdd.h"
+#include "fftconvolver/TwoStageFFTConvolver.h"
 
 
-class AsyncMultiplyAddEngine : public fftconvolver::MultiplyAddEngine
+class Convolver : public fftconvolver::TwoStageFFTConvolver
 {
 public:
-  AsyncMultiplyAddEngine();
-  virtual ~AsyncMultiplyAddEngine();
+  Convolver();
+  virtual ~Convolver();
   
-  virtual void init(const std::vector<fftconvolver::SplitComplex*>& ir);  
-  virtual void setAudio(size_t index, const fftconvolver::SplitComplex& audio);
-  virtual void multiplyAdd(const std::vector<Pair>& pairs);
-  virtual const fftconvolver::SplitComplex& getResult();
+protected:
+  virtual void startBackgroundProcessing();
+  virtual void waitForBackgroundProcessing();
   
 private:
-  friend class MultiplyAddThread;
-  void asyncMultiplyAdd();
+  friend class ConvolverBackgroundThread;
   
   juce::ScopedPointer<juce::Thread> _thread;
-  juce::WaitableEvent _resultReady;
-  std::vector<Pair> _pairs;
+  juce::Atomic<uint32> _backgroundProcessingFinished;
+  juce::WaitableEvent _backgroundProcessingFinishedEvent;
 };
 
 

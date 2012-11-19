@@ -18,7 +18,13 @@
 #ifndef _FFTCONVOLVER_CONFIGURATION_H
 #define _FFTCONVOLVER_CONFIGURATION_H
 
-#if defined (__SSE__)
+
+#if defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+  #define FFTCONVOLVER_USE_SSE
+#endif
+
+
+#if defined (FFTCONVOLVER_USE_SSE)
   #include <xmmintrin.h>
 #else
   #include <new>
@@ -40,8 +46,8 @@ namespace internal
 template<typename T>
 T* AllocateBuffer(size_t size)
 {
-#if defined(__SSE__)
-  return static_cast<T*>(_mm_malloc(size * sizeof(T), 64));
+#if defined(FFTCONVOLVER_USE_SSE)
+  return static_cast<T*>(_mm_malloc(size * sizeof(T), 16));
 #else
   return new(std::nothrow) T[size];
 #endif
@@ -51,7 +57,7 @@ T* AllocateBuffer(size_t size)
 template<typename T>
 void DeallocateBuffer(T* ptr)
 {
-#if defined(__SSE__)
+#if defined(FFTCONVOLVER_USE_SSE)
   _mm_free(ptr);
 #else
   delete [] ptr;
