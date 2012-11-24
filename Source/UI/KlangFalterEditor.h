@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  24 Nov 2012 2:33:20pm
+  Creation date:  24 Nov 2012 9:05:28pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_B1A31388__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_B1A31388__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C38F55DD__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C38F55DD__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -101,6 +101,9 @@ private:
     TextButton* _dryButton;
     TextButton* _autogainButton;
     TextButton* _reverseButton;
+    Label* _predelayHeaderLabel;
+    Slider* _predelaySlider;
+    Label* _predelayLabel;
 
 
     //==============================================================================
@@ -110,4 +113,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_B1A31388__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C38F55DD__

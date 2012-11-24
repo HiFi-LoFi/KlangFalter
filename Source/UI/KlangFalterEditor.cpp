@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  24 Nov 2012 2:33:20pm
+  Creation date:  24 Nov 2012 9:05:28pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -65,7 +65,10 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
       _wetButton (0),
       _dryButton (0),
       _autogainButton (0),
-      _reverseButton (0)
+      _reverseButton (0),
+      _predelayHeaderLabel (0),
+      _predelaySlider (0),
+      _predelayLabel (0)
 {
     addAndMakeVisible (_decibelScale = new DecibelScale());
     _decibelScale->setName (L"DecibelScale");
@@ -211,6 +214,32 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     _reverseButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
     _reverseButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
 
+    addAndMakeVisible (_predelayHeaderLabel = new Label (String::empty,
+                                                         L"Predelay"));
+    _predelayHeaderLabel->setFont (Font (15.0000f, Font::plain));
+    _predelayHeaderLabel->setJustificationType (Justification::centred);
+    _predelayHeaderLabel->setEditable (false, false, false);
+    _predelayHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _predelayHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _predelayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_predelaySlider = new Slider (String::empty));
+    _predelaySlider->setRange (0, 200, 0);
+    _predelaySlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _predelaySlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _predelaySlider->setColour (Slider::thumbColourId, Colour (0xff8080c0));
+    _predelaySlider->setColour (Slider::rotarySliderFillColourId, Colour (0xff8080c0));
+    _predelaySlider->addListener (this);
+
+    addAndMakeVisible (_predelayLabel = new Label (String::empty,
+                                                   L"0ms"));
+    _predelayLabel->setFont (Font (15.0000f, Font::plain));
+    _predelayLabel->setJustificationType (Justification::centred);
+    _predelayLabel->setEditable (false, false, false);
+    _predelayLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _predelayLabel->setColour (TextEditor::textColourId, Colours::black);
+    _predelayLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
 
     //[UserPreSize]
 
@@ -287,6 +316,9 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_dryButton);
     deleteAndZero (_autogainButton);
     deleteAndZero (_reverseButton);
+    deleteAndZero (_predelayHeaderLabel);
+    deleteAndZero (_predelaySlider);
+    deleteAndZero (_predelayLabel);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -329,6 +361,9 @@ void KlangFalterEditor::resized()
     _dryButton->setBounds (596, 240, 44, 24);
     _autogainButton->setBounds (410, 240, 144, 24);
     _reverseButton->setBounds (482, 8, 72, 24);
+    _predelayHeaderLabel->setBounds (196, 220, 84, 24);
+    _predelaySlider->setBounds (196, 244, 84, 40);
+    _predelayLabel->setBounds (196, 280, 84, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -380,6 +415,12 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         //[UserSliderCode__beginSlider] -- add your slider handling code here..
         _processor->getIRManager().setFileBeginSeconds(_beginSlider->getValue());
         //[/UserSliderCode__beginSlider]
+    }
+    else if (sliderThatWasMoved == _predelaySlider)
+    {
+        //[UserSliderCode__predelaySlider] -- add your slider handling code here..
+        _processor->getIRManager().setPredelayMs(_predelaySlider->getValue());
+        //[/UserSliderCode__predelaySlider]
     }
 
     //[UsersliderValueChanged_Post]
@@ -540,6 +581,16 @@ void KlangFalterEditor::processorChanged()
     if (_beginLabel)
     {
       _beginLabel->setText(juce::String(fileBeginSeconds * 1000.0, 1) + juce::String("ms"), true);
+    }
+  }
+
+  if (_predelaySlider)
+  {
+    const double predelayMs = irManager->getPredelayMs();
+    _predelaySlider->setValue(predelayMs);
+    if (_predelayLabel)
+    {
+      _predelayLabel->setText(juce::String(static_cast<int>(predelayMs)) + juce::String("ms"), true);
     }
   }
 
@@ -712,6 +763,21 @@ BEGIN_JUCER_METADATA
               explicitFocusOrder="0" pos="482 8 72 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Reverse" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
+  <LABEL name="" id="33afc8fa0b56ce55" memberName="_predelayHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="196 220 84 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Predelay" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="5263ccd8286f1f44" memberName="_predelaySlider" virtualName=""
+          explicitFocusOrder="0" pos="196 244 84 40" thumbcol="ff8080c0"
+          rotarysliderfill="ff8080c0" min="0" max="200" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="1"/>
+  <LABEL name="" id="22992cd4f6d0f5c1" memberName="_predelayLabel" virtualName=""
+         explicitFocusOrder="0" pos="196 280 84 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="0ms" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

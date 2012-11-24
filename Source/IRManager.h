@@ -69,6 +69,9 @@ public:
 
   void setFileBeginSeconds(double fileBeginSeconds);
   double getFileBeginSeconds() const;
+  
+  void setPredelayMs(double predelayMs);
+  double getPredelayMs() const;
 
   void updateConvolvers();
   
@@ -83,6 +86,7 @@ private:
   double _convolverSampleRate;
   size_t _convolverBlockSize;
   double _fileBeginSeconds;
+  double _predelayMs;
   juce::CriticalSection _irCalculationMutex;
   juce::ScopedPointer<juce::Thread> _irCalculation;
   

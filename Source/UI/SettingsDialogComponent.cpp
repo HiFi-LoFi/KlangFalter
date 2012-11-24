@@ -71,6 +71,7 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     _blockSizeComboBox->addItem (L"2048", 6);
     _blockSizeComboBox->addItem (L"4096", 7);
     _blockSizeComboBox->addItem (L"8192", 8);
+    _blockSizeComboBox->addItem (L"16834", 9);
     _blockSizeComboBox->addListener (this);
 
     addAndMakeVisible (_irDirectoryGroupComponent = new GroupComponent (String::empty,

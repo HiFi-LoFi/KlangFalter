@@ -1,5 +1,5 @@
-#ifndef _KLANGFALTER_DELAYLINE_H
-#define _KLANGFALTER_DELAYLINE_H
+#ifndef _DELAYBUFFER_H
+#define _DELAYBUFFER_H
 
 #include "RingBuffer.h"
 
@@ -7,17 +7,17 @@
 
 
 template<typename T>
-class DelayLine
+class DelayBuffer
 {
 public:
-  explicit DelayLine(size_t delay = 0) :
+  explicit DelayBuffer(size_t delay = 0) :
     _delay(0),
     _buffer()
   {
     init(delay);
   }
   
-  virtual ~DelayLine()
+  virtual ~DelayBuffer()
   {
     destroy();
   }
@@ -55,7 +55,7 @@ public:
     {
       const size_t offset = len - _delay;
       _buffer.write(data + offset, _delay);
-      ::memmove(_data, data + _delay, offset * sizeof(T));
+      ::memmove(_buffer, data + _delay, offset * sizeof(T));
       _buffer.read(data, _delay);
     }
   }

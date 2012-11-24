@@ -118,14 +118,15 @@ public:
     // Import the files
     std::vector<FloatBuffer::Ptr> buffers(agents.size(), nullptr);
     std::vector<double> fileSampleRates(agents.size(), 0.0);
-    const double fileBeginSeconds = _irManager.getFileBeginSeconds();    
+    const double fileBeginSeconds = _irManager.getFileBeginSeconds();
+    const double predelayMs = _irManager.getPredelayMs();
     for (size_t i=0; i<agents.size(); ++i)
     {
       const juce::File file = agents[i]->getFile();
       if (file != juce::File::nonexistent)
       {
         double sampleRate;
-        FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, sampleRate);
+        FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, predelayMs, sampleRate);
         if (!buffer || sampleRate < 0.0001 || threadShouldExit())
         {
           return;
@@ -218,7 +219,7 @@ public:
   }
 
 private:
-  FloatBuffer::Ptr importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double& fileSampleRate) const
+  FloatBuffer::Ptr importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double predelayMs, double& fileSampleRate) const
   {
     fileSampleRate = 0.0;
 
@@ -243,12 +244,13 @@ private:
     }
 
     const size_t startSample = static_cast<size_t>(std::max(0.0, fileBeginSeconds) * audioFormatReader->sampleRate);
-    const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? (fileLen - startSample) : 0;
+    const size_t predelaySamples = static_cast<size_t>((audioFormatReader->sampleRate / 1000.0) * predelayMs);
+    const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? ((fileLen - startSample) + predelaySamples) : 0;
     FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
 
     juce::AudioFormatReaderSource audioFormatReaderSource(audioFormatReader, false);
     audioFormatReaderSource.setNextReadPosition(static_cast<juce::int64>(startSample));
-    size_t bufferPos = 0;
+    size_t bufferPos = predelaySamples;
     int filePos = static_cast<int>(startSample);
     juce::AudioSampleBuffer importBuffer(fileChannels, 8192);
     while (filePos < fileLen)
@@ -418,6 +420,7 @@ IRManager::IRManager(PluginAudioProcessor& processor, size_t inputChannels, size
   _convolverSampleRate(0.0),
   _convolverBlockSize(processor.getSettings().getConvolverBlockSize()),
   _fileBeginSeconds(0.0),
+  _predelayMs(0.0),
   _irCalculationMutex(),
   _irCalculation()
 {
@@ -569,6 +572,32 @@ Envelope IRManager::getEnvelope() const
 {
   juce::ScopedLock lock(_mutex);
   return _envelope;
+}
+
+
+void IRManager::setPredelayMs(double predelayMs)
+{
+  bool changed = false;
+  {
+    juce::ScopedLock lock(_mutex);
+    if (_predelayMs != predelayMs)
+    {
+      _predelayMs = predelayMs;
+      changed = true;
+    }
+  }
+  if (changed)
+  {
+    sendChangeMessage();
+    updateConvolvers();
+  }
+}
+
+
+double IRManager::getPredelayMs() const
+{
+  juce::ScopedLock lock(_mutex);
+  return _predelayMs;
 }
 
 
