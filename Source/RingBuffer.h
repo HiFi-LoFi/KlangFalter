@@ -7,10 +7,6 @@
 #include <algorithm>
 
 
-namespace audio
-{
-
-
 template<typename T>
 class RingBuffer
 {
@@ -175,7 +171,5 @@ private:
   RingBuffer(const RingBuffer&);
   RingBuffer& operator=(const RingBuffer&);
 };
-
-} // End of namespace
 
 #endif // RINGBUFFER_H

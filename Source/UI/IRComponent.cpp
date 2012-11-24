@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  13 Oct 2012 12:01:59pm
+  Creation date:  24 Nov 2012 2:32:12pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -45,6 +45,7 @@ IRComponent::IRComponent ()
     addAndMakeVisible (_loadButton = new TextButton (L"LoadButton"));
     _loadButton->setTooltip (L"Click To Change Impulse Response");
     _loadButton->setButtonText (L"No Impulse Response");
+    _loadButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
     _loadButton->addListener (this);
     _loadButton->setColour (TextButton::buttonColourId, Colour (0xbbbbff));
     _loadButton->setColour (TextButton::buttonOnColourId, Colour (0x4444ff));
@@ -54,6 +55,7 @@ IRComponent::IRComponent ()
     addAndMakeVisible (_clearButton = new TextButton (L"ClearButton"));
     _clearButton->setTooltip (L"Clear Impulse Response");
     _clearButton->setButtonText (L"X");
+    _clearButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
     _clearButton->addListener (this);
 
     addAndMakeVisible (_channelComboBox = new ComboBox (L"ChannelComboBox"));
@@ -285,11 +287,11 @@ BEGIN_JUCER_METADATA
   <TEXTBUTTON name="LoadButton" id="5798b8525a699c54" memberName="_loadButton"
               virtualName="" explicitFocusOrder="0" pos="4 148 396 24" tooltip="Click To Change Impulse Response"
               bgColOff="bbbbff" bgColOn="4444ff" textCol="ff202020" textColOn="ff202020"
-              buttonText="No Impulse Response" connectedEdges="0" needsCallback="1"
+              buttonText="No Impulse Response" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
   <TEXTBUTTON name="ClearButton" id="6bd842f223117695" memberName="_clearButton"
               virtualName="" explicitFocusOrder="0" pos="516 148 20 20" tooltip="Clear Impulse Response"
-              buttonText="X" connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+              buttonText="X" connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <COMBOBOX name="ChannelComboBox" id="c1bafd26d5583017" memberName="_channelComboBox"
             virtualName="" explicitFocusOrder="0" pos="468 148 40 20" editable="0"
             layout="36" items="" textWhenNonSelected="" textWhenNoItems="(no choices)"/>

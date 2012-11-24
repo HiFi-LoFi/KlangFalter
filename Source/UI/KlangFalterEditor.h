@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  13 Oct 2012 12:04:16pm
+  Creation date:  24 Nov 2012 2:33:20pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_2BD96B99__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_2BD96B99__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_B1A31388__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_B1A31388__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -83,7 +83,6 @@ private:
     TabbedComponent* _irTabComponent;
     Label* _stretchHeaderLabel;
     Slider* _stretchSlider;
-    ToggleButton* _reverseButton;
     LevelMeter* _levelMeterDry;
     LevelMeter* _levelMeterWet;
     Label* _dryLevelLabel;
@@ -98,9 +97,10 @@ private:
     Label* _beginHeaderLabel;
     Slider* _beginSlider;
     Label* _beginLabel;
-    ToggleButton* _autoGainButton;
-    ToggleButton* _dryButton;
-    ToggleButton* _wetButton;
+    TextButton* _wetButton;
+    TextButton* _dryButton;
+    TextButton* _autogainButton;
+    TextButton* _reverseButton;
 
 
     //==============================================================================
@@ -110,4 +110,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_2BD96B99__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_B1A31388__

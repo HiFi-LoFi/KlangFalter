@@ -1,13 +1,10 @@
-#ifndef _ORIGAMI_DELAYLINE_H
-#define _ORIGAMI_DELAYLINE_H
+#ifndef _KLANGFALTER_DELAYLINE_H
+#define _KLANGFALTER_DELAYLINE_H
 
 #include "RingBuffer.h"
 
 #include <string>
 
-
-namespace origami
-{
 
 template<typename T>
 class DelayLine
@@ -67,7 +64,5 @@ private:
   size_t _delay;
   RingBuffer<T> _buffer;
 };
-  
-} // End of namespace
 
 #endif // Header guard

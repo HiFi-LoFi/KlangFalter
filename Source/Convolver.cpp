@@ -25,7 +25,7 @@ public:
     juce::Thread("ConvolverBackgroundThread"),
     _convolver(convolver)
   {
-    startThread();
+    startThread(8); // Use a priority higher than the priority of normal threads
   }
   
   

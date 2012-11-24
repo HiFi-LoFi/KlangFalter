@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  13 Oct 2012 12:04:16pm
+  Creation date:  24 Nov 2012 2:33:20pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -48,7 +48,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
       _irTabComponent (0),
       _stretchHeaderLabel (0),
       _stretchSlider (0),
-      _reverseButton (0),
       _levelMeterDry (0),
       _levelMeterWet (0),
       _dryLevelLabel (0),
@@ -63,9 +62,10 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
       _beginHeaderLabel (0),
       _beginSlider (0),
       _beginLabel (0),
-      _autoGainButton (0),
+      _wetButton (0),
       _dryButton (0),
-      _wetButton (0)
+      _autogainButton (0),
+      _reverseButton (0)
 {
     addAndMakeVisible (_decibelScale = new DecibelScale());
     _decibelScale->setName (L"DecibelScale");
@@ -94,11 +94,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     _stretchSlider->setColour (Slider::thumbColourId, Colour (0xff8080c0));
     _stretchSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xff8080c0));
     _stretchSlider->addListener (this);
-
-    addAndMakeVisible (_reverseButton = new ToggleButton (L"ReverseButton"));
-    _reverseButton->setButtonText (L"Reverse");
-    _reverseButton->addListener (this);
-    _reverseButton->setColour (ToggleButton::textColourId, Colour (0xff202020));
 
     addAndMakeVisible (_levelMeterDry = new LevelMeter());
     _levelMeterDry->setName (L"LevelMeterDry");
@@ -188,23 +183,33 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     _beginLabel->setColour (TextEditor::textColourId, Colours::black);
     _beginLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
-    addAndMakeVisible (_autoGainButton = new ToggleButton (String::empty));
-    _autoGainButton->setButtonText (L"Autogain 0.0dB");
-    _autoGainButton->addListener (this);
-    _autoGainButton->setToggleState (true, false);
-    _autoGainButton->setColour (ToggleButton::textColourId, Colour (0xff202020));
-
-    addAndMakeVisible (_dryButton = new ToggleButton (String::empty));
-    _dryButton->setButtonText (L"Dry");
-    _dryButton->addListener (this);
-    _dryButton->setToggleState (true, false);
-    _dryButton->setColour (ToggleButton::textColourId, Colour (0xff202020));
-
-    addAndMakeVisible (_wetButton = new ToggleButton (String::empty));
+    addAndMakeVisible (_wetButton = new TextButton (String::empty));
     _wetButton->setButtonText (L"Wet");
+    _wetButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
     _wetButton->addListener (this);
-    _wetButton->setToggleState (true, false);
-    _wetButton->setColour (ToggleButton::textColourId, Colour (0xff202020));
+    _wetButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
+    _wetButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
+
+    addAndMakeVisible (_dryButton = new TextButton (String::empty));
+    _dryButton->setButtonText (L"Dry");
+    _dryButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _dryButton->addListener (this);
+    _dryButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
+    _dryButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
+
+    addAndMakeVisible (_autogainButton = new TextButton (String::empty));
+    _autogainButton->setButtonText (L"Autogain 0.0dB");
+    _autogainButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _autogainButton->addListener (this);
+    _autogainButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
+    _autogainButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
+
+    addAndMakeVisible (_reverseButton = new TextButton (String::empty));
+    _reverseButton->setButtonText (L"Reverse");
+    _reverseButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _reverseButton->addListener (this);
+    _reverseButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
+    _reverseButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
 
 
     //[UserPreSize]
@@ -240,6 +245,10 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     processorChanged();
 
     _browseButton->setClickingTogglesState(true);
+    _dryButton->setClickingTogglesState(true);
+    _wetButton->setClickingTogglesState(true);
+    _autogainButton->setClickingTogglesState(true);
+    _reverseButton->setClickingTogglesState(true);
 
     //[/Constructor]
 }
@@ -260,7 +269,6 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_irTabComponent);
     deleteAndZero (_stretchHeaderLabel);
     deleteAndZero (_stretchSlider);
-    deleteAndZero (_reverseButton);
     deleteAndZero (_levelMeterDry);
     deleteAndZero (_levelMeterWet);
     deleteAndZero (_dryLevelLabel);
@@ -275,9 +283,10 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_beginHeaderLabel);
     deleteAndZero (_beginSlider);
     deleteAndZero (_beginLabel);
-    deleteAndZero (_autoGainButton);
-    deleteAndZero (_dryButton);
     deleteAndZero (_wetButton);
+    deleteAndZero (_dryButton);
+    deleteAndZero (_autogainButton);
+    deleteAndZero (_reverseButton);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -298,28 +307,28 @@ void KlangFalterEditor::paint (Graphics& g)
 
 void KlangFalterEditor::resized()
 {
-    _decibelScale->setBounds (580, 36, 32, 176);
-    _irTabComponent->setBounds (12, 8, 542, 204);
-    _stretchHeaderLabel->setBounds (104, 216, 84, 24);
-    _stretchSlider->setBounds (104, 240, 84, 40);
-    _reverseButton->setBounds (208, 8, 88, 24);
-    _levelMeterDry->setBounds (616, 36, 12, 176);
-    _levelMeterWet->setBounds (704, 36, 24, 176);
-    _dryLevelLabel->setBounds (584, 216, 60, 24);
-    _wetLevelLabel->setBounds (680, 216, 64, 24);
-    _drySlider->setBounds (624, 28, 24, 192);
-    _decibelScale2->setBounds (668, 36, 32, 176);
-    _wetSlider->setBounds (724, 28, 24, 192);
+    _decibelScale->setBounds (580, 40, 32, 176);
+    _irTabComponent->setBounds (12, 12, 542, 204);
+    _stretchHeaderLabel->setBounds (104, 220, 84, 24);
+    _stretchSlider->setBounds (104, 244, 84, 40);
+    _levelMeterDry->setBounds (616, 40, 12, 176);
+    _levelMeterWet->setBounds (704, 40, 24, 176);
+    _dryLevelLabel->setBounds (584, 220, 60, 24);
+    _wetLevelLabel->setBounds (680, 220, 64, 24);
+    _drySlider->setBounds (624, 32, 24, 192);
+    _decibelScale2->setBounds (668, 40, 32, 176);
+    _wetSlider->setBounds (724, 32, 24, 192);
     _browseButton->setBounds (12, 308, 736, 24);
     _irBrowserComponent->setBounds (12, 332, 736, 288);
     _settingsButton->setBounds (708, 0, 52, 16);
-    _stretchLabel->setBounds (104, 276, 84, 24);
-    _beginHeaderLabel->setBounds (16, 216, 84, 24);
-    _beginSlider->setBounds (16, 240, 84, 40);
-    _beginLabel->setBounds (16, 276, 84, 24);
-    _autoGainButton->setBounds (436, 236, 134, 24);
-    _dryButton->setBounds (596, 236, 52, 24);
-    _wetButton->setBounds (696, 236, 56, 24);
+    _stretchLabel->setBounds (104, 280, 84, 24);
+    _beginHeaderLabel->setBounds (16, 220, 84, 24);
+    _beginSlider->setBounds (16, 244, 84, 40);
+    _beginLabel->setBounds (16, 280, 84, 24);
+    _wetButton->setBounds (696, 240, 44, 24);
+    _dryButton->setBounds (596, 240, 44, 24);
+    _autogainButton->setBounds (410, 240, 144, 24);
+    _reverseButton->setBounds (482, 8, 72, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -385,16 +394,7 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
 
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == _reverseButton)
-    {
-        //[UserButtonCode__reverseButton] -- add your button handler code here..
-        if (_processor)
-        {
-          _processor->getIRManager().setReverse(_reverseButton->getToggleState());
-        }
-        //[/UserButtonCode__reverseButton]
-    }
-    else if (buttonThatWasClicked == _browseButton)
+    if (buttonThatWasClicked == _browseButton)
     {
         //[UserButtonCode__browseButton] -- add your button handler code here..
         int browserHeight = 0;
@@ -426,11 +426,11 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
                                        true);
         //[/UserButtonCode__settingsButton]
     }
-    else if (buttonThatWasClicked == _autoGainButton)
+    else if (buttonThatWasClicked == _wetButton)
     {
-        //[UserButtonCode__autoGainButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::AutoGainOn, _autoGainButton->getToggleState() ? 1.0f : 0.0f);
-        //[/UserButtonCode__autoGainButton]
+        //[UserButtonCode__wetButton] -- add your button handler code here..
+        _processor->setParameter(PluginAudioProcessor::WetOn, _wetButton->getToggleState() ? 1.0f : 0.0f);
+        //[/UserButtonCode__wetButton]
     }
     else if (buttonThatWasClicked == _dryButton)
     {
@@ -438,11 +438,20 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
         _processor->setParameter(PluginAudioProcessor::DryOn, _dryButton->getToggleState() ? 1.0f : 0.0f);
         //[/UserButtonCode__dryButton]
     }
-    else if (buttonThatWasClicked == _wetButton)
+    else if (buttonThatWasClicked == _autogainButton)
     {
-        //[UserButtonCode__wetButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::WetOn, _wetButton->getToggleState() ? 1.0f : 0.0f);
-        //[/UserButtonCode__wetButton]
+        //[UserButtonCode__autogainButton] -- add your button handler code here..
+        _processor->setParameter(PluginAudioProcessor::AutoGainOn, _autogainButton->getToggleState() ? 1.0f : 0.0f);
+        //[/UserButtonCode__autogainButton]
+    }
+    else if (buttonThatWasClicked == _reverseButton)
+    {
+        //[UserButtonCode__reverseButton] -- add your button handler code here..
+        if (_processor)
+        {
+          _processor->getIRManager().setReverse(_reverseButton->getToggleState());
+        }
+        //[/UserButtonCode__reverseButton]
     }
 
     //[UserbuttonClicked_Post]
@@ -534,13 +543,13 @@ void KlangFalterEditor::processorChanged()
     }
   }
 
-  if (_autoGainButton)
+  if (_autogainButton)
   {
     const float autoGain = _processor->getParameter(PluginAudioProcessor::AutoGain);
     const float autoGainOn = _processor->getParameter(PluginAudioProcessor::AutoGainOn);
     const juce::String autoGainText = DecibelScaling::DecibelString(DecibelScaling::Gain2Db(autoGain));
-    _autoGainButton->setButtonText(juce::String("Autogain ") + autoGainText);
-    _autoGainButton->setToggleState(autoGainOn > 0.5, false);
+    _autogainButton->setButtonText(juce::String("Autogain ") + autoGainText);
+    _autogainButton->setToggleState(autoGainOn > 0.5, false);
   }
 
   if (_dryButton)
@@ -606,10 +615,10 @@ BEGIN_JUCER_METADATA
                  fixedSize="1" initialWidth="760" initialHeight="330">
   <BACKGROUND backgroundColour="ffa6a6b1"/>
   <GENERICCOMPONENT name="DecibelScale" id="6dd7ac2ee661b784" memberName="_decibelScale"
-                    virtualName="" explicitFocusOrder="0" pos="580 36 32 176" class="DecibelScale"
+                    virtualName="" explicitFocusOrder="0" pos="580 40 32 176" class="DecibelScale"
                     params=""/>
   <TABBEDCOMPONENT name="IRTabComponent" id="697fc3546f1ab7f1" memberName="_irTabComponent"
-                   virtualName="" explicitFocusOrder="0" pos="12 8 542 204" orientation="top"
+                   virtualName="" explicitFocusOrder="0" pos="12 12 542 204" orientation="top"
                    tabBarDepth="30" initialTab="0">
     <TAB name="1-1" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
@@ -621,44 +630,40 @@ BEGIN_JUCER_METADATA
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
   </TABBEDCOMPONENT>
   <LABEL name="" id="ff104b46d553eb03" memberName="_stretchHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="104 216 84 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="104 220 84 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Stretch" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="e6fe992b37e74eba" memberName="_stretchSlider" virtualName=""
-          explicitFocusOrder="0" pos="104 240 84 40" thumbcol="ff8080c0"
+          explicitFocusOrder="0" pos="104 244 84 40" thumbcol="ff8080c0"
           rotarysliderfill="ff8080c0" min="0" max="2" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
-  <TOGGLEBUTTON name="ReverseButton" id="7f5e152dc8dfd08c" memberName="_reverseButton"
-                virtualName="" explicitFocusOrder="0" pos="208 8 88 24" txtcol="ff202020"
-                buttonText="Reverse" connectedEdges="0" needsCallback="1" radioGroupId="0"
-                state="0"/>
   <GENERICCOMPONENT name="LevelMeterDry" id="93270230a2db62e0" memberName="_levelMeterDry"
-                    virtualName="" explicitFocusOrder="0" pos="616 36 12 176" class="LevelMeter"
+                    virtualName="" explicitFocusOrder="0" pos="616 40 12 176" class="LevelMeter"
                     params=""/>
   <GENERICCOMPONENT name="LevelMeterWet" id="e4867bf99a47726a" memberName="_levelMeterWet"
-                    virtualName="" explicitFocusOrder="0" pos="704 36 24 176" class="LevelMeter"
+                    virtualName="" explicitFocusOrder="0" pos="704 40 24 176" class="LevelMeter"
                     params=""/>
   <LABEL name="DryLevelLabel" id="892bd8ba7f961215" memberName="_dryLevelLabel"
-         virtualName="" explicitFocusOrder="0" pos="584 216 60 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="584 220 60 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="-inf" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="34"/>
   <LABEL name="WetLevelLabel" id="3469fbc38286d2b6" memberName="_wetLevelLabel"
-         virtualName="" explicitFocusOrder="0" pos="680 216 64 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="680 220 64 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="-inf" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="34"/>
   <SLIDER name="DrySlider" id="3694f3553dea94b" memberName="_drySlider"
-          virtualName="" explicitFocusOrder="0" pos="624 28 24 192" min="0"
+          virtualName="" explicitFocusOrder="0" pos="624 32 24 192" min="0"
           max="10" int="0" style="LinearVertical" textBoxPos="NoTextBox"
           textBoxEditable="1" textBoxWidth="80" textBoxHeight="20" skewFactor="1"/>
   <GENERICCOMPONENT name="DecibelScale" id="f3824f7df1d2ea95" memberName="_decibelScale2"
-                    virtualName="" explicitFocusOrder="0" pos="668 36 32 176" class="DecibelScale"
+                    virtualName="" explicitFocusOrder="0" pos="668 40 32 176" class="DecibelScale"
                     params=""/>
   <SLIDER name="WetSlider" id="e50054d828347fbd" memberName="_wetSlider"
-          virtualName="" explicitFocusOrder="0" pos="724 28 24 192" min="0"
+          virtualName="" explicitFocusOrder="0" pos="724 32 24 192" min="0"
           max="10" int="0" style="LinearVertical" textBoxPos="NoTextBox"
           textBoxEditable="1" textBoxWidth="80" textBoxHeight="20" skewFactor="1"/>
   <TEXTBUTTON name="" id="e5cc4d9d88fb6d29" memberName="_browseButton" virtualName=""
@@ -672,37 +677,41 @@ BEGIN_JUCER_METADATA
               explicitFocusOrder="0" pos="708 0 52 16" buttonText="Settings"
               connectedEdges="6" needsCallback="1" radioGroupId="0"/>
   <LABEL name="" id="51bcb70beb24f3cf" memberName="_stretchLabel" virtualName=""
-         explicitFocusOrder="0" pos="104 276 84 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="104 280 84 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="100%" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="59911bc6fa006837" memberName="_beginHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="16 216 84 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="16 220 84 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Begin" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="5e1bc6ab0a48dea8" memberName="_beginSlider" virtualName=""
-          explicitFocusOrder="0" pos="16 240 84 40" thumbcol="ff8080c0"
+          explicitFocusOrder="0" pos="16 244 84 40" thumbcol="ff8080c0"
           rotarysliderfill="ff8080c0" min="0" max="2" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="0.5"/>
   <LABEL name="" id="b32110895dcec8f5" memberName="_beginLabel" virtualName=""
-         explicitFocusOrder="0" pos="16 276 84 24" textCol="ff000000"
+         explicitFocusOrder="0" pos="16 280 84 24" textCol="ff000000"
          edTextCol="ff000000" edBkgCol="0" labelText="0ms" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
-  <TOGGLEBUTTON name="" id="dd1ecfa2e279dd6" memberName="_autoGainButton" virtualName=""
-                explicitFocusOrder="0" pos="436 236 134 24" txtcol="ff202020"
-                buttonText="Autogain 0.0dB" connectedEdges="0" needsCallback="1"
-                radioGroupId="0" state="1"/>
-  <TOGGLEBUTTON name="" id="8628927d4ebd1925" memberName="_dryButton" virtualName=""
-                explicitFocusOrder="0" pos="596 236 52 24" txtcol="ff202020"
-                buttonText="Dry" connectedEdges="0" needsCallback="1" radioGroupId="0"
-                state="1"/>
-  <TOGGLEBUTTON name="" id="91ab6a3d6477618f" memberName="_wetButton" virtualName=""
-                explicitFocusOrder="0" pos="696 236 56 24" txtcol="ff202020"
-                buttonText="Wet" connectedEdges="0" needsCallback="1" radioGroupId="0"
-                state="1"/>
+  <TEXTBUTTON name="" id="c0b279e2bae7030e" memberName="_wetButton" virtualName=""
+              explicitFocusOrder="0" pos="696 240 44 24" bgColOff="80bcbcbc"
+              bgColOn="ffbcbcff" buttonText="Wet" connectedEdges="3" needsCallback="1"
+              radioGroupId="0"/>
+  <TEXTBUTTON name="" id="499237d463b07642" memberName="_dryButton" virtualName=""
+              explicitFocusOrder="0" pos="596 240 44 24" bgColOff="80bcbcbc"
+              bgColOn="ffbcbcff" buttonText="Dry" connectedEdges="3" needsCallback="1"
+              radioGroupId="0"/>
+  <TEXTBUTTON name="" id="f25a3c5b0535fcca" memberName="_autogainButton" virtualName=""
+              explicitFocusOrder="0" pos="410 240 144 24" bgColOff="80bcbcbc"
+              bgColOn="ffbcbcff" buttonText="Autogain 0.0dB" connectedEdges="3"
+              needsCallback="1" radioGroupId="0"/>
+  <TEXTBUTTON name="" id="fcb6829f0d6fc21f" memberName="_reverseButton" virtualName=""
+              explicitFocusOrder="0" pos="482 8 72 24" bgColOff="80bcbcbc"
+              bgColOn="ffbcbcff" buttonText="Reverse" connectedEdges="3" needsCallback="1"
+              radioGroupId="0"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA
