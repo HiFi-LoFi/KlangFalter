@@ -580,7 +580,7 @@ void KlangFalterEditor::processorChanged()
 
     if (_beginLabel)
     {
-      _beginLabel->setText(juce::String(fileBeginSeconds * 1000.0, 1) + juce::String("ms"), true);
+      _beginLabel->setText(juce::String(static_cast<int>(fileBeginSeconds*1000.0 + 0.5)) + juce::String("ms"), true);
     }
   }
 
@@ -588,9 +588,10 @@ void KlangFalterEditor::processorChanged()
   {
     const double predelayMs = irManager->getPredelayMs();
     _predelaySlider->setValue(predelayMs);
+    _predelaySlider->setEnabled(irAvailable);
     if (_predelayLabel)
     {
-      _predelayLabel->setText(juce::String(static_cast<int>(predelayMs)) + juce::String("ms"), true);
+      _predelayLabel->setText(juce::String(static_cast<int>(predelayMs+0.5)) + juce::String("ms"), true);
     }
   }
 

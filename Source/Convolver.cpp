@@ -45,7 +45,6 @@ public:
       {
         return;
       }
-      assert(_convolver._backgroundProcessingFinished.get() == 0);
       _convolver.doBackgroundProcessing();
       _convolver._backgroundProcessingFinished.set(1);
       _convolver._backgroundProcessingFinishedEvent.signal();

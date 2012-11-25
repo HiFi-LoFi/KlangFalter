@@ -55,6 +55,7 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   // Parameters
   convolutionElement->setAttribute("fileBeginSeconds", irManager.getFileBeginSeconds());
   convolutionElement->setAttribute("stretch", irManager.getStretch());
+  convolutionElement->setAttribute("predelayMs", irManager.getPredelayMs());
   convolutionElement->setAttribute("reverse", irManager.getReverse());
         
   // Envelope
@@ -121,6 +122,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   bool autoGainOn = element.getBoolAttribute("autoGainOn", true);
   double fileBeginSeconds = element.getDoubleAttribute("fileBeginSeconds", 0.0);
   double stretch = element.getDoubleAttribute("stretch", 1.0);
+  double predelayMs = element.getDoubleAttribute("predelayMs", 0.0);
   bool reverse = element.getBoolAttribute("reverse", false);
 
   if (wet < 0.0 || wet > 1.0)
@@ -192,6 +194,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   processor.setParameterNotifyingHost(PluginAudioProcessor::Dry, static_cast<float>(dry));
   processor.setParameterNotifyingHost(PluginAudioProcessor::AutoGainOn, (autoGainOn == true) ? 1.0f : 0.0f);
   irManager.setFileBeginSeconds(fileBeginSeconds);
+  irManager.setPredelayMs(predelayMs);
   irManager.setStretch(stretch);
   irManager.setReverse(reverse);
   irManager.setEnvelope(envelope);

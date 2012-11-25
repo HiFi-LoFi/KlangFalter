@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  24 Nov 2012 2:18:13pm
+  Creation date:  25 Nov 2012 2:04:33pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -71,7 +71,6 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     _blockSizeComboBox->addItem (L"2048", 6);
     _blockSizeComboBox->addItem (L"4096", 7);
     _blockSizeComboBox->addItem (L"8192", 8);
-    _blockSizeComboBox->addItem (L"16834", 9);
     _blockSizeComboBox->addListener (this);
 
     addAndMakeVisible (_irDirectoryGroupComponent = new GroupComponent (String::empty,
@@ -80,6 +79,7 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
 
     addAndMakeVisible (_irDirectoryBrowseButton = new TextButton (String::empty));
     _irDirectoryBrowseButton->setButtonText (L"Browse ...");
+    _irDirectoryBrowseButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
     _irDirectoryBrowseButton->addListener (this);
 
     addAndMakeVisible (_irDirectoryLabel = new Label (L"new label",
@@ -285,7 +285,7 @@ BEGIN_JUCER_METADATA
                   title="Impulse Response Directory"/>
   <TEXTBUTTON name="" id="b1f2dd9a0266865f" memberName="_irDirectoryBrowseButton"
               virtualName="" explicitFocusOrder="0" pos="356 256 114 24" buttonText="Browse ..."
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+              connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <LABEL name="new label" id="3415b13950fc6ae1" memberName="_irDirectoryLabel"
          virtualName="" explicitFocusOrder="0" pos="24 224 456 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;None&gt;" editableSingleClick="0"

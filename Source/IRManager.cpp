@@ -119,14 +119,13 @@ public:
     std::vector<FloatBuffer::Ptr> buffers(agents.size(), nullptr);
     std::vector<double> fileSampleRates(agents.size(), 0.0);
     const double fileBeginSeconds = _irManager.getFileBeginSeconds();
-    const double predelayMs = _irManager.getPredelayMs();
     for (size_t i=0; i<agents.size(); ++i)
     {
       const juce::File file = agents[i]->getFile();
       if (file != juce::File::nonexistent)
       {
         double sampleRate;
-        FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, predelayMs, sampleRate);
+        FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, sampleRate);
         if (!buffer || sampleRate < 0.0001 || threadShouldExit())
         {
           return;
@@ -189,15 +188,32 @@ public:
         }
       }
     }
-
+    
+    // Predelay
+    const double predelayMs = _irManager.getPredelayMs();
+    const size_t predelaySamples = static_cast<size_t>((convolverSampleRate / 1000.0) * predelayMs);
+    if (predelaySamples > 0)
+    {
+      for (size_t i=0; i<buffers.size(); ++i)
+      {
+        if (buffers[i] != nullptr)
+        {
+          FloatBuffer::Ptr buffer = new FloatBuffer(buffers[i]->getSize() + predelaySamples);
+          ::memset(buffer->data(), 0, predelaySamples * sizeof(float));
+          ::memcpy(buffer->data()+predelaySamples, buffers[i]->data(), buffers[i]->getSize() * sizeof(float));
+          buffers[i] = buffer;
+        }      
+      }
+    }
+    
     // Update convolvers
     const size_t convolverBlockSize = _irManager.getConvolverBlockSize();
     _irManager.getProcessor().setParameter(PluginAudioProcessor::AutoGain, autoGain);
     for (size_t i=0; i<agents.size(); ++i)
     {
-      juce::ScopedPointer<Convolver> convolver;
+      juce::ScopedPointer<Convolver> convolver(new Convolver());
       if (buffers[i] != nullptr && buffers[i]->getSize() > 0)
-      {
+      {        
         convolver = new Convolver();
         const bool successInit = convolver->init(512, convolverBlockSize, buffers[i]->data(), buffers[i]->getSize());
         if (!successInit || threadShouldExit())
@@ -219,7 +235,7 @@ public:
   }
 
 private:
-  FloatBuffer::Ptr importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double predelayMs, double& fileSampleRate) const
+  FloatBuffer::Ptr importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double& fileSampleRate) const
   {
     fileSampleRate = 0.0;
 
@@ -244,13 +260,12 @@ private:
     }
 
     const size_t startSample = static_cast<size_t>(std::max(0.0, fileBeginSeconds) * audioFormatReader->sampleRate);
-    const size_t predelaySamples = static_cast<size_t>((audioFormatReader->sampleRate / 1000.0) * predelayMs);
-    const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? ((fileLen - startSample) + predelaySamples) : 0;
+    const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? (fileLen - startSample) : 0;
     FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
 
     juce::AudioFormatReaderSource audioFormatReaderSource(audioFormatReader, false);
     audioFormatReaderSource.setNextReadPosition(static_cast<juce::int64>(startSample));
-    size_t bufferPos = predelaySamples;
+    size_t bufferPos = 0;
     int filePos = static_cast<int>(startSample);
     juce::AudioSampleBuffer importBuffer(fileChannels, 8192);
     while (filePos < fileLen)

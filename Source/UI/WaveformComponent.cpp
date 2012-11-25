@@ -30,6 +30,7 @@ WaveformComponent::WaveformComponent() :
   _samplesPerPx(0),
   _minDecibels(-100.0),
   _pxPerDecibel(0),
+  _predelayOffsetX(0),
   _area(),
   _envelope(1.0, 1.0),
   _dragDistance(5.0),
@@ -191,12 +192,21 @@ void WaveformComponent::paint(Graphics& g)
                      static_cast<float>(_area.getY()),
                      static_cast<float>(_area.getBottom()));
   
+  // Predelay
+  if (_predelayOffsetX > 0)
+  {
+    g.setColour(Colours::grey);
+    g.drawVerticalLine(_area.getX()+_predelayOffsetX,
+                       static_cast<float>(_area.getY()),
+                       static_cast<float>(_area.getBottom()));
+  }
+  
   // Envelope
   const size_t nodeCount = _envelope.getNodeCount();
   if (nodeCount > 0)
   {
     Path path;
-    path.startNewSubPath(static_cast<float>(_area.getX()), static_cast<float>(_area.getY()));
+    path.startNewSubPath(static_cast<float>(_area.getX()+_predelayOffsetX), static_cast<float>(_area.getY()));
     for (size_t i=0; i<nodeCount; ++i)
     {
       const float x = static_cast<float>(calcEnvelopePosX(_envelope.getX(i)));
@@ -228,11 +238,13 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
   clear();
   
   if (irAgent != nullptr && sampleRate > 0.0 && samplesPerPx > 0)
-  { 
+  {
+    const IRManager& irManager = irAgent->getManager(); 
     _irAgent = irAgent;
     _sampleRate = sampleRate;
-    _samplesPerPx = samplesPerPx;
-    _envelope = irAgent->getManager().getEnvelope();
+    _samplesPerPx = std::max(static_cast<size_t>(1), samplesPerPx);
+    _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * irManager.getPredelayMs()) / _samplesPerPx;
+    _envelope = irManager.getEnvelope();
     
     const FloatBuffer::Ptr ir = _irAgent->getImpulseResponse();
     if (ir)
@@ -369,7 +381,7 @@ size_t WaveformComponent::getEnvelopeNode(int posX, int posY) const
 
 int WaveformComponent::calcEnvelopePosX(double x) const
 {
-  return _area.getX() + static_cast<int>(x * static_cast<double>(_area.getWidth()));
+  return _area.getX() + static_cast<int>(x * static_cast<double>(_area.getWidth()-_predelayOffsetX)) + _predelayOffsetX;
 }
 
 
@@ -382,7 +394,7 @@ int WaveformComponent::calcEnvelopePosY(double y) const
 
 double WaveformComponent::calcEnvelopeValueX(int posX) const
 {
-  const double x = static_cast<double>(posX-_area.getX()) / static_cast<double>(_area.getWidth());
+  const double x = static_cast<double>((posX-_area.getX())-_predelayOffsetX) / static_cast<double>(_area.getWidth()-_predelayOffsetX);
   return std::min(1.0, std::max(0.0, x));
 }
 
