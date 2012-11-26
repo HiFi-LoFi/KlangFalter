@@ -49,6 +49,10 @@
       <FILE id="YHYGAU" name="SplitComplex.h" compile="0" resource="0" file="Source/FFTConvolver/SplitComplex.h"/>
     </GROUP>
     <GROUP id="{AF9AFB86-5BBB-A92F-6447-4B85AD586F22}" name="UI">
+      <GROUP id="{0D39E3F9-DC00-E9BA-D76D-32943BC0F7A5}" name="Resources">
+        <FILE id="EJUcz7" name="brushed_aluminium.png" compile="0" resource="1"
+              file="Source/UI/Resources/brushed_aluminium.png"/>
+      </GROUP>
       <FILE id="esn7nj" name="CustomLookAndFeel.cpp" compile="1" resource="0"
             file="Source/UI/CustomLookAndFeel.cpp"/>
       <FILE id="woqAZd" name="CustomLookAndFeel.h" compile="0" resource="0"

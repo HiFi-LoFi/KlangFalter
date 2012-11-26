@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  25 Nov 2012 2:04:33pm
+  Creation date:  25 Nov 2012 3:27:48pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -176,7 +176,7 @@ void SettingsDialogComponent::paint (Graphics& g)
     //[UserPrePaint] Add your own custom painting code here..
     //[/UserPrePaint]
 
-    g.fillAll (Colour (0xffa6a6b1));
+    g.fillAll (Colour (0xffe5e5f0));
 
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
@@ -267,7 +267,7 @@ BEGIN_JUCER_METADATA
                  variableInitialisers="_processor(processor)" snapPixels="4" snapActive="1"
                  snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="504"
                  initialHeight="318">
-  <BACKGROUND backgroundColour="ffa6a6b1"/>
+  <BACKGROUND backgroundColour="ffe5e5f0"/>
   <GROUPCOMPONENT name="new group" id="ddebbd07ce1b9c08" memberName="_performanceGroupComponent"
                   virtualName="" explicitFocusOrder="0" pos="16 124 472 72" textcol="ff202020"
                   title="Performance"/>

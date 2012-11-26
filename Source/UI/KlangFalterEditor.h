@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  24 Nov 2012 9:05:28pm
+  Creation date:  25 Nov 2012 3:27:01pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C38F55DD__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C38F55DD__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_E429EC83__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_E429EC83__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -66,6 +66,9 @@ public:
     void sliderValueChanged (Slider* sliderThatWasMoved);
     void buttonClicked (Button* buttonThatWasClicked);
 
+    // Binary resources:
+    static const char* brushed_aluminium_png;
+    static const int brushed_aluminium_pngSize;
 
 
     //==============================================================================
@@ -113,4 +116,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C38F55DD__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_E429EC83__
