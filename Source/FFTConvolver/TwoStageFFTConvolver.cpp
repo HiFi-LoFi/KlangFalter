@@ -213,7 +213,10 @@ void TwoStageFFTConvolver::process(const Sample* input, Sample* output, size_t l
       }
 
       // Convolution: 2nd-Nth tail block (might be done in some background thread)
-      if (_tailPrecalculated.size() > 0 && _tailInputFill == _tailBlockSize)
+      if (_tailPrecalculated.size() > 0 &&
+          _tailInputFill == _tailBlockSize &&
+          _backgroundProcessingInput.size() == _tailBlockSize &&
+          _tailOutput.size() == _tailBlockSize)
       {
         waitForBackgroundProcessing();
         SampleBuffer::Swap(_tailPrecalculated, _tailOutput);

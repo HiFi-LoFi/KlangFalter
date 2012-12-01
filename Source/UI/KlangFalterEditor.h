@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  25 Nov 2012 3:27:01pm
+  Creation date:  1 Dec 2012 3:35:15pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_E429EC83__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_E429EC83__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_7F8B50EA__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_7F8B50EA__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -66,9 +66,6 @@ public:
     void sliderValueChanged (Slider* sliderThatWasMoved);
     void buttonClicked (Button* buttonThatWasClicked);
 
-    // Binary resources:
-    static const char* brushed_aluminium_png;
-    static const int brushed_aluminium_pngSize;
 
 
     //==============================================================================
@@ -107,6 +104,26 @@ private:
     Label* _predelayHeaderLabel;
     Slider* _predelaySlider;
     Label* _predelayLabel;
+    Label* _hiFreqLabel;
+    Label* _hiGainLabel;
+    Label* _hiQLabel;
+    Label* _hiQHeaderLabel;
+    Label* _hiGainHeaderLabel;
+    Label* _hiFreqHeaderLabel;
+    Slider* _hiQSlider;
+    Slider* _hiGainSlider;
+    Slider* _hiFreqSlider;
+    Label* _loFreqLabel;
+    Label* _loGainLabel;
+    Label* _loQLabel;
+    Label* _loQHeaderLabel;
+    Label* _loGainHeaderLabel;
+    Label* _loFreqHeaderLabel;
+    Slider* _loQSlider;
+    Slider* _loGainSlider;
+    Slider* _loFreqSlider;
+    TextButton* _hiEqButton;
+    TextButton* _loEqButton;
 
 
     //==============================================================================
@@ -116,4 +133,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_E429EC83__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_7F8B50EA__

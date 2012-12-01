@@ -20,6 +20,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include "CookbookEq.h"
 #include "IRManager.h"
 #include "LevelMeasurement.h"
 #include "Settings.h"
@@ -93,7 +94,15 @@ public:
       DryOn,
       Dry,
       AutoGainOn,
-      AutoGain
+      AutoGain,
+      EqLowOn,
+      EqLowFreq,
+      EqLowGainDb,
+      EqLowQ,
+      EqHighOn,
+      EqHighFreq,
+      EqHighGainDb,
+      EqHighQ
     };
   
     float getLevelDry(size_t channel) const;
@@ -139,6 +148,9 @@ private:
     };
   
     std::map<ParameterId, Parameter> _parameters;
+  
+    std::vector<CookbookEq> _eqLo;
+    std::vector<CookbookEq> _eqHi;
     
     std::vector<LevelMeasurement> _levelMeasurementsDry;
     std::vector<LevelMeasurement> _levelMeasurementsWet;

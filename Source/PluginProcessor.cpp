@@ -36,16 +36,30 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _wetBuffer(1, 0),
   _convolutionBuffers(),
   _parameters(),
+  _eqLo(4, CookbookEq(CookbookEq::LoShelf, 0, 1.0f)),
+  _eqHi(4, CookbookEq(CookbookEq::HiShelf, 20000, 1.0f)),
   _levelMeasurementsDry(2),
   _levelMeasurementsWet(2),
   _settings()
 {
   _parameters.insert(std::make_pair(DryOn, Parameter("DryOn", 1.0f)));
   _parameters.insert(std::make_pair(Dry, Parameter("Dry", 1.0f)));
+  
   _parameters.insert(std::make_pair(WetOn, Parameter("WetOn", 1.0f)));
   _parameters.insert(std::make_pair(Wet, Parameter("Wet", 1.0f)));
+  
   _parameters.insert(std::make_pair(AutoGainOn, Parameter("Autogain On", 1.0f)));
   _parameters.insert(std::make_pair(AutoGain, Parameter("Autogain", 1.0f)));
+
+  _parameters.insert(std::make_pair(EqLowOn, Parameter("Low On", 0.0f)));
+  _parameters.insert(std::make_pair(EqLowFreq, Parameter("Low Freq", 20.0f)));
+  _parameters.insert(std::make_pair(EqLowGainDb, Parameter("Low Gain", 0.0f)));
+  _parameters.insert(std::make_pair(EqLowQ, Parameter("Low Q", 1.0f)));
+  
+  _parameters.insert(std::make_pair(EqHighOn, Parameter("High On", 0.0f)));
+  _parameters.insert(std::make_pair(EqHighFreq, Parameter("High Freq", 20000.0f)));
+  _parameters.insert(std::make_pair(EqHighGainDb, Parameter("High Gain", 0.0f)));
+  _parameters.insert(std::make_pair(EqHighQ, Parameter("High Q", 1.0f)));
 
   _irManager = new IRManager(*this, 2, 2);
 }
@@ -181,6 +195,16 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
   {
     _convolutionBuffers.push_back(new fftconvolver::SampleBuffer(samplesPerBlock));
   }
+  
+  // EQ
+  for (size_t i=0; i<_eqLo.size(); ++i)
+  {
+    _eqLo[i].prepareToPlay(sampleRate, samplesPerBlock);
+  }
+  for (size_t i=0; i<_eqHi.size(); ++i)
+  {
+    _eqHi[i].prepareToPlay(sampleRate, samplesPerBlock);
+  }
 }
 
 
@@ -193,6 +217,15 @@ void PluginAudioProcessor::releaseResources()
   _convolutionBuffers.clear();
   _wetBuffer.setSize(1, 0, false, true, false);
   _sampleRate = 0.0;
+
+  for (size_t i=0; i<_eqLo.size(); ++i)
+  {
+    _eqLo[i].cleanup();
+  }
+  for (size_t i=0; i<_eqHi.size(); ++i)
+  {
+    _eqHi[i].cleanup();
+  }
   
   sendChangeMessage();
 }
@@ -205,6 +238,16 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
   const bool dryOn = (getParameter(DryOn) >= 0.5f);
   const float factorWet = getParameter(Wet);
   const float factorDry = getParameter(Dry);
+
+  const float eqLoOn = (getParameter(EqLowOn) >= 0.5f);
+  const float eqLoFreq = getParameter(EqLowFreq);
+  const float eqLoGainDb = getParameter(EqLowGainDb);
+  const float eqLoQ = getParameter(EqLowQ);
+  
+  const float eqHiOn = (getParameter(EqHighOn) >= 0.5f);
+  const float eqHiFreq = getParameter(EqHighFreq);
+  const float eqHiGainDb = getParameter(EqHighGainDb);
+  const float eqHiQ = getParameter(EqHighQ);
   
   const int numInputChannels = getNumInputChannels();
   const int numOutputChannels = getNumOutputChannels();
@@ -269,6 +312,23 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     {
       convolutionBuffer00 = _convolutionBuffers[0];
       irAgent00->process(channelData0, convolutionBuffer00->data(), samplesToProcess, autoGain);
+
+      if (eqLoOn)
+      {
+        CookbookEq& eqLo = _eqLo[0];
+        eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
+        eqLo.setGain(eqLoGainDb);
+        eqLo.filterOut(convolutionBuffer00->data(), samplesToProcess);
+      }
+
+      if (eqHiOn)
+      {
+        CookbookEq& eqHi = _eqHi[0];
+        eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
+        eqHi.setGain(eqHiGainDb);
+        eqHi.filterOut(convolutionBuffer00->data(), samplesToProcess);
+      }
+      
       if (wetOn)
       {
         buffer.addFrom(0, 0, convolutionBuffer00->data(), samplesToProcess, 1.0f);
@@ -279,6 +339,23 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     {
       convolutionBuffer01 = _convolutionBuffers[1];
       irAgent01->process(channelData0, convolutionBuffer01->data(), samplesToProcess, autoGain);
+      
+      if (eqLoOn)
+      {
+        CookbookEq& eqLo = _eqLo[1];
+        eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
+        eqLo.setGain(eqLoGainDb);
+        eqLo.filterOut(convolutionBuffer01->data(), samplesToProcess);
+      }
+      
+      if (eqHiOn)
+      {
+        CookbookEq& eqHi = _eqHi[1];
+        eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
+        eqHi.setGain(eqHiGainDb);
+        eqHi.filterOut(convolutionBuffer01->data(), samplesToProcess);
+      }
+      
       if (wetOn)
       {
         buffer.addFrom(1, 0, convolutionBuffer01->data(), samplesToProcess, 1.0f);
@@ -289,6 +366,23 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     {
       convolutionBuffer10 = _convolutionBuffers[2];
       irAgent10->process(channelData1, convolutionBuffer10->data(), samplesToProcess, autoGain);
+      
+      if (eqLoOn)
+      {
+        CookbookEq& eqLo = _eqLo[2];
+        eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
+        eqLo.setGain(eqLoGainDb);
+        eqLo.filterOut(convolutionBuffer10->data(), samplesToProcess);
+      }
+      
+      if (eqHiOn)
+      {
+        CookbookEq& eqHi = _eqHi[2];
+        eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
+        eqHi.setGain(eqHiGainDb);
+        eqHi.filterOut(convolutionBuffer10->data(), samplesToProcess);
+      }
+      
       if (wetOn)
       {
         buffer.addFrom(0, 0, convolutionBuffer10->data(), samplesToProcess, 1.0f);
@@ -299,6 +393,23 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     {
       convolutionBuffer11 = _convolutionBuffers[3];
       irAgent11->process(channelData1, convolutionBuffer11->data(), samplesToProcess, autoGain);
+      
+      if (eqLoOn)
+      {
+        CookbookEq& eqLo = _eqLo[3];
+        eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
+        eqLo.setGain(eqLoGainDb);
+        eqLo.filterOut(convolutionBuffer11->data(), samplesToProcess);
+      }
+      
+      if (eqHiOn)
+      {
+        CookbookEq& eqHi = _eqHi[3];
+        eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
+        eqHi.setGain(eqHiGainDb);
+        eqHi.filterOut(convolutionBuffer11->data(), samplesToProcess);
+      }
+      
       if (wetOn)
       {
         buffer.addFrom(1, 0, convolutionBuffer11->data(), samplesToProcess, 1.0f);

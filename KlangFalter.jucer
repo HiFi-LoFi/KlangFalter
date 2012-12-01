@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2012.11.19beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2012.12.01beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -83,6 +83,8 @@
     </GROUP>
     <FILE id="CCplCO" name="Convolver.cpp" compile="1" resource="0" file="Source/Convolver.cpp"/>
     <FILE id="oFPWI7" name="Convolver.h" compile="0" resource="0" file="Source/Convolver.h"/>
+    <FILE id="d5bCDW" name="CookbookEq.cpp" compile="1" resource="0" file="Source/CookbookEq.cpp"/>
+    <FILE id="d6BKpl" name="CookbookEq.h" compile="0" resource="0" file="Source/CookbookEq.h"/>
     <FILE id="tP4m4I" name="DecibelScaling.h" compile="0" resource="0"
           file="Source/DecibelScaling.h"/>
     <FILE id="gL5qFG" name="DevelopmentApplication.cpp" compile="1" resource="0"
