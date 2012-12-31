@@ -31,6 +31,7 @@ public:
   
   virtual ~ConvolverBackgroundThread()
   {
+    signalThreadShouldExit();
     notify();
     stopThread(1000);
   }
