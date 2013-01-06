@@ -20,7 +20,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "CookbookEq.h"
 #include "IRManager.h"
 #include "LevelMeasurement.h"
 #include "Settings.h"
@@ -149,11 +148,7 @@ private:
   
     std::map<ParameterId, Parameter> _parameters;
   
-    std::vector<CookbookEq> _eqLo;
-    std::vector<CookbookEq> _eqHi;
-    
     std::vector<LevelMeasurement> _levelMeasurementsDry;
-    std::vector<LevelMeasurement> _levelMeasurementsWet;
 
     Settings _settings;
   

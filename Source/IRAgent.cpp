@@ -39,8 +39,22 @@ IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) 
   _convolver(nullptr),
   _fadeFactor(0.0),
   _fadeIncrement(0.0),
-  _levelMeasurement()
+  _levelMeasurement(),
+  _eqLo(CookbookEq::LoShelf, 20, 1.0f),
+  _eqHi(CookbookEq::HiShelf, 20000, 1.0f)
 {
+  PluginAudioProcessor& processor = manager.getProcessor();
+  const double loFreq = processor.getParameter(PluginAudioProcessor::EqLowFreq);
+  const double loQ = processor.getParameter(PluginAudioProcessor::EqLowQ);
+  const double hiFreq = processor.getParameter(PluginAudioProcessor::EqHighFreq);
+  const double hiQ = processor.getParameter(PluginAudioProcessor::EqHighQ);
+  _eqLo.setFreqAndQ(loFreq, loQ);
+  _eqHi.setFreqAndQ(hiFreq, hiQ);  
+  
+  const double eqSampleRate = _manager.getConvolverSampleRate();
+  const size_t eqBlockSize = _manager.getConvolverBlockSize();
+  _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
+  _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
 }
 
 
@@ -233,7 +247,32 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
 {
   const float Epsilon = 0.0001f;
   
+  PluginAudioProcessor& processor = _manager.getProcessor();
+  
+  const bool eqLoOn = (processor.getParameter(PluginAudioProcessor::EqLowOn) > 0.5f);
+  double eqLoFreq = 0.0;
+  double eqLoQ = 0.0;
+  double eqLoGainDb = 0.0;
+  if (eqLoOn)
+  {
+    eqLoFreq = processor.getParameter(PluginAudioProcessor::EqLowFreq);
+    eqLoQ = processor.getParameter(PluginAudioProcessor::EqLowQ);
+    eqLoGainDb = processor.getParameter(PluginAudioProcessor::EqLowGainDb);
+  }
+  
+  const bool eqHiOn = (processor.getParameter(PluginAudioProcessor::EqHighOn) > 0.5f);
+  double eqHiFreq = 0.0;
+  double eqHiQ = 0.0;
+  double eqHiGainDb = 0.0;
+  if (eqHiOn)
+  {
+    eqHiFreq = processor.getParameter(PluginAudioProcessor::EqHighFreq);
+    eqHiQ = processor.getParameter(PluginAudioProcessor::EqHighQ);
+    eqHiGainDb = processor.getParameter(PluginAudioProcessor::EqHighGainDb);
+  }
+  
   ScopedLock convolverLock(_convolverMutex);
+  
   if (_convolver && (_fadeFactor > Epsilon || ::fabs(_fadeIncrement) > Epsilon))
   {
     _convolver->process(input, output, len);
@@ -264,6 +303,20 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
     ::memset(output, 0, len * sizeof(float));
     _fadeFactor = 0.0;
     _fadeIncrement = 0.0;
+  }
+  
+  if (eqLoOn)
+  {
+    _eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
+    _eqLo.setGain(eqLoGainDb);
+    _eqLo.filterOut(output, len);
+  }
+  
+  if (eqHiOn)
+  {
+    _eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
+    _eqHi.setGain(eqHiGainDb);
+    _eqHi.filterOut(output, len);
   }
   
   _levelMeasurement.process(output, len);

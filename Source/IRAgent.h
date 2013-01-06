@@ -20,9 +20,9 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "LevelMeasurement.h"
-
+#include "CookbookEq.h"
 #include "Convolver.h"
+#include "LevelMeasurement.h"
 
 #include <vector>
 
@@ -145,7 +145,10 @@ private:
   float _fadeIncrement;
   
   LevelMeasurement _levelMeasurement;
-    
+  
+  CookbookEq _eqLo;
+  CookbookEq _eqHi;
+  
   // Prevent uncontrolled usage
   IRAgent(const IRAgent&);
   IRAgent& operator=(const IRAgent&);
