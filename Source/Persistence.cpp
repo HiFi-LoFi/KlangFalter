@@ -49,6 +49,16 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   convolutionElement->setAttribute("dryOn", processor.getParameter(PluginAudioProcessor::DryOn) >= 0.5);
   convolutionElement->setAttribute("dry", processor.getParameter(PluginAudioProcessor::Dry));
   convolutionElement->setAttribute("autoGainOn", processor.getParameter(PluginAudioProcessor::AutoGainOn) >= 0.5);
+
+  convolutionElement->setAttribute("eqLoShelfOn", processor.getParameter(PluginAudioProcessor::EqLowOn) >= 0.5);
+  convolutionElement->setAttribute("eqLoShelfFreq", processor.getParameter(PluginAudioProcessor::EqLowFreq));
+  convolutionElement->setAttribute("eqLoShelfGainDb", processor.getParameter(PluginAudioProcessor::EqLowGainDb));
+  convolutionElement->setAttribute("eqLoShelfQ", processor.getParameter(PluginAudioProcessor::EqLowQ));
+  
+  convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(PluginAudioProcessor::EqHighOn) >= 0.5);
+  convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(PluginAudioProcessor::EqHighFreq));
+  convolutionElement->setAttribute("eqHiShelfGainDb", processor.getParameter(PluginAudioProcessor::EqHighGainDb));
+  convolutionElement->setAttribute("eqHiShelfQ", processor.getParameter(PluginAudioProcessor::EqHighQ));
   
   const IRManager& irManager = processor.getIRManager();
 
@@ -124,7 +134,18 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   double stretch = element.getDoubleAttribute("stretch", 1.0);
   double predelayMs = element.getDoubleAttribute("predelayMs", 0.0);
   bool reverse = element.getBoolAttribute("reverse", false);
-
+  
+  bool eqLoShelfOn = element.getBoolAttribute("eqLoShelfOn", false);
+  double eqLoShelfFreq = element.getDoubleAttribute("eqLoShelfFreq", 20.0);
+  double eqLoShelfGainDb = element.getDoubleAttribute("eqLoShelfGainDb", 0.0);
+  double eqLoShelfQ = element.getDoubleAttribute("eqLoShelfQ", 1.0);
+  
+  
+  bool eqHiShelfOn = element.getBoolAttribute("eqHiShelfOn", false);
+  double eqHiShelfFreq = element.getDoubleAttribute("eqHiShelfFreq", 20000.0);
+  double eqHiShelfGainDb = element.getDoubleAttribute("eqHiShelfGainDb", 0.0);
+  double eqHiShelfQ = element.getDoubleAttribute("eqHiShelfQ", 1.0);
+  
   if (wet < 0.0 || wet > 1.0)
   {
     return false;
@@ -188,11 +209,23 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   
   // Phase 2: Restore the state
   irManager.reset();
+  
   processor.setParameterNotifyingHost(PluginAudioProcessor::WetOn, (wetOn == true) ? 1.0f : 0.0f);
   processor.setParameterNotifyingHost(PluginAudioProcessor::Wet, static_cast<float>(wet));
   processor.setParameterNotifyingHost(PluginAudioProcessor::DryOn, (dryOn == true) ? 1.0f : 0.0f);
   processor.setParameterNotifyingHost(PluginAudioProcessor::Dry, static_cast<float>(dry));
   processor.setParameterNotifyingHost(PluginAudioProcessor::AutoGainOn, (autoGainOn == true) ? 1.0f : 0.0f);
+  
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowOn, (eqLoShelfOn == true) ? 1.0f : 0.0f);
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowFreq, static_cast<float>(eqLoShelfFreq));
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowGainDb, static_cast<float>(eqLoShelfGainDb));
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowQ, static_cast<float>(eqLoShelfQ));
+  
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighOn, (eqHiShelfOn == true) ? 1.0f : 0.0f);
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighFreq, static_cast<float>(eqHiShelfFreq));
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighGainDb, static_cast<float>(eqHiShelfGainDb));
+  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighQ, static_cast<float>(eqHiShelfQ));
+  
   irManager.setFileBeginSeconds(fileBeginSeconds);
   irManager.setPredelayMs(predelayMs);
   irManager.setStretch(stretch);
