@@ -18,13 +18,13 @@ I started its development a couple of time ago because I couldn't find a free co
 ![Screenshot](https://raw.github.com/HiFi-LoFi/KlangFalter/master/Screenshot.png)
 
 
-### Getting KlangFalter: ###
+## Getting KlangFalter: ##
 
 Please check the [Binary](https://github.com/HiFi-LoFi/KlangFalter/tree/master/Binary) folder.
 
 At the moment, I only build Audio Unit plugins. However, it should be easy to build the plugin for any format supported by the [JUCE](http://www.rawmaterialsoftware.com) framework.
 
-### Very Short Tutorial: ###
+## Very Short Tutorial: ##
 
 #### Loading impulse responses ####
 
@@ -50,7 +50,7 @@ KlangFalter doesn't come with any impulse respones, but you can find many free a
 - Double-click somewhere in the wave form display to add a new envelope node.
 - Double-click on a envelope node to remove it again.
 
-### Technical Stuff: ###
+## Technical Stuff: ##
 
 - Open source ([GPL](http://www.gnu.org/licenses) license)
 - SSE optimized algorithm
@@ -58,6 +58,6 @@ KlangFalter doesn't come with any impulse respones, but you can find many free a
 - Written in C++
 - Based on the great [JUCE](http://www.rawmaterialsoftware.com) framework
 
-### Important: ###
+## Important: ##
 
 At the moment, KlangFalter is neither really "feature complete" nor absolutely free of software bugs, and there's still much room for improvement. Nevertheless, it runs sufficiently stable at least in Ableton Live 8, which I use myself for making music.
