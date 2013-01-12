@@ -15,7 +15,7 @@ I started its development a couple of time ago because I couldn't find a free co
 - Basically no limit on impulse response length - as long as your computer can handle it...
 - Intuitive and flexible loading of impulse response files
 
-![Screenshot](./Screenshot.png)
+![Screenshot](https://github.com/HiFi-LoFi/KlangFalter/blob/master/Screenshot.png)
 
 
 ### Getting KlangFalter: ###
