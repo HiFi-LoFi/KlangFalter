@@ -442,7 +442,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
 
 
     //[Constructor] You can add your own custom stuff here..
-
     _processor = ownerFilter;
     if (_processor)
     {
@@ -463,7 +462,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
       startTimer(100);
     }
     processorChanged();
-
     _browseButton->setClickingTogglesState(true);
     _dryButton->setClickingTogglesState(true);
     _wetButton->setClickingTogglesState(true);

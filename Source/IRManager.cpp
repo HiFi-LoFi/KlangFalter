@@ -207,7 +207,8 @@ public:
     }
     
     // Update convolvers
-    const size_t convolverBlockSize = _irManager.getConvolverBlockSize();
+    const size_t headBlockSize = _irManager.getConvolverBlockSize();
+    const size_t tailBlockSize = 8192;
     _irManager.getProcessor().setParameter(PluginAudioProcessor::AutoGain, autoGain);
     for (size_t i=0; i<agents.size(); ++i)
     {
@@ -215,7 +216,7 @@ public:
       if (buffers[i] != nullptr && buffers[i]->getSize() > 0)
       {        
         convolver = new Convolver();
-        const bool successInit = convolver->init(512, convolverBlockSize, buffers[i]->data(), buffers[i]->getSize());
+        const bool successInit = convolver->init(headBlockSize, tailBlockSize, buffers[i]->data(), buffers[i]->getSize());
         if (!successInit || threadShouldExit())
         {
           return;
@@ -471,6 +472,30 @@ const PluginAudioProcessor& IRManager::getProcessor() const
 }
 
 
+void IRManager::initialize(double convolverSampleRate, size_t convolverBlockSize)
+{
+  bool changed = false;
+  {
+    juce::ScopedLock lock(_mutex);
+    if (::fabs(_convolverSampleRate-convolverSampleRate) > 0.00000001 || _convolverBlockSize != convolverBlockSize)
+    {
+      _convolverSampleRate = convolverSampleRate;
+      _convolverBlockSize = convolverBlockSize;
+      changed = true;
+    }
+  }
+  if (changed)
+  {
+    for (size_t i=0; i<_agents.size(); ++i)
+    {
+      _agents[i]->initialize();
+    }
+    sendChangeMessage();
+    updateConvolvers();
+  }
+}
+
+
 IRAgent* IRManager::getAgent(size_t inputChannel, size_t outputChannel) const
 {
   for (size_t i=0; i<_agents.size(); ++i)
@@ -642,48 +667,10 @@ double IRManager::getFileBeginSeconds() const
 }
 
 
-void IRManager::setConvolverSampleRate(double sampleRate)
-{
-  bool changed = false;
-  {
-    juce::ScopedLock lock(_mutex);
-    if (::fabs(_convolverSampleRate-sampleRate) > 0.00000001)
-    {
-      _convolverSampleRate = sampleRate;
-      changed = true;
-    }
-  }
-  if (changed)
-  {
-    sendChangeMessage();
-    updateConvolvers();
-  }
-}
-
-
 double IRManager::getConvolverSampleRate() const
 {
   juce::ScopedLock lock(_mutex);
   return _convolverSampleRate;
-}
-
-
-void IRManager::setConvolverBlockSize(size_t blockSize)
-{
-  bool changed = false;
-  {
-    juce::ScopedLock lock(_mutex);
-    if (_convolverBlockSize != blockSize)
-    {
-      _convolverBlockSize = blockSize;
-      changed = true;
-    }
-  }
-  if (changed)
-  {
-    sendChangeMessage();
-    updateConvolvers();
-  }
 }
 
 

@@ -91,6 +91,8 @@ public:
   size_t getInputChannel() const;
   size_t getOutputChannel() const;
   
+  void initialize();
+  
   void clear();
   
   // IR File

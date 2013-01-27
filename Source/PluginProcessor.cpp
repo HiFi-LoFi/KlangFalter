@@ -185,7 +185,7 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
   
   // Prepare convolution
   _sampleRate = sampleRate;
-  _irManager->setConvolverSampleRate(_sampleRate);
+  _irManager->initialize(_sampleRate, static_cast<size_t>(samplesPerBlock));
   _wetBuffer.setSize(2, samplesPerBlock);  
   for (size_t i=0; i<_irManager->getAgentCount(); ++i)
   {
@@ -347,7 +347,7 @@ void PluginAudioProcessor::getStateInformation (MemoryBlock& destData)
 }
 
 void PluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{  
+{
   juce::ScopedPointer<juce::XmlElement> element(getXmlFromBinary(data, sizeInBytes));
   if (element)
   {

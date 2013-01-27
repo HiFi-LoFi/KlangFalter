@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  25 Nov 2012 3:27:48pm
+  Creation date:  27 Jan 2013 6:14:14pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -34,9 +34,6 @@
 //==============================================================================
 SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processor)
     : _processor(processor),
-      _performanceGroupComponent (0),
-      _blockSizeHeaderLabel (0),
-      _blockSizeComboBox (0),
       _irDirectoryGroupComponent (0),
       _irDirectoryBrowseButton (0),
       _irDirectoryLabel (0),
@@ -45,34 +42,6 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
       _copyrightLabel (0),
       _licenseHyperlink (0)
 {
-    addAndMakeVisible (_performanceGroupComponent = new GroupComponent (L"new group",
-                                                                        L"Performance"));
-    _performanceGroupComponent->setColour (GroupComponent::textColourId, Colour (0xff202020));
-
-    addAndMakeVisible (_blockSizeHeaderLabel = new Label (String::empty,
-                                                          L"Convolution Block Size:"));
-    _blockSizeHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _blockSizeHeaderLabel->setJustificationType (Justification::centredLeft);
-    _blockSizeHeaderLabel->setEditable (false, false, false);
-    _blockSizeHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _blockSizeHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _blockSizeHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_blockSizeComboBox = new ComboBox (String::empty));
-    _blockSizeComboBox->setEditableText (false);
-    _blockSizeComboBox->setJustificationType (Justification::centredRight);
-    _blockSizeComboBox->setTextWhenNothingSelected (String::empty);
-    _blockSizeComboBox->setTextWhenNoChoicesAvailable (L"(no choices)");
-    _blockSizeComboBox->addItem (L"64", 1);
-    _blockSizeComboBox->addItem (L"128", 2);
-    _blockSizeComboBox->addItem (L"256", 3);
-    _blockSizeComboBox->addItem (L"512", 4);
-    _blockSizeComboBox->addItem (L"1024", 5);
-    _blockSizeComboBox->addItem (L"2048", 6);
-    _blockSizeComboBox->addItem (L"4096", 7);
-    _blockSizeComboBox->addItem (L"8192", 8);
-    _blockSizeComboBox->addListener (this);
-
     addAndMakeVisible (_irDirectoryGroupComponent = new GroupComponent (String::empty,
                                                                         L"Impulse Response Directory"));
     _irDirectoryGroupComponent->setColour (GroupComponent::textColourId, Colour (0xff202020));
@@ -122,7 +91,7 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     //[UserPreSize]
     //[/UserPreSize]
 
-    setSize (504, 318);
+    setSize (504, 232);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -131,15 +100,6 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     {
       _nameVersionLabel->setText(ProjectInfo::projectName + juce::String(" - Version ") + ProjectInfo::versionString, false);
     }
-
-    const size_t blockSize = _processor.getSettings().getConvolverBlockSize();
-    juce::String blockSizeString(static_cast<unsigned>(blockSize));
-    int comboBoxIndex = 0;
-    while (comboBoxIndex < _blockSizeComboBox->getNumItems() && _blockSizeComboBox->getItemText(comboBoxIndex) != blockSizeString)
-    {
-      ++comboBoxIndex;
-    }
-    _blockSizeComboBox->setSelectedItemIndex(comboBoxIndex);
 
     if (_irDirectoryLabel)
     {
@@ -154,9 +114,6 @@ SettingsDialogComponent::~SettingsDialogComponent()
     //[Destructor_pre]. You can add your own custom destruction code here..
     //[/Destructor_pre]
 
-    deleteAndZero (_performanceGroupComponent);
-    deleteAndZero (_blockSizeHeaderLabel);
-    deleteAndZero (_blockSizeComboBox);
     deleteAndZero (_irDirectoryGroupComponent);
     deleteAndZero (_irDirectoryBrowseButton);
     deleteAndZero (_irDirectoryLabel);
@@ -184,37 +141,15 @@ void SettingsDialogComponent::paint (Graphics& g)
 
 void SettingsDialogComponent::resized()
 {
-    _performanceGroupComponent->setBounds (16, 124, 472, 72);
-    _blockSizeHeaderLabel->setBounds (24, 148, 192, 24);
-    _blockSizeComboBox->setBounds (188, 148, 132, 20);
-    _irDirectoryGroupComponent->setBounds (16, 208, 472, 88);
-    _irDirectoryBrowseButton->setBounds (356, 256, 114, 24);
-    _irDirectoryLabel->setBounds (24, 224, 456, 24);
+    _irDirectoryGroupComponent->setBounds (16, 128, 472, 88);
+    _irDirectoryBrowseButton->setBounds (356, 176, 114, 24);
+    _irDirectoryLabel->setBounds (24, 144, 456, 24);
     _aboutGroupComponent->setBounds (16, 11, 472, 101);
     _nameVersionLabel->setBounds (24, 28, 456, 24);
     _copyrightLabel->setBounds (24, 52, 456, 24);
     _licenseHyperlink->setBounds (24, 76, 456, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
-}
-
-void SettingsDialogComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
-{
-    //[UsercomboBoxChanged_Pre]
-    //[/UsercomboBoxChanged_Pre]
-
-    if (comboBoxThatHasChanged == _blockSizeComboBox)
-    {
-        //[UserComboBoxCode__blockSizeComboBox] -- add your combo box handling code here..
-        const int index = _blockSizeComboBox->getSelectedItemIndex();
-        const int blockSize = _blockSizeComboBox->getItemText(index).getIntValue();
-        _processor.getIRManager().setConvolverBlockSize(blockSize);
-        _processor.getSettings().setConvolverBlockSize(blockSize);
-        //[/UserComboBoxCode__blockSizeComboBox]
-    }
-
-    //[UsercomboBoxChanged_Post]
-    //[/UsercomboBoxChanged_Post]
 }
 
 void SettingsDialogComponent::buttonClicked (Button* buttonThatWasClicked)
@@ -266,28 +201,16 @@ BEGIN_JUCER_METADATA
                  componentName="" parentClasses="public Component" constructorParams="PluginAudioProcessor&amp; processor"
                  variableInitialisers="_processor(processor)" snapPixels="4" snapActive="1"
                  snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="504"
-                 initialHeight="318">
+                 initialHeight="232">
   <BACKGROUND backgroundColour="ffe5e5f0"/>
-  <GROUPCOMPONENT name="new group" id="ddebbd07ce1b9c08" memberName="_performanceGroupComponent"
-                  virtualName="" explicitFocusOrder="0" pos="16 124 472 72" textcol="ff202020"
-                  title="Performance"/>
-  <LABEL name="" id="62ad5d666b54a84a" memberName="_blockSizeHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 148 192 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="Convolution Block Size:"
-         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
-         fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
-  <COMBOBOX name="" id="9e24f95de8031f2e" memberName="_blockSizeComboBox"
-            virtualName="" explicitFocusOrder="0" pos="188 148 132 20" editable="0"
-            layout="34" items="64&#10;128&#10;256&#10;512&#10;1024&#10;2048&#10;4096&#10;8192"
-            textWhenNonSelected="" textWhenNoItems="(no choices)"/>
   <GROUPCOMPONENT name="" id="54a84aa39bb27f4b" memberName="_irDirectoryGroupComponent"
-                  virtualName="" explicitFocusOrder="0" pos="16 208 472 88" textcol="ff202020"
+                  virtualName="" explicitFocusOrder="0" pos="16 128 472 88" textcol="ff202020"
                   title="Impulse Response Directory"/>
   <TEXTBUTTON name="" id="b1f2dd9a0266865f" memberName="_irDirectoryBrowseButton"
-              virtualName="" explicitFocusOrder="0" pos="356 256 114 24" buttonText="Browse ..."
+              virtualName="" explicitFocusOrder="0" pos="356 176 114 24" buttonText="Browse ..."
               connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <LABEL name="new label" id="3415b13950fc6ae1" memberName="_irDirectoryLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 224 456 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 144 456 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;None&gt;" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="33"/>

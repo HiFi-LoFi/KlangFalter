@@ -43,18 +43,7 @@ IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) 
   _eqLo(CookbookEq::LoShelf, 20, 1.0f),
   _eqHi(CookbookEq::HiShelf, 20000, 1.0f)
 {
-  PluginAudioProcessor& processor = manager.getProcessor();
-  const double loFreq = processor.getParameter(PluginAudioProcessor::EqLowFreq);
-  const double loQ = processor.getParameter(PluginAudioProcessor::EqLowQ);
-  const double hiFreq = processor.getParameter(PluginAudioProcessor::EqHighFreq);
-  const double hiQ = processor.getParameter(PluginAudioProcessor::EqHighQ);
-  _eqLo.setFreqAndQ(loFreq, loQ);
-  _eqHi.setFreqAndQ(hiFreq, hiQ);  
-  
-  const double eqSampleRate = _manager.getConvolverSampleRate();
-  const size_t eqBlockSize = _manager.getConvolverBlockSize();
-  _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
-  _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
+  initialize();
 }
 
 
@@ -79,6 +68,23 @@ size_t IRAgent::getInputChannel() const
 size_t IRAgent::getOutputChannel() const
 {
   return _outputChannel;
+}
+
+
+void IRAgent::initialize()
+{
+  PluginAudioProcessor& processor = _manager.getProcessor();
+  const double loFreq = processor.getParameter(PluginAudioProcessor::EqLowFreq);
+  const double loQ = processor.getParameter(PluginAudioProcessor::EqLowQ);
+  const double hiFreq = processor.getParameter(PluginAudioProcessor::EqHighFreq);
+  const double hiQ = processor.getParameter(PluginAudioProcessor::EqHighQ);
+  _eqLo.setFreqAndQ(loFreq, loQ);
+  _eqHi.setFreqAndQ(hiFreq, hiQ);
+  
+  const double eqSampleRate = _manager.getConvolverSampleRate();
+  const size_t eqBlockSize = _manager.getConvolverBlockSize();
+  _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
+  _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
 }
 
 

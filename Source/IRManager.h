@@ -43,6 +43,11 @@ public:
   PluginAudioProcessor& getProcessor();
   const PluginAudioProcessor& getProcessor() const;
   
+  void initialize(double convolverSampleRate, size_t convolverBlockSize);
+  
+  double getConvolverSampleRate() const;
+  size_t getConvolverBlockSize() const;
+  
   IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
   size_t getAgentCount() const;
   IRAgentContainer getAgents() const;
@@ -56,13 +61,7 @@ public:
   
   void setEnvelope(const Envelope& envelope);
   Envelope getEnvelope() const; 
-  
-  void setConvolverSampleRate(double sampleRate);
-  double getConvolverSampleRate() const;
-  
-  void setConvolverBlockSize(size_t blockSize);
-  size_t getConvolverBlockSize() const;
-  
+    
   size_t getMaxIRSampleCount() const;
   size_t getMaxFileSampleCount() const;
   double getMaxFileDuration() const;

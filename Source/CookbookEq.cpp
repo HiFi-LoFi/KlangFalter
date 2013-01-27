@@ -324,40 +324,43 @@ void CookbookEq::computeFilterCoefs()
 void CookbookEq::setFreq (float freq)
 {
   freq = std::max(freq, 0.1f);
-  
-  float rap = _freq / freq;
-  if (rap < 1.0)
+ 
+  if (!Equal(_freq, freq))
   {
-    rap = 1.0 / rap;
-  }
-  
-  _aboveNyquistOld = _aboveNyquist;
-  _aboveNyquist = freq > (_sampleRate / 2 - 500.0);
-  
-  bool nyquistThreshold = (_aboveNyquist ^ _aboveNyquistOld);
-  
-  if (rap > 3.0 || nyquistThreshold)
-  {
-    // if the frequency is changed fast, it needs interpolation
-    // (now, filter and coeficients backup)
-    for (size_t i = 0; i < 3; ++i)
+    float rap = _freq / freq;
+    if (rap < 1.0f)
     {
-      _oldc[i] = _c[i];
-      _oldd[i] = _d[i];
+      rap = 1.0f / rap;
     }
-    
-    _oldx = _x;
-    _oldy = _y;
-    
-    if (!_firstTime)
-    {
-      _needsInterpolation = true;
-    }
-  }
   
-  _freq = freq;
-  computeFilterCoefs();
-  _firstTime = false;
+    _aboveNyquistOld = _aboveNyquist;
+    _aboveNyquist = freq > (static_cast<float>(_sampleRate) / 2.0f - 500.0f);
+  
+    bool nyquistThreshold = (_aboveNyquist ^ _aboveNyquistOld);
+  
+    if (rap > 3.0f || nyquistThreshold)
+    {
+      // if the frequency is changed fast, it needs interpolation
+      // (now, filter and coeficients backup)
+      for (size_t i = 0; i < 3; ++i)
+      {
+        _oldc[i] = _c[i];
+        _oldd[i] = _d[i];
+      }
+    
+      _oldx = _x;
+      _oldy = _y;
+    
+      if (!_firstTime)
+      {
+        _needsInterpolation = true;
+      }
+    }
+  
+    _freq = freq;
+    computeFilterCoefs();
+    _firstTime = false;
+  }
 }
 
 void CookbookEq::setFreqAndQ(float freq, float q)

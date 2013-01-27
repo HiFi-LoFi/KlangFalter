@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  25 Nov 2012 3:27:48pm
+  Creation date:  27 Jan 2013 6:14:14pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_301CD402__
-#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_301CD402__
+#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_165D1411__
+#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_165D1411__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -39,7 +39,6 @@
                                                                     //[/Comments]
 */
 class SettingsDialogComponent  : public Component,
-                                 public ComboBoxListener,
                                  public ButtonListener
 {
 public:
@@ -53,7 +52,6 @@ public:
 
     void paint (Graphics& g);
     void resized();
-    void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
     void buttonClicked (Button* buttonThatWasClicked);
 
 
@@ -67,9 +65,6 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    GroupComponent* _performanceGroupComponent;
-    Label* _blockSizeHeaderLabel;
-    ComboBox* _blockSizeComboBox;
     GroupComponent* _irDirectoryGroupComponent;
     TextButton* _irDirectoryBrowseButton;
     Label* _irDirectoryLabel;
@@ -86,4 +81,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_301CD402__
+#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_165D1411__
