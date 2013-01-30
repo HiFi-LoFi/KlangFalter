@@ -628,7 +628,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         const float gain = SnapValue(DecibelScaling::Scale2Gain(scale), 1.0f, 0.075f);
         if (_processor)
         {
-          _processor->setParameterNotifyingHost(PluginAudioProcessor::Dry, gain);
+          _processor->setParameterNotifyingHost(Parameters::Dry, gain);
         }
         //[/UserSliderCode__drySlider]
     }
@@ -639,7 +639,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         const float gain = SnapValue(DecibelScaling::Scale2Gain(scale), 1.0f, 0.075f);
         if (_processor)
         {
-          _processor->setParameterNotifyingHost(PluginAudioProcessor::Wet, gain);
+          _processor->setParameterNotifyingHost(Parameters::Wet, gain);
         }
         //[/UserSliderCode__wetSlider]
     }
@@ -658,37 +658,37 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     else if (sliderThatWasMoved == _hiQSlider)
     {
         //[UserSliderCode__hiQSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(PluginAudioProcessor::EqHighQ, static_cast<float>(_hiQSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(_hiQSlider->getValue()));
         //[/UserSliderCode__hiQSlider]
     }
     else if (sliderThatWasMoved == _hiGainSlider)
     {
         //[UserSliderCode__hiGainSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(PluginAudioProcessor::EqHighGainDb, static_cast<float>(_hiGainSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqHighGainDb, static_cast<float>(_hiGainSlider->getValue()));
         //[/UserSliderCode__hiGainSlider]
     }
     else if (sliderThatWasMoved == _hiFreqSlider)
     {
         //[UserSliderCode__hiFreqSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(PluginAudioProcessor::EqHighFreq, static_cast<float>(_hiFreqSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(_hiFreqSlider->getValue()));
         //[/UserSliderCode__hiFreqSlider]
     }
     else if (sliderThatWasMoved == _loQSlider)
     {
         //[UserSliderCode__loQSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(PluginAudioProcessor::EqLowQ, static_cast<float>(_loQSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(_loQSlider->getValue()));
         //[/UserSliderCode__loQSlider]
     }
     else if (sliderThatWasMoved == _loGainSlider)
     {
         //[UserSliderCode__loGainSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(PluginAudioProcessor::EqLowGainDb, static_cast<float>(_loGainSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqLowGainDb, static_cast<float>(_loGainSlider->getValue()));
         //[/UserSliderCode__loGainSlider]
     }
     else if (sliderThatWasMoved == _loFreqSlider)
     {
         //[UserSliderCode__loFreqSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(PluginAudioProcessor::EqLowFreq, static_cast<float>(_loFreqSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(_loFreqSlider->getValue()));
         //[/UserSliderCode__loFreqSlider]
     }
 
@@ -739,19 +739,19 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == _wetButton)
     {
         //[UserButtonCode__wetButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::WetOn, _wetButton->getToggleState() ? 1.0f : 0.0f);
+        _processor->setParameter(Parameters::WetOn, _wetButton->getToggleState());
         //[/UserButtonCode__wetButton]
     }
     else if (buttonThatWasClicked == _dryButton)
     {
         //[UserButtonCode__dryButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::DryOn, _dryButton->getToggleState() ? 1.0f : 0.0f);
+        _processor->setParameter(Parameters::DryOn, _dryButton->getToggleState());
         //[/UserButtonCode__dryButton]
     }
     else if (buttonThatWasClicked == _autogainButton)
     {
         //[UserButtonCode__autogainButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::AutoGainOn, _autogainButton->getToggleState() ? 1.0f : 0.0f);
+        _processor->setParameter(Parameters::AutoGainOn, _autogainButton->getToggleState());
         //[/UserButtonCode__autogainButton]
     }
     else if (buttonThatWasClicked == _reverseButton)
@@ -766,13 +766,13 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == _hiEqButton)
     {
         //[UserButtonCode__hiEqButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::EqHighOn, _hiEqButton->getToggleState() ? 1.0f : 0.0f);
+        _processor->setParameter(Parameters::EqHighOn, _hiEqButton->getToggleState());
         //[/UserButtonCode__hiEqButton]
     }
     else if (buttonThatWasClicked == _loEqButton)
     {
         //[UserButtonCode__loEqButton] -- add your button handler code here..
-        _processor->setParameter(PluginAudioProcessor::EqLowOn, _loEqButton->getToggleState() ? 1.0f : 0.0f);
+        _processor->setParameter(Parameters::EqLowOn, _loEqButton->getToggleState());
         //[/UserButtonCode__loEqButton]
     }
 
@@ -800,7 +800,7 @@ void KlangFalterEditor::processorChanged()
 
   if (_processor)
   {
-    const float gain = _processor->getParameter(PluginAudioProcessor::Dry);
+    const float gain = _processor->getParameter(Parameters::Dry);
     const float db = DecibelScaling::Gain2Db(gain);
     const float scale = DecibelScaling::Db2Scale(db);
     _drySlider->setEnabled(true);
@@ -815,7 +815,7 @@ void KlangFalterEditor::processorChanged()
 
   if (_processor)
   {
-    const float gain = _processor->getParameter(PluginAudioProcessor::Wet);
+    const float gain = _processor->getParameter(Parameters::Wet);
     const float db = DecibelScaling::Gain2Db(gain);
     const float scale = DecibelScaling::Db2Scale(db);
     _wetSlider->setEnabled(true);
@@ -858,61 +858,61 @@ void KlangFalterEditor::processorChanged()
   }
 
   {
-    const float autoGain = _processor->getParameter(PluginAudioProcessor::AutoGain);
-    const float autoGainOn = _processor->getParameter(PluginAudioProcessor::AutoGainOn);
+    const float autoGain = _processor->getParameter(Parameters::AutoGain);
+    const bool autoGainOn = _processor->getParameter(Parameters::AutoGainOn);
     const juce::String autoGainText = DecibelScaling::DecibelString(DecibelScaling::Gain2Db(autoGain));
     _autogainButton->setButtonText(juce::String("Autogain ") + autoGainText);
-    _autogainButton->setToggleState(autoGainOn > 0.5, false);
+    _autogainButton->setToggleState(autoGainOn, false);
   }
 
-  _dryButton->setToggleState(_processor->getParameter(PluginAudioProcessor::DryOn) > 0.5, false);
-  _wetButton->setToggleState(_processor->getParameter(PluginAudioProcessor::WetOn) > 0.5, false);
+  _dryButton->setToggleState(_processor->getParameter(Parameters::DryOn), false);
+  _wetButton->setToggleState(_processor->getParameter(Parameters::WetOn), false);
 
   const bool loEqEnabled = irAvailable;
-  const bool loEqOn = (_processor->getParameter(PluginAudioProcessor::EqLowOn) > 0.5f && loEqEnabled);
+  const bool loEqOn = (_processor->getParameter(Parameters::EqLowOn) && loEqEnabled);
   {
     _loEqButton->setEnabled(loEqEnabled);
     _loEqButton->setToggleState(loEqOn, false);
   }
   {
-    const float freq = _processor->getParameter(PluginAudioProcessor::EqLowFreq);
+    const float freq = _processor->getParameter(Parameters::EqLowFreq);
     _loFreqSlider->setEnabled(loEqEnabled);
     _loFreqSlider->setValue(freq, false, false);
     _loFreqLabel->setText(juce::String(static_cast<int>(freq+0.5f)) + juce::String("Hz"), false);
   }
   {
-    const float gainDb = _processor->getParameter(PluginAudioProcessor::EqLowGainDb);
+    const float gainDb = _processor->getParameter(Parameters::EqLowGainDb);
     _loGainSlider->setEnabled(loEqEnabled);
     _loGainSlider->setValue(gainDb, false, false);
     _loGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
   }
   {
-    const float q = _processor->getParameter(PluginAudioProcessor::EqLowQ);
+    const float q = _processor->getParameter(Parameters::EqLowQ);
     _loQSlider->setEnabled(loEqEnabled);
     _loQSlider->setValue(q, false, false);
     _loQLabel->setText(juce::String(q, 2), false);
   }
 
   const bool hiEqEnabled = irAvailable;
-  const bool hiEqOn = (_processor->getParameter(PluginAudioProcessor::EqHighOn) > 0.5f && hiEqEnabled);
+  const bool hiEqOn = (_processor->getParameter(Parameters::EqHighOn) && hiEqEnabled);
   {
     _hiEqButton->setEnabled(hiEqEnabled);
     _hiEqButton->setToggleState(hiEqOn, false);
   }
   {
-    const float freq = _processor->getParameter(PluginAudioProcessor::EqHighFreq);
+    const float freq = _processor->getParameter(Parameters::EqHighFreq);
     _hiFreqSlider->setEnabled(hiEqEnabled);
     _hiFreqSlider->setValue(freq, false, false);
     _hiFreqLabel->setText(juce::String(freq/1000.0f, 2) + juce::String("kHz"), false);
   }
   {
-    const float gainDb = _processor->getParameter(PluginAudioProcessor::EqHighGainDb);
+    const float gainDb = _processor->getParameter(Parameters::EqHighGainDb);
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(gainDb, false, false);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
   }
   {
-    const float q = _processor->getParameter(PluginAudioProcessor::EqHighQ);
+    const float q = _processor->getParameter(Parameters::EqHighQ);
     _hiQSlider->setEnabled(hiEqEnabled);
     _hiQSlider->setValue(q, false, false);
     _hiQLabel->setText(juce::String(q, 2), false);

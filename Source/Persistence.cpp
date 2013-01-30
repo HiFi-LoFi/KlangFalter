@@ -44,21 +44,21 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
 { 
   ScopedPointer<XmlElement> convolutionElement(new XmlElement("Convolution"));
   convolutionElement->setAttribute("pluginVersion", juce::String(ProjectInfo::versionString));
-  convolutionElement->setAttribute("wetOn", processor.getParameter(PluginAudioProcessor::WetOn) >= 0.5);
-  convolutionElement->setAttribute("wet", processor.getParameter(PluginAudioProcessor::Wet));
-  convolutionElement->setAttribute("dryOn", processor.getParameter(PluginAudioProcessor::DryOn) >= 0.5);
-  convolutionElement->setAttribute("dry", processor.getParameter(PluginAudioProcessor::Dry));
-  convolutionElement->setAttribute("autoGainOn", processor.getParameter(PluginAudioProcessor::AutoGainOn) >= 0.5);
+  convolutionElement->setAttribute("wetOn", processor.getParameter(Parameters::WetOn));
+  convolutionElement->setAttribute("wet", processor.getParameter(Parameters::Wet));
+  convolutionElement->setAttribute("dryOn", processor.getParameter(Parameters::DryOn));
+  convolutionElement->setAttribute("dry", processor.getParameter(Parameters::Dry));
+  convolutionElement->setAttribute("autoGainOn", processor.getParameter(Parameters::AutoGainOn));
 
-  convolutionElement->setAttribute("eqLoShelfOn", processor.getParameter(PluginAudioProcessor::EqLowOn) >= 0.5);
-  convolutionElement->setAttribute("eqLoShelfFreq", processor.getParameter(PluginAudioProcessor::EqLowFreq));
-  convolutionElement->setAttribute("eqLoShelfGainDb", processor.getParameter(PluginAudioProcessor::EqLowGainDb));
-  convolutionElement->setAttribute("eqLoShelfQ", processor.getParameter(PluginAudioProcessor::EqLowQ));
+  convolutionElement->setAttribute("eqLoShelfOn", processor.getParameter(Parameters::EqLowOn));
+  convolutionElement->setAttribute("eqLoShelfFreq", processor.getParameter(Parameters::EqLowFreq));
+  convolutionElement->setAttribute("eqLoShelfGainDb", processor.getParameter(Parameters::EqLowGainDb));
+  convolutionElement->setAttribute("eqLoShelfQ", processor.getParameter(Parameters::EqLowQ));
   
-  convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(PluginAudioProcessor::EqHighOn) >= 0.5);
-  convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(PluginAudioProcessor::EqHighFreq));
-  convolutionElement->setAttribute("eqHiShelfGainDb", processor.getParameter(PluginAudioProcessor::EqHighGainDb));
-  convolutionElement->setAttribute("eqHiShelfQ", processor.getParameter(PluginAudioProcessor::EqHighQ));
+  convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(Parameters::EqHighOn));
+  convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(Parameters::EqHighFreq));
+  convolutionElement->setAttribute("eqHiShelfGainDb", processor.getParameter(Parameters::EqHighGainDb));
+  convolutionElement->setAttribute("eqHiShelfQ", processor.getParameter(Parameters::EqHighQ));
   
   const IRManager& irManager = processor.getIRManager();
 
@@ -210,21 +210,21 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   // Phase 2: Restore the state
   irManager.reset();
   
-  processor.setParameterNotifyingHost(PluginAudioProcessor::WetOn, (wetOn == true) ? 1.0f : 0.0f);
-  processor.setParameterNotifyingHost(PluginAudioProcessor::Wet, static_cast<float>(wet));
-  processor.setParameterNotifyingHost(PluginAudioProcessor::DryOn, (dryOn == true) ? 1.0f : 0.0f);
-  processor.setParameterNotifyingHost(PluginAudioProcessor::Dry, static_cast<float>(dry));
-  processor.setParameterNotifyingHost(PluginAudioProcessor::AutoGainOn, (autoGainOn == true) ? 1.0f : 0.0f);
+  processor.setParameterNotifyingHost(Parameters::WetOn, wetOn);
+  processor.setParameterNotifyingHost(Parameters::Wet, static_cast<float>(wet));
+  processor.setParameterNotifyingHost(Parameters::DryOn, dryOn);
+  processor.setParameterNotifyingHost(Parameters::Dry, static_cast<float>(dry));
+  processor.setParameterNotifyingHost(Parameters::AutoGainOn, autoGainOn);
   
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowOn, (eqLoShelfOn == true) ? 1.0f : 0.0f);
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowFreq, static_cast<float>(eqLoShelfFreq));
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowGainDb, static_cast<float>(eqLoShelfGainDb));
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqLowQ, static_cast<float>(eqLoShelfQ));
+  processor.setParameterNotifyingHost(Parameters::EqLowOn, eqLoShelfOn);
+  processor.setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(eqLoShelfFreq));
+  processor.setParameterNotifyingHost(Parameters::EqLowGainDb, static_cast<float>(eqLoShelfGainDb));
+  processor.setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(eqLoShelfQ));
   
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighOn, (eqHiShelfOn == true) ? 1.0f : 0.0f);
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighFreq, static_cast<float>(eqHiShelfFreq));
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighGainDb, static_cast<float>(eqHiShelfGainDb));
-  processor.setParameterNotifyingHost(PluginAudioProcessor::EqHighQ, static_cast<float>(eqHiShelfQ));
+  processor.setParameterNotifyingHost(Parameters::EqHighOn, eqHiShelfOn);
+  processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(eqHiShelfFreq));
+  processor.setParameterNotifyingHost(Parameters::EqHighGainDb, static_cast<float>(eqHiShelfGainDb));
+  processor.setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(eqHiShelfQ));
   
   irManager.setFileBeginSeconds(fileBeginSeconds);
   irManager.setPredelayMs(predelayMs);

@@ -27,6 +27,110 @@
 #include <algorithm>
 
 
+const BoolParameterDescriptor Parameters::WetOn(0,
+                                                "Wet On",
+                                                "",
+                                                ParameterDescriptor::Automatable,
+                                                true);
+
+const FloatParameterDescriptor Parameters::Wet(1,
+                                               "Wet",
+                                               "Gain",
+                                               ParameterDescriptor::Automatable,
+                                               1.0f,
+                                               0.0f,
+                                               DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
+                                              
+const BoolParameterDescriptor Parameters::DryOn(2,
+                                               "Dry On",
+                                               "",
+                                               ParameterDescriptor::Automatable,
+                                               true);
+
+const FloatParameterDescriptor Parameters::Dry(3,
+                                              "Dry",
+                                              "Gain",
+                                              ParameterDescriptor::Automatable,
+                                              1.0f,
+                                              0.0f,
+                                              DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
+
+const BoolParameterDescriptor Parameters::AutoGainOn(4,
+                                                    "Autogain On",
+                                                    "",
+                                                    ParameterDescriptor::Automatable,
+                                                    true);
+
+const FloatParameterDescriptor Parameters::AutoGain(5,
+                                                   "Autogain",
+                                                   "Gain",
+                                                   ParameterDescriptor::Automatable,
+                                                   1.0f,
+                                                   0.0f,
+                                                   DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
+
+const BoolParameterDescriptor Parameters::EqLowOn(6,
+                                                 "EQ Low On",
+                                                 "",
+                                                 ParameterDescriptor::Automatable,
+                                                 true);
+
+const FloatParameterDescriptor Parameters::EqLowFreq(7,
+                                                    "EQ Low Freq",
+                                                    "Hz",
+                                                    ParameterDescriptor::Automatable,
+                                                    20.0f,
+                                                    20.0f,
+                                                    2000.0f);
+
+const FloatParameterDescriptor Parameters::EqLowGainDb(8,
+                                                      "EQ Low Gain",
+                                                      "Db",
+                                                      ParameterDescriptor::Automatable,
+                                                      0.0f,
+                                                      DecibelScaling::Db2Gain(-30.0),
+                                                      DecibelScaling::Db2Gain(+30.0));
+                                                   
+const FloatParameterDescriptor Parameters::EqLowQ(9,
+                                                 "EQ Low Slope",
+                                                 "",
+                                                 ParameterDescriptor::Automatable,
+                                                 1.0f,
+                                                 1.0f,
+                                                 2.0f);
+
+const BoolParameterDescriptor Parameters::EqHighOn(10,
+                                                  "EQ High On",
+                                                  "",
+                                                  ParameterDescriptor::Automatable,
+                                                  true);
+                                                   
+const FloatParameterDescriptor Parameters::EqHighFreq(11,
+                                                     "EQ High Freq",
+                                                     "Hz",
+                                                     ParameterDescriptor::Automatable,
+                                                     20000.0f,
+                                                     2000.0f,
+                                                     20000.0f);
+                                                     
+const FloatParameterDescriptor Parameters::EqHighGainDb(12,
+                                                       "EQ High Gain",
+                                                       "Db",
+                                                       ParameterDescriptor::Automatable,
+                                                       0.0f,
+                                                       DecibelScaling::Db2Gain(-30.0),
+                                                       DecibelScaling::Db2Gain(+30.0));
+                                                       
+const FloatParameterDescriptor Parameters::EqHighQ(13,
+                                                  "EQ High Slope",
+                                                  "",
+                                                  ParameterDescriptor::Automatable,
+                                                  1.0f,
+                                                  1.0f,
+                                                  2.0f);
+
+
+
 //==============================================================================
 PluginAudioProcessor::PluginAudioProcessor() :
   AudioProcessor(),
@@ -35,29 +139,25 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _sampleRate(0.0),
   _wetBuffer(1, 0),
   _convolutionBuffers(),
-  _parameters(),
+  _parameterSet(),
   _levelMeasurementsDry(2),
   _settings()
-{
-  _parameters.insert(std::make_pair(DryOn, Parameter("DryOn", 1.0f)));
-  _parameters.insert(std::make_pair(Dry, Parameter("Dry", 1.0f)));
+{ 
+  _parameterSet.registerParameter(Parameters::WetOn);
+  _parameterSet.registerParameter(Parameters::Wet);
+  _parameterSet.registerParameter(Parameters::DryOn);
+  _parameterSet.registerParameter(Parameters::Dry);
+  _parameterSet.registerParameter(Parameters::AutoGainOn);
+  _parameterSet.registerParameter(Parameters::AutoGain);
+  _parameterSet.registerParameter(Parameters::EqLowOn);
+  _parameterSet.registerParameter(Parameters::EqLowFreq);
+  _parameterSet.registerParameter(Parameters::EqLowGainDb);
+  _parameterSet.registerParameter(Parameters::EqLowQ);
+  _parameterSet.registerParameter(Parameters::EqHighOn);
+  _parameterSet.registerParameter(Parameters::EqHighFreq);
+  _parameterSet.registerParameter(Parameters::EqHighGainDb);
+  _parameterSet.registerParameter(Parameters::EqHighQ);
   
-  _parameters.insert(std::make_pair(WetOn, Parameter("WetOn", 1.0f)));
-  _parameters.insert(std::make_pair(Wet, Parameter("Wet", 1.0f)));
-  
-  _parameters.insert(std::make_pair(AutoGainOn, Parameter("Autogain On", 1.0f)));
-  _parameters.insert(std::make_pair(AutoGain, Parameter("Autogain", 1.0f)));
-
-  _parameters.insert(std::make_pair(EqLowOn, Parameter("Low On", 0.0f)));
-  _parameters.insert(std::make_pair(EqLowFreq, Parameter("Low Freq", 20.0f)));
-  _parameters.insert(std::make_pair(EqLowGainDb, Parameter("Low Gain", 0.0f)));
-  _parameters.insert(std::make_pair(EqLowQ, Parameter("Low Q", 1.0f)));
-  
-  _parameters.insert(std::make_pair(EqHighOn, Parameter("High On", 0.0f)));
-  _parameters.insert(std::make_pair(EqHighFreq, Parameter("High Freq", 20000.0f)));
-  _parameters.insert(std::make_pair(EqHighGainDb, Parameter("High Gain", 0.0f)));
-  _parameters.insert(std::make_pair(EqHighQ, Parameter("High Q", 1.0f)));
-
   _irManager = new IRManager(*this, 2, 2);
 }
 
@@ -80,39 +180,30 @@ const String PluginAudioProcessor::getName() const
 
 int PluginAudioProcessor::getNumParameters()
 {
-  return _parameters.size();
+  return _parameterSet.getParameterCount();
 }
 
 float PluginAudioProcessor::getParameter(int index)
 {
-  auto it = _parameters.find(static_cast<ParameterId>(index));
-  jassert(it != _parameters.end());
-  return it->second.getValue();
+  return _parameterSet.getNormalizedParameter(index);
 }
 
 void PluginAudioProcessor::setParameter(int index, float newValue)
 {
-  auto it = _parameters.find(static_cast<ParameterId>(index));
-  jassert(it != _parameters.end());
-  if (it != _parameters.end() && ::fabs(it->second.getValue()-newValue) > 0.0000001)
+  if (_parameterSet.setNormalizedParameter(index, newValue))
   {
-    it->second.setValue(newValue);
     sendChangeMessage();
   }
 }
 
 const String PluginAudioProcessor::getParameterName(int index)
 {
-  auto it = _parameters.find(static_cast<ParameterId>(index));
-  jassert(it != _parameters.end());
-  return it->second.getName();
+  return _parameterSet.getParameterDescriptor(index).getName();
 }
 
 const String PluginAudioProcessor::getParameterText(int index)
 {
-  auto it = _parameters.find(static_cast<ParameterId>(index));
-  jassert(it != _parameters.end());
-  return juce::String(it->second.getValue());
+  return _parameterSet.getParameterDescriptor(index).getUnit();
 }
 
 const String PluginAudioProcessor::getInputChannelName(int channelIndex) const
@@ -210,10 +301,10 @@ void PluginAudioProcessor::releaseResources()
 void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
 { 
   // Preparation
-  const bool wetOn = (getParameter(WetOn) >= 0.5f);
-  const bool dryOn = (getParameter(DryOn) >= 0.5f);
-  const float factorWet = getParameter(Wet);
-  const float factorDry = getParameter(Dry);
+  const bool wetOn = getParameter(Parameters::WetOn);
+  const bool dryOn = getParameter(Parameters::DryOn);
+  const float factorWet = getParameter(Parameters::Wet);
+  const float factorDry = getParameter(Parameters::Dry);
   
   const int numInputChannels = getNumInputChannels();
   const int numOutputChannels = getNumOutputChannels();
@@ -268,9 +359,9 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     fftconvolver::SampleBuffer* convolutionBuffer11 = nullptr;
 
     float autoGain = 1.0f;
-    if (getParameter(AutoGainOn) > 0.5f)
+    if (getParameter(Parameters::AutoGainOn))
     {
-      autoGain = getParameter(AutoGain);
+      autoGain = getParameter(Parameters::AutoGain);
     }
     
     // Convolve

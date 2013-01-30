@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.01.27beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.01.30beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -99,6 +99,7 @@
           file="Source/LevelMeasurement.cpp"/>
     <FILE id="mYCk2O" name="LevelMeasurement.h" compile="0" resource="0"
           file="Source/LevelMeasurement.h"/>
+    <FILE id="QInZML" name="ParameterSet.h" compile="0" resource="0" file="Source/ParameterSet.h"/>
     <FILE id="izDfGd" name="Persistence.cpp" compile="1" resource="0" file="Source/Persistence.cpp"/>
     <FILE id="zBljGc" name="Persistence.h" compile="0" resource="0" file="Source/Persistence.h"/>
     <FILE id="hmuxWn" name="PluginProcessor.cpp" compile="1" resource="0"

@@ -209,7 +209,7 @@ public:
     // Update convolvers
     const size_t headBlockSize = _irManager.getConvolverBlockSize();
     const size_t tailBlockSize = 8192;
-    _irManager.getProcessor().setParameter(PluginAudioProcessor::AutoGain, autoGain);
+    _irManager.getProcessor().setParameter(Parameters::AutoGain, autoGain);
     for (size_t i=0; i<agents.size(); ++i)
     {
       juce::ScopedPointer<Convolver> convolver(new Convolver());

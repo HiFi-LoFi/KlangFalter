@@ -74,10 +74,10 @@ size_t IRAgent::getOutputChannel() const
 void IRAgent::initialize()
 {
   PluginAudioProcessor& processor = _manager.getProcessor();
-  const double loFreq = processor.getParameter(PluginAudioProcessor::EqLowFreq);
-  const double loQ = processor.getParameter(PluginAudioProcessor::EqLowQ);
-  const double hiFreq = processor.getParameter(PluginAudioProcessor::EqHighFreq);
-  const double hiQ = processor.getParameter(PluginAudioProcessor::EqHighQ);
+  const double loFreq = processor.getParameter(Parameters::EqLowFreq);
+  const double loQ = processor.getParameter(Parameters::EqLowQ);
+  const double hiFreq = processor.getParameter(Parameters::EqHighFreq);
+  const double hiQ = processor.getParameter(Parameters::EqHighQ);
   _eqLo.setFreqAndQ(loFreq, loQ);
   _eqHi.setFreqAndQ(hiFreq, hiQ);
   
@@ -255,26 +255,26 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
   
   PluginAudioProcessor& processor = _manager.getProcessor();
   
-  const bool eqLoOn = (processor.getParameter(PluginAudioProcessor::EqLowOn) > 0.5f);
+  const bool eqLoOn = (processor.getParameter(Parameters::EqLowOn) > 0.5f);
   double eqLoFreq = 0.0;
   double eqLoQ = 0.0;
   double eqLoGainDb = 0.0;
   if (eqLoOn)
   {
-    eqLoFreq = processor.getParameter(PluginAudioProcessor::EqLowFreq);
-    eqLoQ = processor.getParameter(PluginAudioProcessor::EqLowQ);
-    eqLoGainDb = processor.getParameter(PluginAudioProcessor::EqLowGainDb);
+    eqLoFreq = processor.getParameter(Parameters::EqLowFreq);
+    eqLoQ = processor.getParameter(Parameters::EqLowQ);
+    eqLoGainDb = processor.getParameter(Parameters::EqLowGainDb);
   }
   
-  const bool eqHiOn = (processor.getParameter(PluginAudioProcessor::EqHighOn) > 0.5f);
+  const bool eqHiOn = (processor.getParameter(Parameters::EqHighOn) > 0.5f);
   double eqHiFreq = 0.0;
   double eqHiQ = 0.0;
   double eqHiGainDb = 0.0;
   if (eqHiOn)
   {
-    eqHiFreq = processor.getParameter(PluginAudioProcessor::EqHighFreq);
-    eqHiQ = processor.getParameter(PluginAudioProcessor::EqHighQ);
-    eqHiGainDb = processor.getParameter(PluginAudioProcessor::EqHighGainDb);
+    eqHiFreq = processor.getParameter(Parameters::EqHighFreq);
+    eqHiQ = processor.getParameter(Parameters::EqHighQ);
+    eqHiGainDb = processor.getParameter(Parameters::EqHighGainDb);
   }
   
   ScopedLock convolverLock(_convolverMutex);

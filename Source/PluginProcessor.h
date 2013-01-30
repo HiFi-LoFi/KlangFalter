@@ -22,11 +22,35 @@
 
 #include "IRManager.h"
 #include "LevelMeasurement.h"
+#include "Parameterset.h"
 #include "Settings.h"
 #include "FFTConvolver/Sample.h"
 
 #include <map>
 #include <vector>
+
+
+struct Parameters
+{
+  static const BoolParameterDescriptor WetOn;
+  static const FloatParameterDescriptor Wet;
+  
+  static const BoolParameterDescriptor DryOn;
+  static const FloatParameterDescriptor Dry;
+  
+  static const BoolParameterDescriptor AutoGainOn;
+  static const FloatParameterDescriptor AutoGain;
+
+  static const BoolParameterDescriptor EqLowOn;
+  static const FloatParameterDescriptor EqLowFreq;
+  static const FloatParameterDescriptor EqLowGainDb;
+  static const FloatParameterDescriptor EqLowQ;
+  
+  static const BoolParameterDescriptor EqHighOn;
+  static const FloatParameterDescriptor EqHighFreq;
+  static const FloatParameterDescriptor EqHighGainDb;
+  static const FloatParameterDescriptor EqHighQ;
+};
 
 
 //==============================================================================
@@ -53,10 +77,30 @@ public:
     const juce::String getName() const;
 
     int getNumParameters();
-
-    float getParameter (int index);
+    virtual float getParameter (int index);
     virtual void setParameter (int index, float newValue);
-
+  
+    template<typename T>
+    T getParameter(const TypedParameterDescriptor<T>& parameter) const
+    {
+      return _parameterSet.getParameter(parameter);
+    }
+  
+    template<typename T>
+    void setParameter(const TypedParameterDescriptor<T>& parameter, T val)
+    {
+      if (_parameterSet.setParameter(parameter, val))
+      {
+        sendChangeMessage();
+      }
+    }
+  
+    template<typename T>
+    void setParameterNotifyingHost(const TypedParameterDescriptor<T>& parameter, T val)
+    {
+      AudioProcessor::setParameterNotifyingHost(parameter.getIndex(), parameter.convertToNormalized(val));
+    }
+  
     const juce::String getParameterName (int index);
     const juce::String getParameterText (int index);
 
@@ -86,24 +130,6 @@ public:
   
     double getSampleRate() const;
   
-    enum ParameterId
-    {
-      WetOn,
-      Wet,
-      DryOn,
-      Dry,
-      AutoGainOn,
-      AutoGain,
-      EqLowOn,
-      EqLowFreq,
-      EqLowGainDb,
-      EqLowQ,
-      EqHighOn,
-      EqHighFreq,
-      EqHighGainDb,
-      EqHighQ
-    };
-  
     float getLevelDry(size_t channel) const;
 
     Settings& getSettings();
@@ -112,44 +138,9 @@ private:
     juce::ScopedPointer<IRManager> _irManager; 
     double _sampleRate;
     juce::AudioSampleBuffer _wetBuffer;
-  
     std::vector<fftconvolver::SampleBuffer*> _convolutionBuffers;
-  
-    class Parameter
-    {
-    public:
-      Parameter() : _name(), _value(std::numeric_limits<float>::max())
-      {
-      }
-      
-      Parameter(const String& name, const float val) : _name(name), _value(val)
-      {
-      }
-      
-      const String& getName() const
-      {
-        return _name;
-      }
-      
-      float getValue() const
-      {
-        return _value;
-      }
-      
-      void setValue(const float newValue)
-      {
-        _value = newValue;
-      } 
-      
-    private:
-      String _name;
-      float _value;
-    };
-  
-    std::map<ParameterId, Parameter> _parameters;
-  
+    ParameterSet _parameterSet;  
     std::vector<LevelMeasurement> _levelMeasurementsDry;
-
     Settings _settings;
   
     //==============================================================================
