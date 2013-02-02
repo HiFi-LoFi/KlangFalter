@@ -18,6 +18,7 @@
 #include "IRAgent.h"
 
 #include "IRManager.h"
+#include "Parameters.h"
 #include "PluginProcessor.h"
 
 #include <algorithm>
@@ -40,8 +41,8 @@ IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) 
   _fadeFactor(0.0),
   _fadeIncrement(0.0),
   _levelMeasurement(),
-  _eqLo(CookbookEq::LoShelf, 20, 1.0f),
-  _eqHi(CookbookEq::HiShelf, 20000, 1.0f)
+  _eqLo(CookbookEq::LoShelf, Parameters::EqLowFreq.getMinValue(), Parameters::EqLowQ.getMinValue()),
+  _eqHi(CookbookEq::HiShelf, Parameters::EqLowFreq.getMaxValue(), Parameters::EqLowQ.getMinValue())
 {
   initialize();
 }

@@ -19,6 +19,7 @@
 
 #include "IRAgent.h"
 #include "IRManager.h"
+#include "Parameters.h"
 
 #include <algorithm>
 #include <list>

@@ -22,6 +22,7 @@
 //[Headers] You can add your own extra header files here...
 
 #include "../DecibelScaling.h"
+#include "../Parameters.h"
 
 //[/Headers]
 

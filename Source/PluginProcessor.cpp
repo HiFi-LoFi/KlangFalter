@@ -18,6 +18,7 @@
 #include "PluginProcessor.h"
 
 #include "IRAgent.h"
+#include "Parameters.h"
 #include "Persistence.h"
 #include "Settings.h"
 #include "FFTConvolver/Configuration.h"
@@ -25,110 +26,6 @@
 #include "UI/KlangFalterEditor.h"
 
 #include <algorithm>
-
-
-const BoolParameterDescriptor Parameters::WetOn(0,
-                                                "Wet On",
-                                                "",
-                                                ParameterDescriptor::Automatable,
-                                                true);
-
-const FloatParameterDescriptor Parameters::Wet(1,
-                                               "Wet",
-                                               "Gain",
-                                               ParameterDescriptor::Automatable,
-                                               1.0f,
-                                               0.0f,
-                                               DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
-                                              
-const BoolParameterDescriptor Parameters::DryOn(2,
-                                               "Dry On",
-                                               "",
-                                               ParameterDescriptor::Automatable,
-                                               true);
-
-const FloatParameterDescriptor Parameters::Dry(3,
-                                              "Dry",
-                                              "Gain",
-                                              ParameterDescriptor::Automatable,
-                                              1.0f,
-                                              0.0f,
-                                              DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
-
-const BoolParameterDescriptor Parameters::AutoGainOn(4,
-                                                    "Autogain On",
-                                                    "",
-                                                    ParameterDescriptor::Automatable,
-                                                    true);
-
-const FloatParameterDescriptor Parameters::AutoGain(5,
-                                                   "Autogain",
-                                                   "Gain",
-                                                   ParameterDescriptor::Automatable,
-                                                   1.0f,
-                                                   0.0f,
-                                                   DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
-
-const BoolParameterDescriptor Parameters::EqLowOn(6,
-                                                 "EQ Low On",
-                                                 "",
-                                                 ParameterDescriptor::Automatable,
-                                                 true);
-
-const FloatParameterDescriptor Parameters::EqLowFreq(7,
-                                                    "EQ Low Freq",
-                                                    "Hz",
-                                                    ParameterDescriptor::Automatable,
-                                                    20.0f,
-                                                    20.0f,
-                                                    2000.0f);
-
-const FloatParameterDescriptor Parameters::EqLowGainDb(8,
-                                                      "EQ Low Gain",
-                                                      "Db",
-                                                      ParameterDescriptor::Automatable,
-                                                      0.0f,
-                                                      DecibelScaling::Db2Gain(-30.0),
-                                                      DecibelScaling::Db2Gain(+30.0));
-                                                   
-const FloatParameterDescriptor Parameters::EqLowQ(9,
-                                                 "EQ Low Slope",
-                                                 "",
-                                                 ParameterDescriptor::Automatable,
-                                                 1.0f,
-                                                 1.0f,
-                                                 2.0f);
-
-const BoolParameterDescriptor Parameters::EqHighOn(10,
-                                                  "EQ High On",
-                                                  "",
-                                                  ParameterDescriptor::Automatable,
-                                                  true);
-                                                   
-const FloatParameterDescriptor Parameters::EqHighFreq(11,
-                                                     "EQ High Freq",
-                                                     "Hz",
-                                                     ParameterDescriptor::Automatable,
-                                                     20000.0f,
-                                                     2000.0f,
-                                                     20000.0f);
-                                                     
-const FloatParameterDescriptor Parameters::EqHighGainDb(12,
-                                                       "EQ High Gain",
-                                                       "Db",
-                                                       ParameterDescriptor::Automatable,
-                                                       0.0f,
-                                                       DecibelScaling::Db2Gain(-30.0),
-                                                       DecibelScaling::Db2Gain(+30.0));
-                                                       
-const FloatParameterDescriptor Parameters::EqHighQ(13,
-                                                  "EQ High Slope",
-                                                  "",
-                                                  ParameterDescriptor::Automatable,
-                                                  1.0f,
-                                                  1.0f,
-                                                  2.0f);
-
 
 
 //==============================================================================

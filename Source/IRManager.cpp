@@ -19,6 +19,7 @@
 
 #include "Convolver.h"
 #include "IRAgent.h"
+#include "Parameters.h"
 #include "PluginProcessor.h"
 #include "Settings.h"
 
