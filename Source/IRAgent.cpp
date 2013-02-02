@@ -20,6 +20,7 @@
 #include "IRManager.h"
 #include "Parameters.h"
 #include "PluginProcessor.h"
+#include "SpinningScopedLock.h"
 
 #include <algorithm>
 
@@ -278,7 +279,9 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
     eqHiGainDb = processor.getParameter(Parameters::EqHighGainDb);
   }
   
-  ScopedLock convolverLock(_convolverMutex);
+  // Lock the convolver mutex by spinning because this method
+  // is called in the realtime audio thread...
+  SpinningScopedLock<juce::CriticalSection> convolverLock(_convolverMutex);
   
   if (_convolver && (_fadeFactor > Epsilon || ::fabs(_fadeIncrement) > Epsilon))
   {
