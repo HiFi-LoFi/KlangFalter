@@ -89,12 +89,17 @@ void LevelMeter::setChannelCount(size_t channelCount)
 
 void LevelMeter::setLevel(size_t channel, float level)
 {
+  bool needsRepaint = false;
   if (channel < _levels.size())
   {
     if (::fabs(_levels[channel]-level) > 0.000001)
     {
       _levels[channel] = level;
-      repaint();
+      needsRepaint = true;
     }
+  }
+  if (needsRepaint)
+  {
+    repaint();
   }
 }
