@@ -81,6 +81,10 @@
       <FILE id="WU2LwP" name="WaveformComponent.h" compile="0" resource="0"
             file="Source/UI/WaveformComponent.h"/>
     </GROUP>
+    <FILE id="r6mTsl" name="ChangeNotifier.cpp" compile="1" resource="0"
+          file="Source/ChangeNotifier.cpp"/>
+    <FILE id="OXPSzy" name="ChangeNotifier.h" compile="0" resource="0"
+          file="Source/ChangeNotifier.h"/>
     <FILE id="CCplCO" name="Convolver.cpp" compile="1" resource="0" file="Source/Convolver.cpp"/>
     <FILE id="oFPWI7" name="Convolver.h" compile="0" resource="0" file="Source/Convolver.h"/>
     <FILE id="d5bCDW" name="CookbookEq.cpp" compile="1" resource="0" file="Source/CookbookEq.cpp"/>

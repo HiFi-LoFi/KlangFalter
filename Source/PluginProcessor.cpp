@@ -31,7 +31,7 @@
 //==============================================================================
 PluginAudioProcessor::PluginAudioProcessor() :
   AudioProcessor(),
-  ChangeBroadcaster(),
+  ChangeNotifier(),
   _irManager(),
   _sampleRate(0.0),
   _wetBuffer(1, 0),
@@ -89,7 +89,7 @@ void PluginAudioProcessor::setParameter(int index, float newValue)
 {
   if (_parameterSet.setNormalizedParameter(index, newValue))
   {
-    sendChangeMessage();
+    notifyAboutChange();
   }
 }
 
@@ -179,6 +179,8 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
   {
     _convolutionBuffers.push_back(new fftconvolver::SampleBuffer(samplesPerBlock));
   }
+  
+  notifyAboutChange();
 }
 
 
@@ -191,7 +193,7 @@ void PluginAudioProcessor::releaseResources()
   _convolutionBuffers.clear();
   _wetBuffer.setSize(1, 0, false, true, false);
   _sampleRate = 0.0;
-  sendChangeMessage();
+  notifyAboutChange();
 }
 
 

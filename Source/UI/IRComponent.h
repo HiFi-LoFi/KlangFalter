@@ -42,7 +42,7 @@
                                                                     //[/Comments]
 */
 class IRComponent  : public Component,
-                     public ChangeListener,
+                     public ChangeNotifier::Listener,
                      public ButtonListener,
                      public ComboBoxListener
 {
@@ -56,8 +56,7 @@ public:
 
     void init(IRManager* irManager, size_t inputChannel, size_t outputChannel);
     void irChanged();
-
-    virtual void changeListenerCallback(ChangeBroadcaster* source);
+    virtual void changeNotification();
 
     //[/UserMethods]
 

@@ -243,7 +243,7 @@ public:
   template<typename T>
   T getParameter(const TypedParameterDescriptor<T>& parameter) const
   {
-    return parameter.convertFromNormalized(_parameters.find(parameter.getIndex())->second.second);
+    return parameter.convertFromNormalized(_parameters.find(parameter.getIndex())->second.second.get());
   }
   
   template<typename T>
@@ -254,18 +254,14 @@ public:
   
   float getNormalizedParameter(int index) const
   {
-    return _parameters.find(index)->second.second;
+    return _parameters.find(index)->second.second.get();
   }
   
   bool setNormalizedParameter(int index, float normalizedVal)
   {
     ParameterMap::iterator it = _parameters.find(index);
-    if (::fabs(it->second.second - normalizedVal) > 0.00001f)
-    {
-      it->second.second = normalizedVal;
-      return true;
-    }
-    return false;
+    const float normalizedValOld = it->second.second.exchange(normalizedVal);
+    return (::fabs(normalizedVal - normalizedValOld) > 0.00001f);
   }
   
   const ParameterDescriptor& getParameterDescriptor(int index) const
@@ -279,7 +275,7 @@ public:
   }
   
 private:
-  typedef std::map<int, std::pair<const ParameterDescriptor*, float> > ParameterMap;
+  typedef std::map<int, std::pair<const ParameterDescriptor*, juce::Atomic<float> > > ParameterMap;
   ParameterMap _parameters;
   
   // Prevent uncontrolled usage

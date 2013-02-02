@@ -26,7 +26,7 @@
 
 
 IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) :
-  ChangeBroadcaster(),
+  ChangeNotifier(),
   _manager(manager),
   _inputChannel(inputChannel),
   _outputChannel(outputChannel),
@@ -105,7 +105,7 @@ void IRAgent::clear()
     _irBuffer = nullptr;
     _levelMeasurement.reset();
   }
-  sendChangeMessage();
+  propagateChange();
 }
 
 
@@ -246,8 +246,8 @@ void IRAgent::setConvolver(Convolver* convolver)
 
 void IRAgent::propagateChange()
 {
-  sendChangeMessage();
-  _manager.sendChangeMessage();
+  notifyAboutChange();
+  _manager.notifyAboutChange();
 }
 
 

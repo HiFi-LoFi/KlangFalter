@@ -447,8 +447,8 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     if (_processor)
     {
       IRManager& irManager = _processor->getIRManager();
-      _processor->addChangeListener(this);
-      irManager.addChangeListener(this);
+      _processor->addNotificationListener(this);
+      irManager.addNotificationListener(this);
       IRComponent* irComponent00 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(0));
       IRComponent* irComponent01 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(1));
       IRComponent* irComponent10 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(2));
@@ -479,8 +479,8 @@ KlangFalterEditor::~KlangFalterEditor()
 
     if (_processor)
     {
-      _processor->removeChangeListener(this);
-      _processor->getIRManager().removeChangeListener(this);
+      _processor->removeNotificationListener(this);
+      _processor->getIRManager().removeNotificationListener(this);
     }
 
     //[/Destructor_pre]
@@ -921,7 +921,7 @@ void KlangFalterEditor::processorChanged()
 }
 
 
-void KlangFalterEditor::changeListenerCallback(ChangeBroadcaster* /*source*/)
+void KlangFalterEditor::changeNotification()
 {
   processorChanged();
 }

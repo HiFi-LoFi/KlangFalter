@@ -21,6 +21,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include "ChangeNotifier.h"
 #include "Envelope.h"
 
 #include <vector>
@@ -34,7 +35,7 @@ class PluginAudioProcessor;
 typedef std::vector<IRAgent*> IRAgentContainer;
 
 
-class IRManager : public ChangeBroadcaster
+class IRManager : public ChangeNotifier
 {
 public:
   IRManager(PluginAudioProcessor& processor, size_t inputChannels, size_t outputChannels);

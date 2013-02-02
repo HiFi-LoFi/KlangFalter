@@ -20,6 +20,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include "ChangeNotifier.h"
 #include "CookbookEq.h"
 #include "Convolver.h"
 #include "LevelMeasurement.h"
@@ -78,7 +79,7 @@ private:
 // ====================================================
 
 
-class IRAgent : public ChangeBroadcaster
+class IRAgent : public ChangeNotifier
 {
 public:
   IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel);

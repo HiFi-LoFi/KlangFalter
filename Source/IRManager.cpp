@@ -427,7 +427,7 @@ private:
 
 
 IRManager::IRManager(PluginAudioProcessor& processor, size_t inputChannels, size_t outputChannels) :
-  ChangeBroadcaster(),
+  ChangeNotifier(),
   _processor(processor),
   _agents(),
   _mutex(),
@@ -491,7 +491,7 @@ void IRManager::initialize(double convolverSampleRate, size_t convolverBlockSize
     {
       _agents[i]->initialize();
     }
-    sendChangeMessage();
+    notifyAboutChange();
     updateConvolvers();
   }
 }
@@ -538,7 +538,7 @@ void IRManager::reset()
     _agents[i]->clear();
   }
 
-  sendChangeMessage();
+  notifyAboutChange();
   updateConvolvers();
 }
 
@@ -556,7 +556,7 @@ void IRManager::setStretch(double stretch)
   }
   if (changed)
   {
-    sendChangeMessage();
+    notifyAboutChange();
     updateConvolvers();
   }
 }
@@ -583,7 +583,7 @@ void IRManager::setReverse(bool reverse)
   }
   if (changed)
   {
-    sendChangeMessage();
+    notifyAboutChange();
     updateConvolvers();
   }
 }
@@ -604,7 +604,7 @@ void IRManager::setEnvelope(const Envelope& envelope)
       _envelope = envelope;
     }
   }
-  sendChangeMessage();
+  notifyAboutChange();
   updateConvolvers();
 }
 
@@ -629,7 +629,7 @@ void IRManager::setPredelayMs(double predelayMs)
   }
   if (changed)
   {
-    sendChangeMessage();
+    notifyAboutChange();
     updateConvolvers();
   }
 }
@@ -655,7 +655,7 @@ void IRManager::setFileBeginSeconds(double fileBeginSeconds)
   }
   if (changed)
   {
-    sendChangeMessage();
+    notifyAboutChange();
     updateConvolvers();
   }
 }

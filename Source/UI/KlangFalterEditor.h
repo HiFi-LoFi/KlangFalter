@@ -44,7 +44,7 @@
                                                                     //[/Comments]
 */
 class KlangFalterEditor  : public AudioProcessorEditor,
-                           public ChangeListener,
+                           public ChangeNotifier::Listener,
                            public Timer,
                            public SliderListener,
                            public ButtonListener
@@ -57,8 +57,8 @@ public:
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
     void processorChanged();
-    void changeListenerCallback(ChangeBroadcaster* source);
-    void timerCallback();
+    virtual void changeNotification();
+    virtual void timerCallback();
     //[/UserMethods]
 
     void paint (Graphics& g);

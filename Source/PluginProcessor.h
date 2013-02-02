@@ -20,6 +20,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include "ChangeNotifier.h"
 #include "IRManager.h"
 #include "LevelMeasurement.h"
 #include "Parameterset.h"
@@ -33,7 +34,7 @@
 //==============================================================================
 /**
 */
-class PluginAudioProcessor  : public AudioProcessor, public ChangeBroadcaster
+class PluginAudioProcessor  : public AudioProcessor, public ChangeNotifier
 {
 public:
     //==============================================================================
@@ -68,7 +69,7 @@ public:
     {
       if (_parameterSet.setParameter(parameter, val))
       {
-        sendChangeMessage();
+        notifyAboutChange();
       }
     }
   

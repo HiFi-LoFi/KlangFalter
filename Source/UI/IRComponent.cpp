@@ -95,13 +95,13 @@ IRComponent::~IRComponent()
 
     if (_irManager)
     {
-      _irManager->removeChangeListener(this);
+      _irManager->removeNotificationListener(this);
       _irManager = nullptr;
     }
 
     if (_irAgent)
     {
-      _irAgent->removeChangeListener(this);
+      _irAgent->removeNotificationListener(this);
       _irAgent = nullptr;
     }
 
@@ -211,9 +211,9 @@ void IRComponent::init(IRManager* irManager, size_t inputChannel, size_t outputC
   if (irManager && irAgent)
   {
     _irManager = irManager;
-    _irManager->addChangeListener(this);
+    _irManager->addNotificationListener(this);
     _irAgent = irAgent;
-    _irAgent->addChangeListener(this);
+    _irAgent->addNotificationListener(this);
   }
   irChanged();
 }
@@ -254,14 +254,10 @@ void IRComponent::irChanged()
 }
 
 
-void IRComponent::changeListenerCallback(ChangeBroadcaster* source)
+void IRComponent::changeNotification()
 {
-  if (source == _irAgent)
-  {
-    irChanged();
-  }
+  irChanged();
 }
-
 
 
 //[/MiscUserCode]
