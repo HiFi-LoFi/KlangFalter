@@ -545,8 +545,9 @@ void KlangFalterEditor::paint (Graphics& g)
     g.fillAll (Colour (0xffa6a6b1));
 
     //[UserPaint] Add your own custom painting code here..
-  BinaryData::ImageProvider imageProvider;
-  g.setFillType(juce::FillType(imageProvider.getImageForIdentifier("brushed_aluminium_png"), juce::AffineTransform()));
+    juce::Image backgroundImage(juce::ImageCache::getFromMemory(BinaryData::brushed_aluminium_png,
+                                                                BinaryData::brushed_aluminium_pngSize));  
+    g.setFillType(juce::FillType(backgroundImage, juce::AffineTransform()));
     g.fillAll();
     //[/UserPaint]
 }
@@ -616,7 +617,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
           if (::fabs(sliderVal-1.0) < 0.025)
           {
             sliderVal = 1.0;
-            _stretchSlider->setValue(1.0, false);
+            _stretchSlider->setValue(1.0, juce::dontSendNotification);
           }
           _processor->getIRManager().setStretch(sliderVal);
         }
@@ -795,7 +796,7 @@ void KlangFalterEditor::processorChanged()
     const double stretch = irManager ? irManager->getStretch() : 1.0;
     _stretchSlider->setEnabled(irAvailable);
     _stretchSlider->setRange(0.5, 1.5);
-    _stretchSlider->setValue(stretch, false, false);
+    _stretchSlider->setValue(stretch, juce::dontSendNotification);
     _stretchLabel->setText(String(static_cast<int>(100.0*stretch)) + String("%"), true);
   }
 
@@ -805,7 +806,7 @@ void KlangFalterEditor::processorChanged()
     const float scale = DecibelScaling::Db2Scale(db);
     _drySlider->setEnabled(true);
     _drySlider->setRange(0.0, 1.0);
-    _drySlider->setValue(scale, false, false);
+    _drySlider->setValue(scale, juce::dontSendNotification);
     _dryLevelLabel->setText(DecibelScaling::DecibelString(db), true);
   }
   else
@@ -819,7 +820,7 @@ void KlangFalterEditor::processorChanged()
     const float scale = DecibelScaling::Db2Scale(db);
     _wetSlider->setEnabled(true);
     _wetSlider->setRange(0.0, 1.0);
-    _wetSlider->setValue(scale, false, false);
+    _wetSlider->setValue(scale, juce::dontSendNotification);
     _wetLevelLabel->setText(DecibelScaling::DecibelString(db), true);
   }
   else
@@ -845,7 +846,7 @@ void KlangFalterEditor::processorChanged()
     {
       _beginSlider->setRange(0.0, maxFileDuration);
     }
-    _beginSlider->setValue(fileBeginSeconds, false, false);
+    _beginSlider->setValue(fileBeginSeconds, juce::dontSendNotification);
     _beginLabel->setText(juce::String(static_cast<int>(fileBeginSeconds*1000.0 + 0.5)) + juce::String("ms"), true);
   }
 
@@ -876,19 +877,19 @@ void KlangFalterEditor::processorChanged()
   {
     const float freq = _processor->getParameter(Parameters::EqLowFreq);
     _loFreqSlider->setEnabled(loEqEnabled);
-    _loFreqSlider->setValue(freq, false, false);
+    _loFreqSlider->setValue(freq, juce::dontSendNotification);
     _loFreqLabel->setText(juce::String(static_cast<int>(freq+0.5f)) + juce::String("Hz"), false);
   }
   {
     const float gainDb = _processor->getParameter(Parameters::EqLowDecibels);
     _loGainSlider->setEnabled(loEqEnabled);
-    _loGainSlider->setValue(gainDb, false, false);
+    _loGainSlider->setValue(gainDb, juce::dontSendNotification);
     _loGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
   }
   {
     const float q = _processor->getParameter(Parameters::EqLowQ);
     _loQSlider->setEnabled(loEqEnabled);
-    _loQSlider->setValue(q, false, false);
+    _loQSlider->setValue(q, juce::dontSendNotification);
     _loQLabel->setText(juce::String(q, 2), false);
   }
 
@@ -901,19 +902,19 @@ void KlangFalterEditor::processorChanged()
   {
     const float freq = _processor->getParameter(Parameters::EqHighFreq);
     _hiFreqSlider->setEnabled(hiEqEnabled);
-    _hiFreqSlider->setValue(freq, false, false);
+    _hiFreqSlider->setValue(freq, juce::dontSendNotification);
     _hiFreqLabel->setText(juce::String(freq/1000.0f, 2) + juce::String("kHz"), false);
   }
   {
     const float gainDb = _processor->getParameter(Parameters::EqHighDecibels);
     _hiGainSlider->setEnabled(hiEqEnabled);
-    _hiGainSlider->setValue(gainDb, false, false);
+    _hiGainSlider->setValue(gainDb, juce::dontSendNotification);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
   }
   {
     const float q = _processor->getParameter(Parameters::EqHighQ);
     _hiQSlider->setEnabled(hiEqEnabled);
-    _hiQSlider->setValue(q, false, false);
+    _hiQSlider->setValue(q, juce::dontSendNotification);
     _hiQLabel->setText(juce::String(q, 2), false);
   }
 }

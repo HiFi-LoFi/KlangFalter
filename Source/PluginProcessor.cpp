@@ -141,6 +141,11 @@ bool PluginAudioProcessor::producesMidi() const
 #endif
 }
 
+bool PluginAudioProcessor::silenceInProducesSilenceOut() const
+{
+  return false;
+}
+
 int PluginAudioProcessor::getNumPrograms()
 {
     return 0;

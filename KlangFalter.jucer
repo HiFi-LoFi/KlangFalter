@@ -8,16 +8,17 @@
               pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
               pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="KlangFalterAU" pluginAUViewClass="KlangFalterAU_V1"
-              pluginRTASCategory="" companyName="HiFi-LoFi">
+              pluginRTASCategory="" companyName="HiFi-LoFi" aaxIdentifier="com.yourcompany.KlangFalter"
+              pluginAAXCategory="AAX_ePlugInCategory_Dynamics">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" juceFolder="../Juce/modules"
                extraCompilerFlags="" extraFrameworks="Accelerate">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="KlangFalter"
-                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
                        defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
         <CONFIGURATION name="Release" isDebug="1" optimisation="2" targetName="KlangFalter"
-                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
                        defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
       </CONFIGURATIONS>
     </XCODE_MAC>

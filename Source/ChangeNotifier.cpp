@@ -74,6 +74,7 @@ void ChangeNotifier::timerCallback()
 {
   if (_changePending.get() == 1)
   {
+    _changePending.set(0);
     {
       juce::ScopedLock lock(_listenersMutex);    
       // Work on a copy which makes it safe that the callback can add/remove listeners...
@@ -83,6 +84,5 @@ void ChangeNotifier::timerCallback()
         listeners[i]->changeNotification();
       }
     }
-    _changePending.set(0);
   }
 }
