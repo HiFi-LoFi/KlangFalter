@@ -41,18 +41,18 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _settings()
 { 
   _parameterSet.registerParameter(Parameters::WetOn);
-  _parameterSet.registerParameter(Parameters::Wet);
+  _parameterSet.registerParameter(Parameters::WetDecibels);
   _parameterSet.registerParameter(Parameters::DryOn);
-  _parameterSet.registerParameter(Parameters::Dry);
+  _parameterSet.registerParameter(Parameters::DryDecibels);
   _parameterSet.registerParameter(Parameters::AutoGainOn);
-  _parameterSet.registerParameter(Parameters::AutoGain);
+  _parameterSet.registerParameter(Parameters::AutoGainDecibels);
   _parameterSet.registerParameter(Parameters::EqLowOn);
   _parameterSet.registerParameter(Parameters::EqLowFreq);
-  _parameterSet.registerParameter(Parameters::EqLowGainDb);
+  _parameterSet.registerParameter(Parameters::EqLowDecibels);
   _parameterSet.registerParameter(Parameters::EqLowQ);
   _parameterSet.registerParameter(Parameters::EqHighOn);
   _parameterSet.registerParameter(Parameters::EqHighFreq);
-  _parameterSet.registerParameter(Parameters::EqHighGainDb);
+  _parameterSet.registerParameter(Parameters::EqHighDecibels);
   _parameterSet.registerParameter(Parameters::EqHighQ);
   
   _irManager = new IRManager(*this, 2, 2);
@@ -202,8 +202,8 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
   // Preparation
   const bool wetOn = getParameter(Parameters::WetOn);
   const bool dryOn = getParameter(Parameters::DryOn);
-  const float factorWet = getParameter(Parameters::Wet);
-  const float factorDry = getParameter(Parameters::Dry);
+  const float factorWet = DecibelScaling::Db2Gain(getParameter(Parameters::WetDecibels));
+  const float factorDry = DecibelScaling::Db2Gain(getParameter(Parameters::DryDecibels));
   
   const int numInputChannels = getNumInputChannels();
   const int numOutputChannels = getNumOutputChannels();
@@ -260,7 +260,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     float autoGain = 1.0f;
     if (getParameter(Parameters::AutoGainOn))
     {
-      autoGain = getParameter(Parameters::AutoGain);
+      autoGain = DecibelScaling::Db2Gain(getParameter(Parameters::AutoGainDecibels));
     }
     
     // Convolve

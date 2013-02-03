@@ -626,10 +626,10 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     {
         //[UserSliderCode__drySlider] -- add your slider handling code here..
         const float scale = static_cast<float>(_drySlider->getValue());
-        const float gain = SnapValue(DecibelScaling::Scale2Gain(scale), 1.0f, 0.075f);
+        const float decibels = SnapValue(DecibelScaling::Scale2Db(scale), 0.0f, 0.5f);
         if (_processor)
         {
-          _processor->setParameterNotifyingHost(Parameters::Dry, gain);
+          _processor->setParameterNotifyingHost(Parameters::DryDecibels, decibels);
         }
         //[/UserSliderCode__drySlider]
     }
@@ -637,10 +637,10 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     {
         //[UserSliderCode__wetSlider] -- add your slider handling code here..
         const float scale = static_cast<float>(_wetSlider->getValue());
-        const float gain = SnapValue(DecibelScaling::Scale2Gain(scale), 1.0f, 0.075f);
+        const float decibels = SnapValue(DecibelScaling::Scale2Db(scale), 0.0f, 0.5f);
         if (_processor)
         {
-          _processor->setParameterNotifyingHost(Parameters::Wet, gain);
+          _processor->setParameterNotifyingHost(Parameters::WetDecibels, decibels);
         }
         //[/UserSliderCode__wetSlider]
     }
@@ -665,7 +665,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     else if (sliderThatWasMoved == _hiGainSlider)
     {
         //[UserSliderCode__hiGainSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqHighGainDb, static_cast<float>(_hiGainSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(_hiGainSlider->getValue()));
         //[/UserSliderCode__hiGainSlider]
     }
     else if (sliderThatWasMoved == _hiFreqSlider)
@@ -683,7 +683,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     else if (sliderThatWasMoved == _loGainSlider)
     {
         //[UserSliderCode__loGainSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqLowGainDb, static_cast<float>(_loGainSlider->getValue()));
+        _processor->setParameterNotifyingHost(Parameters::EqLowDecibels, static_cast<float>(_loGainSlider->getValue()));
         //[/UserSliderCode__loGainSlider]
     }
     else if (sliderThatWasMoved == _loFreqSlider)
@@ -801,8 +801,7 @@ void KlangFalterEditor::processorChanged()
 
   if (_processor)
   {
-    const float gain = _processor->getParameter(Parameters::Dry);
-    const float db = DecibelScaling::Gain2Db(gain);
+    const float db = _processor->getParameter(Parameters::DryDecibels);
     const float scale = DecibelScaling::Db2Scale(db);
     _drySlider->setEnabled(true);
     _drySlider->setRange(0.0, 1.0);
@@ -816,8 +815,7 @@ void KlangFalterEditor::processorChanged()
 
   if (_processor)
   {
-    const float gain = _processor->getParameter(Parameters::Wet);
-    const float db = DecibelScaling::Gain2Db(gain);
+    const float db = _processor->getParameter(Parameters::WetDecibels);
     const float scale = DecibelScaling::Db2Scale(db);
     _wetSlider->setEnabled(true);
     _wetSlider->setRange(0.0, 1.0);
@@ -859,9 +857,9 @@ void KlangFalterEditor::processorChanged()
   }
 
   {
-    const float autoGain = _processor->getParameter(Parameters::AutoGain);
+    const float autoGainDecibels = _processor->getParameter(Parameters::AutoGainDecibels);
     const bool autoGainOn = _processor->getParameter(Parameters::AutoGainOn);
-    const juce::String autoGainText = DecibelScaling::DecibelString(DecibelScaling::Gain2Db(autoGain));
+    const juce::String autoGainText = DecibelScaling::DecibelString(autoGainDecibels);
     _autogainButton->setButtonText(juce::String("Autogain ") + autoGainText);
     _autogainButton->setToggleState(autoGainOn, false);
   }
@@ -882,7 +880,7 @@ void KlangFalterEditor::processorChanged()
     _loFreqLabel->setText(juce::String(static_cast<int>(freq+0.5f)) + juce::String("Hz"), false);
   }
   {
-    const float gainDb = _processor->getParameter(Parameters::EqLowGainDb);
+    const float gainDb = _processor->getParameter(Parameters::EqLowDecibels);
     _loGainSlider->setEnabled(loEqEnabled);
     _loGainSlider->setValue(gainDb, false, false);
     _loGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
@@ -907,7 +905,7 @@ void KlangFalterEditor::processorChanged()
     _hiFreqLabel->setText(juce::String(freq/1000.0f, 2) + juce::String("kHz"), false);
   }
   {
-    const float gainDb = _processor->getParameter(Parameters::EqHighGainDb);
+    const float gainDb = _processor->getParameter(Parameters::EqHighDecibels);
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(gainDb, false, false);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);

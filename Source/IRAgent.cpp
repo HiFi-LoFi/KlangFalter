@@ -260,23 +260,23 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
   const bool eqLoOn = (processor.getParameter(Parameters::EqLowOn) > 0.5f);
   double eqLoFreq = 0.0;
   double eqLoQ = 0.0;
-  double eqLoGainDb = 0.0;
+  double eqLoDecibels = 0.0;
   if (eqLoOn)
   {
     eqLoFreq = processor.getParameter(Parameters::EqLowFreq);
     eqLoQ = processor.getParameter(Parameters::EqLowQ);
-    eqLoGainDb = processor.getParameter(Parameters::EqLowGainDb);
+    eqLoDecibels = processor.getParameter(Parameters::EqLowDecibels);
   }
   
   const bool eqHiOn = (processor.getParameter(Parameters::EqHighOn) > 0.5f);
   double eqHiFreq = 0.0;
   double eqHiQ = 0.0;
-  double eqHiGainDb = 0.0;
+  double eqHiDecibels = 0.0;
   if (eqHiOn)
   {
     eqHiFreq = processor.getParameter(Parameters::EqHighFreq);
     eqHiQ = processor.getParameter(Parameters::EqHighQ);
-    eqHiGainDb = processor.getParameter(Parameters::EqHighGainDb);
+    eqHiDecibels = processor.getParameter(Parameters::EqHighDecibels);
   }
   
   // Lock the convolver mutex by spinning because this method
@@ -318,14 +318,14 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
   if (eqLoOn)
   {
     _eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
-    _eqLo.setGain(eqLoGainDb);
+    _eqLo.setGain(eqLoDecibels);
     _eqLo.filterOut(output, len);
   }
   
   if (eqHiOn)
   {
     _eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
-    _eqHi.setGain(eqHiGainDb);
+    _eqHi.setGain(eqHiDecibels);
     _eqHi.filterOut(output, len);
   }
   

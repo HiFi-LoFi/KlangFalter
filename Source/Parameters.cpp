@@ -26,13 +26,13 @@ const BoolParameterDescriptor Parameters::WetOn(0,
                                                 ParameterDescriptor::Automatable,
                                                 true);
 
-const FloatParameterDescriptor Parameters::Wet(1,
-                                               "Wet",
-                                               "Gain",
-                                               ParameterDescriptor::Automatable,
-                                               1.0f,
-                                               0.0f,
-                                               DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
+const FloatParameterDescriptor Parameters::WetDecibels(1,
+                                                       "Wet",
+                                                       "dB",
+                                                       ParameterDescriptor::Automatable,
+                                                       0.0f,
+                                                       DecibelScaling::MinScaleDb(),
+                                                       DecibelScaling::MaxScaleDb());
                                               
 const BoolParameterDescriptor Parameters::DryOn(2,
                                                 "Dry On",
@@ -40,13 +40,13 @@ const BoolParameterDescriptor Parameters::DryOn(2,
                                                 ParameterDescriptor::Automatable,
                                                 true);
 
-const FloatParameterDescriptor Parameters::Dry(3,
-                                               "Dry",
-                                               "Gain",
-                                               ParameterDescriptor::Automatable,
-                                               1.0f,
-                                               0.0f,
-                                               DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
+const FloatParameterDescriptor Parameters::DryDecibels(3,
+                                                       "Dry",
+                                                       "dB",
+                                                       ParameterDescriptor::Automatable,
+                                                       0.0f,
+                                                       DecibelScaling::MinScaleDb(),
+                                                       DecibelScaling::MaxScaleDb());
 
 const BoolParameterDescriptor Parameters::AutoGainOn(4,
                                                      "Autogain On",
@@ -54,13 +54,13 @@ const BoolParameterDescriptor Parameters::AutoGainOn(4,
                                                      ParameterDescriptor::Automatable,
                                                      true);
  
-const FloatParameterDescriptor Parameters::AutoGain(5,
-                                                    "Autogain",
-                                                    "Gain",
-                                                    ParameterDescriptor::Automatable,
-                                                    1.0f,
-                                                    0.0f,
-                                                    DecibelScaling::Db2Gain(DecibelScaling::MaxScaleDb()));
+const FloatParameterDescriptor Parameters::AutoGainDecibels(5,
+                                                            "Autogain",
+                                                            "dB",
+                                                            ParameterDescriptor::NotAutomatable,
+                                                            0.0f,
+                                                            DecibelScaling::MinScaleDb(),
+                                                            DecibelScaling::MaxScaleDb());
 
 const BoolParameterDescriptor Parameters::EqLowOn(6,
                                                   "EQ Low On",
@@ -76,13 +76,13 @@ const FloatParameterDescriptor Parameters::EqLowFreq(7,
                                                      20.0f,
                                                      2000.0f);
 
-const FloatParameterDescriptor Parameters::EqLowGainDb(8,
-                                                       "EQ Low Gain",
-                                                       "Db",
-                                                       ParameterDescriptor::Automatable,
-                                                       0.0f,
-                                                       DecibelScaling::Db2Gain(-30.0),
-                                                       DecibelScaling::Db2Gain(+30.0));
+const FloatParameterDescriptor Parameters::EqLowDecibels(8,
+                                                         "EQ Low Gain",
+                                                         "dB",
+                                                         ParameterDescriptor::Automatable,
+                                                         0.0f,
+                                                         -30.0f,
+                                                         +30.0f);
                                                    
 const FloatParameterDescriptor Parameters::EqLowQ(9,
                                                   "EQ Low Slope",
@@ -106,13 +106,13 @@ const FloatParameterDescriptor Parameters::EqHighFreq(11,
                                                       2000.0f,
                                                       20000.0f);
                                                      
-const FloatParameterDescriptor Parameters::EqHighGainDb(12,
-                                                        "EQ High Gain",
-                                                        "Db",
-                                                        ParameterDescriptor::Automatable,
-                                                        0.0f,
-                                                        DecibelScaling::Db2Gain(-30.0),
-                                                        DecibelScaling::Db2Gain(+30.0));
+const FloatParameterDescriptor Parameters::EqHighDecibels(12,
+                                                          "EQ High Gain",
+                                                          "dB",
+                                                          ParameterDescriptor::Automatable,
+                                                          0.0f,
+                                                          -30.0,
+                                                          +30.0);
                                                        
 const FloatParameterDescriptor Parameters::EqHighQ(13,
                                                    "EQ High Slope",

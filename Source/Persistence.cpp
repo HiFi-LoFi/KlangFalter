@@ -46,19 +46,19 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   ScopedPointer<XmlElement> convolutionElement(new XmlElement("Convolution"));
   convolutionElement->setAttribute("pluginVersion", juce::String(ProjectInfo::versionString));
   convolutionElement->setAttribute("wetOn", processor.getParameter(Parameters::WetOn));
-  convolutionElement->setAttribute("wet", processor.getParameter(Parameters::Wet));
+  convolutionElement->setAttribute("wetDecibels", processor.getParameter(Parameters::WetDecibels));
   convolutionElement->setAttribute("dryOn", processor.getParameter(Parameters::DryOn));
-  convolutionElement->setAttribute("dry", processor.getParameter(Parameters::Dry));
+  convolutionElement->setAttribute("dryDecibels", processor.getParameter(Parameters::DryDecibels));
   convolutionElement->setAttribute("autoGainOn", processor.getParameter(Parameters::AutoGainOn));
 
   convolutionElement->setAttribute("eqLoShelfOn", processor.getParameter(Parameters::EqLowOn));
   convolutionElement->setAttribute("eqLoShelfFreq", processor.getParameter(Parameters::EqLowFreq));
-  convolutionElement->setAttribute("eqLoShelfGainDb", processor.getParameter(Parameters::EqLowGainDb));
+  convolutionElement->setAttribute("eqLoShelfDecibels", processor.getParameter(Parameters::EqLowDecibels));
   convolutionElement->setAttribute("eqLoShelfQ", processor.getParameter(Parameters::EqLowQ));
   
   convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(Parameters::EqHighOn));
   convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(Parameters::EqHighFreq));
-  convolutionElement->setAttribute("eqHiShelfGainDb", processor.getParameter(Parameters::EqHighGainDb));
+  convolutionElement->setAttribute("eqHiShelfDecibels", processor.getParameter(Parameters::EqHighDecibels));
   convolutionElement->setAttribute("eqHiShelfQ", processor.getParameter(Parameters::EqHighQ));
   
   const IRManager& irManager = processor.getIRManager();
@@ -127,9 +127,9 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
 
   // Phase 1: Load all data
   bool wetOn = element.getBoolAttribute("wetOn", 1.0);
-  double wet = element.getDoubleAttribute("wet", -1.0);
+  double wetDecibels = element.getDoubleAttribute("wetDecibels", 0.0);
   bool dryOn = element.getBoolAttribute("dryOn", 1.0);
-  double dry = element.getDoubleAttribute("dry", -1.0);
+  double dryDecibels = element.getDoubleAttribute("dryDecibels", 0.0);
   bool autoGainOn = element.getBoolAttribute("autoGainOn", true);
   double fileBeginSeconds = element.getDoubleAttribute("fileBeginSeconds", 0.0);
   double stretch = element.getDoubleAttribute("stretch", 1.0);
@@ -138,23 +138,14 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   
   bool eqLoShelfOn = element.getBoolAttribute("eqLoShelfOn", false);
   double eqLoShelfFreq = element.getDoubleAttribute("eqLoShelfFreq", 20.0);
-  double eqLoShelfGainDb = element.getDoubleAttribute("eqLoShelfGainDb", 0.0);
+  double eqLoShelfDecibels = element.getDoubleAttribute("eqLoShelfDecibels", 0.0);
   double eqLoShelfQ = element.getDoubleAttribute("eqLoShelfQ", 1.0);
   
   
   bool eqHiShelfOn = element.getBoolAttribute("eqHiShelfOn", false);
   double eqHiShelfFreq = element.getDoubleAttribute("eqHiShelfFreq", 20000.0);
-  double eqHiShelfGainDb = element.getDoubleAttribute("eqHiShelfGainDb", 0.0);
+  double eqHiShelfDecibels = element.getDoubleAttribute("eqHiShelfDecibels", 0.0);
   double eqHiShelfQ = element.getDoubleAttribute("eqHiShelfQ", 1.0);
-  
-  if (wet < 0.0 || wet > 1.0)
-  {
-    return false;
-  }
-  if (dry < 0.0 || dry > 1.0)
-  {
-    return false;
-  }
   
   Envelope envelope;
   XmlElement* envelopeElement = element.getChildByName("Envelope");
@@ -212,19 +203,19 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   irManager.reset();
   
   processor.setParameterNotifyingHost(Parameters::WetOn, wetOn);
-  processor.setParameterNotifyingHost(Parameters::Wet, static_cast<float>(wet));
+  processor.setParameterNotifyingHost(Parameters::WetDecibels, static_cast<float>(wetDecibels));
   processor.setParameterNotifyingHost(Parameters::DryOn, dryOn);
-  processor.setParameterNotifyingHost(Parameters::Dry, static_cast<float>(dry));
+  processor.setParameterNotifyingHost(Parameters::DryDecibels, static_cast<float>(dryDecibels));
   processor.setParameterNotifyingHost(Parameters::AutoGainOn, autoGainOn);
   
   processor.setParameterNotifyingHost(Parameters::EqLowOn, eqLoShelfOn);
   processor.setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(eqLoShelfFreq));
-  processor.setParameterNotifyingHost(Parameters::EqLowGainDb, static_cast<float>(eqLoShelfGainDb));
+  processor.setParameterNotifyingHost(Parameters::EqLowDecibels, static_cast<float>(eqLoShelfDecibels));
   processor.setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(eqLoShelfQ));
   
   processor.setParameterNotifyingHost(Parameters::EqHighOn, eqHiShelfOn);
   processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(eqHiShelfFreq));
-  processor.setParameterNotifyingHost(Parameters::EqHighGainDb, static_cast<float>(eqHiShelfGainDb));
+  processor.setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(eqHiShelfDecibels));
   processor.setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(eqHiShelfQ));
   
   irManager.setFileBeginSeconds(fileBeginSeconds);

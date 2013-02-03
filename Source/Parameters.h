@@ -26,22 +26,22 @@
 struct Parameters
 {
   static const BoolParameterDescriptor WetOn;
-  static const FloatParameterDescriptor Wet;
+  static const FloatParameterDescriptor WetDecibels;
   
   static const BoolParameterDescriptor DryOn;
-  static const FloatParameterDescriptor Dry;
+  static const FloatParameterDescriptor DryDecibels;
   
   static const BoolParameterDescriptor AutoGainOn;
-  static const FloatParameterDescriptor AutoGain;
+  static const FloatParameterDescriptor AutoGainDecibels;
 
   static const BoolParameterDescriptor EqLowOn;
   static const FloatParameterDescriptor EqLowFreq;
-  static const FloatParameterDescriptor EqLowGainDb;
+  static const FloatParameterDescriptor EqLowDecibels;
   static const FloatParameterDescriptor EqLowQ;
   
   static const BoolParameterDescriptor EqHighOn;
   static const FloatParameterDescriptor EqHighFreq;
-  static const FloatParameterDescriptor EqHighGainDb;
+  static const FloatParameterDescriptor EqHighDecibels;
   static const FloatParameterDescriptor EqHighQ;
 };
 
