@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  27 Jan 2013 6:14:14pm
+  Creation date:  6 Feb 2013 2:44:47pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_165D1411__
-#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_165D1411__
+#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_7F33059F__
+#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_7F33059F__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -72,6 +72,15 @@ private:
     Label* _nameVersionLabel;
     Label* _copyrightLabel;
     HyperlinkButton* _licenseHyperlink;
+    GroupComponent* _infoGroupComponent;
+    Label* _juceVersionPrefixLabel;
+    Label* _juceVersionLabel;
+    Label* _numberInputsPrefixLabel;
+    Label* _numberInputsLabel;
+    Label* _numberOutputsPrefixLabel;
+    Label* _numberOutputsLabel;
+    Label* _sseOptimizationPrefixLabel;
+    Label* _sseOptimizationLabel;
 
 
     //==============================================================================
@@ -81,4 +90,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_165D1411__
+#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_7F33059F__

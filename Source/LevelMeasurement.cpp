@@ -27,7 +27,7 @@ LevelMeasurement::LevelMeasurement() :
 
 void LevelMeasurement::process(const float* data, size_t len)
 {
-  float level = _level;
+  float level = _level.get();
   for (size_t i=0; i<len; ++i)
   {
     const float val = data[i];
@@ -44,17 +44,17 @@ void LevelMeasurement::process(const float* data, size_t len)
       level = 0.0f;
     }
   }
-  _level = level;
+  _level.set(level);
 }
 
 
 float LevelMeasurement::getLevel() const
 {
-  return _level;
+  return _level.get();
 }
 
 
 void LevelMeasurement::reset()
 {
-  _level = 0.0f;
+  _level.set(0.0f);
 }

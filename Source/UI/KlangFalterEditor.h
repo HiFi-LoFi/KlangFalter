@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  1 Dec 2012 3:35:15pm
+  Creation date:  6 Feb 2013 7:51:45pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_7F8B50EA__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_7F8B50EA__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_5AC77563__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_5AC77563__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -51,7 +51,7 @@ class KlangFalterEditor  : public AudioProcessorEditor,
 {
 public:
     //==============================================================================
-    KlangFalterEditor (PluginAudioProcessor* ownerFilter);
+    KlangFalterEditor (PluginAudioProcessor& processor);
     ~KlangFalterEditor();
 
     //==============================================================================
@@ -74,7 +74,7 @@ public:
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     CustomLookAndFeel _customLookAndFeel;
-    PluginAudioProcessor* _processor;
+    PluginAudioProcessor& _processor;
     juce::ScopedPointer<SettingsDialogComponent> _settingsDialog;
     //[/UserVariables]
 
@@ -84,7 +84,6 @@ private:
     Label* _stretchHeaderLabel;
     Slider* _stretchSlider;
     LevelMeter* _levelMeterDry;
-    LevelMeter* _levelMeterWet;
     Label* _dryLevelLabel;
     Label* _wetLevelLabel;
     Slider* _drySlider;
@@ -124,6 +123,7 @@ private:
     Slider* _loFreqSlider;
     TextButton* _hiEqButton;
     TextButton* _loEqButton;
+    LevelMeter* _levelMeterWet;
 
 
     //==============================================================================
@@ -133,4 +133,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_7F8B50EA__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_5AC77563__

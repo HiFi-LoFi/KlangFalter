@@ -64,7 +64,17 @@ void DeallocateBuffer(T* ptr)
 #endif
 }
 
-} // End of namespace internal  
+} // End of namespace internal
+  
+inline bool SSEOptimized()
+{
+#if defined(FFTCONVOLVER_USE_SSE)
+  return true;
+#else
+  return false;
+#endif
+}
+  
 } // End of namespace fftconvolver
 
 #endif // Header guard

@@ -18,6 +18,8 @@
 #ifndef _LEVELMEASUREMENT_H
 #define _LEVELMEASUREMENT_H
 
+#include "../JuceLibraryCode/JuceHeader.h"
+
 #include <cstddef>
 
 
@@ -30,8 +32,8 @@ public:
   void reset();
   
 private:
-  volatile float _level;
-  float _decay;
+  juce::Atomic<float> _level;
+  const float _decay;
 };
 
 

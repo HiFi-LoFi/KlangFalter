@@ -111,6 +111,7 @@ public:
     double getSampleRate() const;
   
     float getLevelDry(size_t channel) const;
+    float getLevelWet(size_t channel) const;
 
     Settings& getSettings();
   
@@ -121,6 +122,7 @@ private:
     std::vector<fftconvolver::SampleBuffer*> _convolutionBuffers;
     ParameterSet _parameterSet;  
     std::vector<LevelMeasurement> _levelMeasurementsDry;
+    std::vector<LevelMeasurement> _levelMeasurementsWet;
     Settings _settings;
   
     //==============================================================================

@@ -38,6 +38,7 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _convolutionBuffers(),
   _parameterSet(),
   _levelMeasurementsDry(2),
+  _levelMeasurementsWet(2),
   _settings()
 { 
   _parameterSet.registerParameter(Parameters::WetOn);
@@ -219,6 +220,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
 
   buffer.applyGain(0, samplesToProcess, factorDry);
 
+  // Level measurement (dry)
   if (numInputChannels == 1)
   {    
     _levelMeasurementsDry[0].process(buffer.getSampleData(0), samplesToProcess);
@@ -230,9 +232,9 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     _levelMeasurementsDry[1].process(buffer.getSampleData(1), samplesToProcess);
   }
 
+  // Determine channel data
   float* channelData0 = nullptr;
   float* channelData1 = nullptr;
-
   if (numInputChannels == 1)
   {    
     channelData0 = _wetBuffer.getSampleData(0);
@@ -269,7 +271,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     }
     
     // Convolve
-    if (irAgent00 && irAgent00->getConvolver())
+    if (irAgent00 && irAgent00->getConvolver() && numInputChannels >= 1 && numOutputChannels >= 1)
     {
       convolutionBuffer00 = _convolutionBuffers[0];
       irAgent00->process(channelData0, convolutionBuffer00->data(), samplesToProcess, autoGain);
@@ -279,7 +281,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
       }
     }
     
-    if (irAgent01 && irAgent01->getConvolver())
+    if (irAgent01 && irAgent01->getConvolver() && numInputChannels >= 1 && numOutputChannels >= 2)
     {
       convolutionBuffer01 = _convolutionBuffers[1];
       irAgent01->process(channelData0, convolutionBuffer01->data(), samplesToProcess, autoGain);
@@ -289,7 +291,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
       }
     }
     
-    if (irAgent10 && irAgent10->getConvolver())
+    if (irAgent10 && irAgent10->getConvolver() && numInputChannels >= 2 && numOutputChannels >= 1)
     {
       convolutionBuffer10 = _convolutionBuffers[2];
       irAgent10->process(channelData1, convolutionBuffer10->data(), samplesToProcess, autoGain);
@@ -299,7 +301,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
       }
     }
     
-    if (irAgent11 && irAgent11->getConvolver())
+    if (irAgent11 && irAgent11->getConvolver() && numInputChannels >= 2 && numOutputChannels >= 2)
     {
       convolutionBuffer11 = _convolutionBuffers[3];
       irAgent11->process(channelData1, convolutionBuffer11->data(), samplesToProcess, autoGain);
@@ -310,12 +312,24 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     }  
   }
   
+  // Level measurement (wet)
+  if (numOutputChannels == 1)
+  {    
+    _levelMeasurementsWet[0].process(buffer.getSampleData(0), samplesToProcess);
+    _levelMeasurementsWet[1].reset();
+  }
+  else if (numOutputChannels == 2)
+  {
+    _levelMeasurementsWet[0].process(buffer.getSampleData(0), samplesToProcess);
+    _levelMeasurementsWet[1].process(buffer.getSampleData(1), samplesToProcess);
+  }
+  
   // In case we have more outputs than inputs, we'll clear any output
   // channels that didn't contain input data, (because these aren't
   // guaranteed to be empty - they may contain garbage).
   for (int i=numInputChannels; i<numOutputChannels; ++i)
   {
-    buffer.clear (i, 0, buffer.getNumSamples());
+    buffer.clear(i, 0, buffer.getNumSamples());
   }
 }
 
@@ -327,7 +341,7 @@ bool PluginAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* PluginAudioProcessor::createEditor()
 {
-  return new KlangFalterEditor(this);
+  return new KlangFalterEditor(*this);
 }
 
 //==============================================================================
@@ -376,6 +390,12 @@ const IRManager& PluginAudioProcessor::getIRManager() const
 float PluginAudioProcessor::getLevelDry(size_t channel) const
 {
   return (channel < _levelMeasurementsDry.size()) ? _levelMeasurementsDry[channel].getLevel() : 0.0f;
+}
+
+
+float PluginAudioProcessor::getLevelWet(size_t channel) const
+{
+  return (channel < _levelMeasurementsWet.size()) ? _levelMeasurementsWet[channel].getLevel() : 0.0f;
 }
 
 

@@ -23,7 +23,6 @@
 #include "ChangeNotifier.h"
 #include "CookbookEq.h"
 #include "Convolver.h"
-#include "LevelMeasurement.h"
 
 #include <vector>
 
@@ -111,8 +110,6 @@ public:
   void fadeOut();
   bool waitForFadeOut(size_t waitTimeMs = 100);
   
-  float getLevel() const;
-  
   // Convolver
   void updateConvolver();
   void clearConvolver();
@@ -146,8 +143,6 @@ private:
   
   float _fadeFactor;
   float _fadeIncrement;
-  
-  LevelMeasurement _levelMeasurement;
   
   CookbookEq _eqLo;
   CookbookEq _eqHi;

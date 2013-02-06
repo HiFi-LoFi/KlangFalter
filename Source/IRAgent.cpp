@@ -41,7 +41,6 @@ IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) 
   _convolver(nullptr),
   _fadeFactor(0.0),
   _fadeIncrement(0.0),
-  _levelMeasurement(),
   _eqLo(CookbookEq::LoShelf, Parameters::EqLowFreq.getMinValue(), Parameters::EqLowQ.getMinValue()),
   _eqHi(CookbookEq::HiShelf, Parameters::EqLowFreq.getMaxValue(), Parameters::EqLowQ.getMinValue())
 {
@@ -103,7 +102,6 @@ void IRAgent::clear()
     _fileSampleRate = 0.0;
     _fileChannel = 0;
     _irBuffer = nullptr;
-    _levelMeasurement.reset();
   }
   propagateChange();
 }
@@ -328,8 +326,6 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
     _eqHi.setGain(eqHiDecibels);
     _eqHi.filterOut(output, len);
   }
-  
-  _levelMeasurement.process(output, len);
 }
 
 
@@ -353,10 +349,3 @@ bool IRAgent::waitForFadeOut(size_t waitTimeMs)
   }
   return (_fadeFactor < 0.0001);
 }
-
-
-float IRAgent::getLevel() const
-{
-  return _levelMeasurement.getLevel();
-}
-

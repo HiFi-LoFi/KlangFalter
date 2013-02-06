@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  1 Dec 2012 3:35:15pm
+  Creation date:  6 Feb 2013 7:51:45pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -43,14 +43,14 @@ T SnapValue(const T& val, const T& snapValue, const T& sensitivity)
 //[/MiscUserDefs]
 
 //==============================================================================
-KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
-    : AudioProcessorEditor(ownerFilter),
+KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
+    : AudioProcessorEditor(&processor),
+      _processor(processor),
       _decibelScale (0),
       _irTabComponent (0),
       _stretchHeaderLabel (0),
       _stretchSlider (0),
       _levelMeterDry (0),
-      _levelMeterWet (0),
       _dryLevelLabel (0),
       _wetLevelLabel (0),
       _drySlider (0),
@@ -89,7 +89,8 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
       _loGainSlider (0),
       _loFreqSlider (0),
       _hiEqButton (0),
-      _loEqButton (0)
+      _loEqButton (0),
+      _levelMeterWet (0)
 {
     addAndMakeVisible (_decibelScale = new DecibelScale());
     _decibelScale->setName (L"DecibelScale");
@@ -121,9 +122,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
 
     addAndMakeVisible (_levelMeterDry = new LevelMeter());
     _levelMeterDry->setName (L"LevelMeterDry");
-
-    addAndMakeVisible (_levelMeterWet = new LevelMeter());
-    _levelMeterWet->setName (L"LevelMeterWet");
 
     addAndMakeVisible (_dryLevelLabel = new Label (L"DryLevelLabel",
                                                    L"-inf"));
@@ -432,6 +430,9 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
     _loEqButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
     _loEqButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
 
+    addAndMakeVisible (_levelMeterWet = new LevelMeter());
+    _levelMeterWet->setName (L"LevelMeterWet");
+
 
     //[UserPreSize]
 
@@ -443,25 +444,20 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
 
 
     //[Constructor] You can add your own custom stuff here..
-    _processor = ownerFilter;
-    if (_processor)
-    {
-      IRManager& irManager = _processor->getIRManager();
-      _processor->addNotificationListener(this);
-      irManager.addNotificationListener(this);
-      IRComponent* irComponent00 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(0));
-      IRComponent* irComponent01 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(1));
-      IRComponent* irComponent10 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(2));
-      IRComponent* irComponent11 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(3));
-      irComponent00->init(&irManager, 0, 0);
-      irComponent01->init(&irManager, 0, 1);
-      irComponent10->init(&irManager, 1, 0);
-      irComponent11->init(&irManager, 1, 1);
-      _levelMeterDry->setChannelCount(2);
-      _levelMeterWet->setChannelCount(4);
-      _irBrowserComponent->init(_processor);
-      startTimer(100);
-    }
+    IRManager& irManager = _processor.getIRManager();
+    _processor.addNotificationListener(this);
+    irManager.addNotificationListener(this);
+    IRComponent* irComponent00 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(0));
+    IRComponent* irComponent01 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(1));
+    IRComponent* irComponent10 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(2));
+    IRComponent* irComponent11 = dynamic_cast<IRComponent*>(_irTabComponent->getTabContentComponent(3));
+    irComponent00->init(&irManager, 0, 0);
+    irComponent01->init(&irManager, 0, 1);
+    irComponent10->init(&irManager, 1, 0);
+    irComponent11->init(&irManager, 1, 1);
+    _irBrowserComponent->init(&_processor);
+    startTimer(100);
+
     processorChanged();
     _browseButton->setClickingTogglesState(true);
     _dryButton->setClickingTogglesState(true);
@@ -476,13 +472,8 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor* ownerFilter)
 KlangFalterEditor::~KlangFalterEditor()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
-
-    if (_processor)
-    {
-      _processor->removeNotificationListener(this);
-      _processor->getIRManager().removeNotificationListener(this);
-    }
-
+    _processor.removeNotificationListener(this);
+    _processor.getIRManager().removeNotificationListener(this);
     //[/Destructor_pre]
 
     deleteAndZero (_decibelScale);
@@ -490,7 +481,6 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_stretchHeaderLabel);
     deleteAndZero (_stretchSlider);
     deleteAndZero (_levelMeterDry);
-    deleteAndZero (_levelMeterWet);
     deleteAndZero (_dryLevelLabel);
     deleteAndZero (_wetLevelLabel);
     deleteAndZero (_drySlider);
@@ -530,6 +520,7 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_loFreqSlider);
     deleteAndZero (_hiEqButton);
     deleteAndZero (_loEqButton);
+    deleteAndZero (_levelMeterWet);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -546,7 +537,7 @@ void KlangFalterEditor::paint (Graphics& g)
 
     //[UserPaint] Add your own custom painting code here..
     juce::Image backgroundImage(juce::ImageCache::getFromMemory(BinaryData::brushed_aluminium_png,
-                                                                BinaryData::brushed_aluminium_pngSize));  
+                                                                BinaryData::brushed_aluminium_pngSize));
     g.setFillType(juce::FillType(backgroundImage, juce::AffineTransform()));
     g.fillAll();
     //[/UserPaint]
@@ -554,17 +545,16 @@ void KlangFalterEditor::paint (Graphics& g)
 
 void KlangFalterEditor::resized()
 {
-    _decibelScale->setBounds (580, 40, 32, 176);
-    _irTabComponent->setBounds (12, 12, 542, 204);
+    _decibelScale->setBounds (584, 40, 32, 176);
+    _irTabComponent->setBounds (16, 12, 542, 204);
     _stretchHeaderLabel->setBounds (80, 220, 84, 24);
     _stretchSlider->setBounds (80, 244, 84, 40);
-    _levelMeterDry->setBounds (616, 40, 12, 176);
-    _levelMeterWet->setBounds (704, 40, 24, 176);
-    _dryLevelLabel->setBounds (584, 220, 60, 24);
-    _wetLevelLabel->setBounds (680, 220, 64, 24);
-    _drySlider->setBounds (624, 32, 24, 192);
-    _decibelScale2->setBounds (668, 40, 32, 176);
-    _wetSlider->setBounds (724, 32, 24, 192);
+    _levelMeterDry->setBounds (620, 40, 12, 176);
+    _dryLevelLabel->setBounds (588, 220, 60, 24);
+    _wetLevelLabel->setBounds (672, 220, 64, 24);
+    _drySlider->setBounds (628, 32, 24, 192);
+    _decibelScale2->setBounds (672, 40, 32, 176);
+    _wetSlider->setBounds (716, 32, 24, 192);
     _browseButton->setBounds (12, 308, 736, 24);
     _irBrowserComponent->setBounds (12, 332, 736, 288);
     _settingsButton->setBounds (708, 0, 52, 16);
@@ -572,10 +562,10 @@ void KlangFalterEditor::resized()
     _beginHeaderLabel->setBounds (16, 220, 84, 24);
     _beginSlider->setBounds (16, 244, 84, 40);
     _beginLabel->setBounds (16, 280, 84, 24);
-    _wetButton->setBounds (696, 240, 44, 24);
-    _dryButton->setBounds (596, 240, 44, 24);
-    _autogainButton->setBounds (596, 272, 144, 24);
-    _reverseButton->setBounds (482, 8, 72, 24);
+    _wetButton->setBounds (688, 240, 44, 24);
+    _dryButton->setBounds (600, 240, 44, 24);
+    _autogainButton->setBounds (600, 272, 132, 24);
+    _reverseButton->setBounds (486, 8, 72, 24);
     _predelayHeaderLabel->setBounds (144, 220, 84, 24);
     _predelaySlider->setBounds (144, 244, 84, 40);
     _predelayLabel->setBounds (144, 280, 84, 24);
@@ -599,6 +589,7 @@ void KlangFalterEditor::resized()
     _loFreqSlider->setBounds (272, 260, 36, 28);
     _hiEqButton->setBounds (464, 220, 56, 24);
     _loEqButton->setBounds (300, 220, 56, 24);
+    _levelMeterWet->setBounds (708, 40, 12, 176);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -611,16 +602,13 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     if (sliderThatWasMoved == _stretchSlider)
     {
         //[UserSliderCode__stretchSlider] -- add your slider handling code here..
-        if (_processor)
+        double sliderVal = _stretchSlider->getValue();
+        if (::fabs(sliderVal-1.0) < 0.025)
         {
-          double sliderVal = _stretchSlider->getValue();
-          if (::fabs(sliderVal-1.0) < 0.025)
-          {
-            sliderVal = 1.0;
-            _stretchSlider->setValue(1.0, juce::dontSendNotification);
-          }
-          _processor->getIRManager().setStretch(sliderVal);
+          sliderVal = 1.0;
+          _stretchSlider->setValue(1.0, juce::dontSendNotification);
         }
+        _processor.getIRManager().setStretch(sliderVal);
         //[/UserSliderCode__stretchSlider]
     }
     else if (sliderThatWasMoved == _drySlider)
@@ -628,10 +616,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         //[UserSliderCode__drySlider] -- add your slider handling code here..
         const float scale = static_cast<float>(_drySlider->getValue());
         const float decibels = SnapValue(DecibelScaling::Scale2Db(scale), 0.0f, 0.5f);
-        if (_processor)
-        {
-          _processor->setParameterNotifyingHost(Parameters::DryDecibels, decibels);
-        }
+        _processor.setParameterNotifyingHost(Parameters::DryDecibels, decibels);
         //[/UserSliderCode__drySlider]
     }
     else if (sliderThatWasMoved == _wetSlider)
@@ -639,58 +624,55 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         //[UserSliderCode__wetSlider] -- add your slider handling code here..
         const float scale = static_cast<float>(_wetSlider->getValue());
         const float decibels = SnapValue(DecibelScaling::Scale2Db(scale), 0.0f, 0.5f);
-        if (_processor)
-        {
-          _processor->setParameterNotifyingHost(Parameters::WetDecibels, decibels);
-        }
+        _processor.setParameterNotifyingHost(Parameters::WetDecibels, decibels);
         //[/UserSliderCode__wetSlider]
     }
     else if (sliderThatWasMoved == _beginSlider)
     {
         //[UserSliderCode__beginSlider] -- add your slider handling code here..
-        _processor->getIRManager().setFileBeginSeconds(_beginSlider->getValue());
+        _processor.getIRManager().setFileBeginSeconds(_beginSlider->getValue());
         //[/UserSliderCode__beginSlider]
     }
     else if (sliderThatWasMoved == _predelaySlider)
     {
         //[UserSliderCode__predelaySlider] -- add your slider handling code here..
-        _processor->getIRManager().setPredelayMs(_predelaySlider->getValue());
+        _processor.getIRManager().setPredelayMs(_predelaySlider->getValue());
         //[/UserSliderCode__predelaySlider]
     }
     else if (sliderThatWasMoved == _hiQSlider)
     {
         //[UserSliderCode__hiQSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(_hiQSlider->getValue()));
+        _processor.setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(_hiQSlider->getValue()));
         //[/UserSliderCode__hiQSlider]
     }
     else if (sliderThatWasMoved == _hiGainSlider)
     {
         //[UserSliderCode__hiGainSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(_hiGainSlider->getValue()));
+        _processor.setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(_hiGainSlider->getValue()));
         //[/UserSliderCode__hiGainSlider]
     }
     else if (sliderThatWasMoved == _hiFreqSlider)
     {
         //[UserSliderCode__hiFreqSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(_hiFreqSlider->getValue()));
+        _processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(_hiFreqSlider->getValue()));
         //[/UserSliderCode__hiFreqSlider]
     }
     else if (sliderThatWasMoved == _loQSlider)
     {
         //[UserSliderCode__loQSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(_loQSlider->getValue()));
+        _processor.setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(_loQSlider->getValue()));
         //[/UserSliderCode__loQSlider]
     }
     else if (sliderThatWasMoved == _loGainSlider)
     {
         //[UserSliderCode__loGainSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqLowDecibels, static_cast<float>(_loGainSlider->getValue()));
+        _processor.setParameterNotifyingHost(Parameters::EqLowDecibels, static_cast<float>(_loGainSlider->getValue()));
         //[/UserSliderCode__loGainSlider]
     }
     else if (sliderThatWasMoved == _loFreqSlider)
     {
         //[UserSliderCode__loFreqSlider] -- add your slider handling code here..
-        _processor->setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(_loFreqSlider->getValue()));
+        _processor.setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(_loFreqSlider->getValue()));
         //[/UserSliderCode__loFreqSlider]
     }
 
@@ -730,7 +712,7 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
     {
         //[UserButtonCode__settingsButton] -- add your button handler code here..
         _settingsDialog = nullptr;
-        _settingsDialog = new SettingsDialogComponent(*_processor);
+        _settingsDialog = new SettingsDialogComponent(_processor);
         juce::DialogWindow::showDialog("Settings",
                                        _settingsDialog,
                                        this,
@@ -741,40 +723,37 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == _wetButton)
     {
         //[UserButtonCode__wetButton] -- add your button handler code here..
-        _processor->setParameter(Parameters::WetOn, _wetButton->getToggleState());
+        _processor.setParameter(Parameters::WetOn, _wetButton->getToggleState());
         //[/UserButtonCode__wetButton]
     }
     else if (buttonThatWasClicked == _dryButton)
     {
         //[UserButtonCode__dryButton] -- add your button handler code here..
-        _processor->setParameter(Parameters::DryOn, _dryButton->getToggleState());
+        _processor.setParameter(Parameters::DryOn, _dryButton->getToggleState());
         //[/UserButtonCode__dryButton]
     }
     else if (buttonThatWasClicked == _autogainButton)
     {
         //[UserButtonCode__autogainButton] -- add your button handler code here..
-        _processor->setParameter(Parameters::AutoGainOn, _autogainButton->getToggleState());
+        _processor.setParameter(Parameters::AutoGainOn, _autogainButton->getToggleState());
         //[/UserButtonCode__autogainButton]
     }
     else if (buttonThatWasClicked == _reverseButton)
     {
         //[UserButtonCode__reverseButton] -- add your button handler code here..
-        if (_processor)
-        {
-          _processor->getIRManager().setReverse(_reverseButton->getToggleState());
-        }
+        _processor.getIRManager().setReverse(_reverseButton->getToggleState());
         //[/UserButtonCode__reverseButton]
     }
     else if (buttonThatWasClicked == _hiEqButton)
     {
         //[UserButtonCode__hiEqButton] -- add your button handler code here..
-        _processor->setParameter(Parameters::EqHighOn, _hiEqButton->getToggleState());
+        _processor.setParameter(Parameters::EqHighOn, _hiEqButton->getToggleState());
         //[/UserButtonCode__hiEqButton]
     }
     else if (buttonThatWasClicked == _loEqButton)
     {
         //[UserButtonCode__loEqButton] -- add your button handler code here..
-        _processor->setParameter(Parameters::EqLowOn, _loEqButton->getToggleState());
+        _processor.setParameter(Parameters::EqLowOn, _loEqButton->getToggleState());
         //[/UserButtonCode__loEqButton]
     }
 
@@ -788,59 +767,45 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
 
 void KlangFalterEditor::processorChanged()
 {
-  const IRManager* irManager = _processor ? &_processor->getIRManager() : nullptr;
-  const double maxFileDuration = irManager ? irManager->getMaxFileDuration() : 0.0;
+  const IRManager& irManager = _processor.getIRManager();
+  const double maxFileDuration = irManager.getMaxFileDuration();
   const bool irAvailable = (maxFileDuration > 0.0);
 
   {
-    const double stretch = irManager ? irManager->getStretch() : 1.0;
+    const double stretch = irManager.getStretch();
     _stretchSlider->setEnabled(irAvailable);
     _stretchSlider->setRange(0.5, 1.5);
     _stretchSlider->setValue(stretch, juce::dontSendNotification);
     _stretchLabel->setText(String(static_cast<int>(100.0*stretch)) + String("%"), true);
   }
 
-  if (_processor)
   {
-    const float db = _processor->getParameter(Parameters::DryDecibels);
+    const float db = _processor.getParameter(Parameters::DryDecibels);
     const float scale = DecibelScaling::Db2Scale(db);
     _drySlider->setEnabled(true);
     _drySlider->setRange(0.0, 1.0);
     _drySlider->setValue(scale, juce::dontSendNotification);
     _dryLevelLabel->setText(DecibelScaling::DecibelString(db), true);
-  }
-  else
-  {
-    _drySlider->setEnabled(false);
+    _dryButton->setToggleState(_processor.getParameter(Parameters::DryOn), false);
   }
 
-  if (_processor)
   {
-    const float db = _processor->getParameter(Parameters::WetDecibels);
+    const float db = _processor.getParameter(Parameters::WetDecibels);
     const float scale = DecibelScaling::Db2Scale(db);
     _wetSlider->setEnabled(true);
     _wetSlider->setRange(0.0, 1.0);
     _wetSlider->setValue(scale, juce::dontSendNotification);
     _wetLevelLabel->setText(DecibelScaling::DecibelString(db), true);
-  }
-  else
-  {
-    _wetSlider->setEnabled(false);
+    _wetButton->setToggleState(_processor.getParameter(Parameters::WetOn), false);
   }
 
-  if (irManager)
   {
     _reverseButton->setEnabled(true);
-    _reverseButton->setToggleState(irManager->getReverse(), false);
-  }
-  else
-  {
-    _reverseButton->setEnabled(false);
-    _reverseButton->setToggleState(false, false);
+    _reverseButton->setToggleState(irManager.getReverse(), false);
   }
 
   {
-    const double fileBeginSeconds = std::min(irManager->getFileBeginSeconds(), maxFileDuration);
+    const double fileBeginSeconds = std::min(irManager.getFileBeginSeconds(), maxFileDuration);
     _beginSlider->setEnabled(irAvailable);
     if (maxFileDuration > 0.0)
     {
@@ -851,71 +816,75 @@ void KlangFalterEditor::processorChanged()
   }
 
   {
-    const double predelayMs = irManager->getPredelayMs();
+    const double predelayMs = irManager.getPredelayMs();
     _predelaySlider->setValue(predelayMs);
     _predelaySlider->setEnabled(irAvailable);
     _predelayLabel->setText(juce::String(static_cast<int>(predelayMs+0.5)) + juce::String("ms"), true);
   }
 
   {
-    const float autoGainDecibels = _processor->getParameter(Parameters::AutoGainDecibels);
-    const bool autoGainOn = _processor->getParameter(Parameters::AutoGainOn);
+    const float autoGainDecibels = _processor.getParameter(Parameters::AutoGainDecibels);
+    const bool autoGainOn = _processor.getParameter(Parameters::AutoGainOn);
     const juce::String autoGainText = DecibelScaling::DecibelString(autoGainDecibels);
     _autogainButton->setButtonText(juce::String("Autogain ") + autoGainText);
     _autogainButton->setToggleState(autoGainOn, false);
   }
 
-  _dryButton->setToggleState(_processor->getParameter(Parameters::DryOn), false);
-  _wetButton->setToggleState(_processor->getParameter(Parameters::WetOn), false);
-
   const bool loEqEnabled = irAvailable;
-  const bool loEqOn = (_processor->getParameter(Parameters::EqLowOn) && loEqEnabled);
+  const bool loEqOn = (_processor.getParameter(Parameters::EqLowOn) && loEqEnabled);
   {
     _loEqButton->setEnabled(loEqEnabled);
     _loEqButton->setToggleState(loEqOn, false);
   }
   {
-    const float freq = _processor->getParameter(Parameters::EqLowFreq);
+    const float freq = _processor.getParameter(Parameters::EqLowFreq);
     _loFreqSlider->setEnabled(loEqEnabled);
     _loFreqSlider->setValue(freq, juce::dontSendNotification);
     _loFreqLabel->setText(juce::String(static_cast<int>(freq+0.5f)) + juce::String("Hz"), false);
   }
   {
-    const float gainDb = _processor->getParameter(Parameters::EqLowDecibels);
+    const float gainDb = _processor.getParameter(Parameters::EqLowDecibels);
     _loGainSlider->setEnabled(loEqEnabled);
     _loGainSlider->setValue(gainDb, juce::dontSendNotification);
     _loGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
   }
   {
-    const float q = _processor->getParameter(Parameters::EqLowQ);
+    const float q = _processor.getParameter(Parameters::EqLowQ);
     _loQSlider->setEnabled(loEqEnabled);
     _loQSlider->setValue(q, juce::dontSendNotification);
     _loQLabel->setText(juce::String(q, 2), false);
   }
 
   const bool hiEqEnabled = irAvailable;
-  const bool hiEqOn = (_processor->getParameter(Parameters::EqHighOn) && hiEqEnabled);
+  const bool hiEqOn = (_processor.getParameter(Parameters::EqHighOn) && hiEqEnabled);
   {
     _hiEqButton->setEnabled(hiEqEnabled);
     _hiEqButton->setToggleState(hiEqOn, false);
   }
   {
-    const float freq = _processor->getParameter(Parameters::EqHighFreq);
+    const float freq = _processor.getParameter(Parameters::EqHighFreq);
     _hiFreqSlider->setEnabled(hiEqEnabled);
     _hiFreqSlider->setValue(freq, juce::dontSendNotification);
     _hiFreqLabel->setText(juce::String(freq/1000.0f, 2) + juce::String("kHz"), false);
   }
   {
-    const float gainDb = _processor->getParameter(Parameters::EqHighDecibels);
+    const float gainDb = _processor.getParameter(Parameters::EqHighDecibels);
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(gainDb, juce::dontSendNotification);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
   }
   {
-    const float q = _processor->getParameter(Parameters::EqHighQ);
+    const float q = _processor.getParameter(Parameters::EqHighQ);
     _hiQSlider->setEnabled(hiEqEnabled);
     _hiQSlider->setValue(q, juce::dontSendNotification);
     _hiQLabel->setText(juce::String(q, 2), false);
+  }
+  
+  {
+    const int numInputChannels = std::min(_processor.getNumInputChannels(), 2);
+    const int numOutputChannels = std::min(_processor.getNumOutputChannels(), 2);
+    _levelMeterDry->setChannelCount(numInputChannels);
+    _levelMeterWet->setChannelCount(numOutputChannels);
   }
 }
 
@@ -928,28 +897,10 @@ void KlangFalterEditor::changeNotification()
 
 void KlangFalterEditor::timerCallback()
 {
-  float levelDry1 = 0.0f;
-  float levelDry2 = 0.0f;
-  float levelWet00 = 0.0f;
-  float levelWet01 = 0.0f;
-  float levelWet10 = 0.0f;
-  float levelWet11 = 0.0f;
-  if (_processor)
-  {
-    IRManager& irManager = _processor->getIRManager();
-    levelDry1 = _processor->getLevelDry(0);
-    levelDry2 = _processor->getLevelDry(1);
-    levelWet00 = irManager.getAgent(0, 0)->getLevel();
-    levelWet01 = irManager.getAgent(0, 1)->getLevel();
-    levelWet10 = irManager.getAgent(1, 0)->getLevel();
-    levelWet11 = irManager.getAgent(1, 1)->getLevel();
-  }
-  _levelMeterDry->setLevel(0, levelDry1);
-  _levelMeterDry->setLevel(1, levelDry2);
-  _levelMeterWet->setLevel(0, levelWet00);
-  _levelMeterWet->setLevel(1, levelWet01);
-  _levelMeterWet->setLevel(2, levelWet10);
-  _levelMeterWet->setLevel(3, levelWet11);
+  _levelMeterDry->setLevel(0, _processor.getLevelDry(0));
+  _levelMeterDry->setLevel(1, _processor.getLevelDry(1));
+  _levelMeterWet->setLevel(0, _processor.getLevelWet(0));
+  _levelMeterWet->setLevel(1, _processor.getLevelWet(1));
 }
 
 
@@ -965,16 +916,16 @@ void KlangFalterEditor::timerCallback()
 BEGIN_JUCER_METADATA
 
 <JUCER_COMPONENT documentType="Component" className="KlangFalterEditor" componentName=""
-                 parentClasses="public AudioProcessorEditor, public ChangeListener, public Timer"
-                 constructorParams="PluginAudioProcessor* ownerFilter" variableInitialisers="AudioProcessorEditor(ownerFilter)"
+                 parentClasses="public AudioProcessorEditor, public ChangeNotifier::Listener, public Timer"
+                 constructorParams="PluginAudioProcessor&amp; processor" variableInitialisers="AudioProcessorEditor(&amp;processor),&#10;_processor(processor)"
                  snapPixels="4" snapActive="1" snapShown="1" overlayOpacity="0.330000013"
                  fixedSize="1" initialWidth="760" initialHeight="330">
   <BACKGROUND backgroundColour="ffa6a6b1"/>
   <GENERICCOMPONENT name="DecibelScale" id="6dd7ac2ee661b784" memberName="_decibelScale"
-                    virtualName="" explicitFocusOrder="0" pos="580 40 32 176" class="DecibelScale"
+                    virtualName="" explicitFocusOrder="0" pos="584 40 32 176" class="DecibelScale"
                     params=""/>
   <TABBEDCOMPONENT name="IRTabComponent" id="697fc3546f1ab7f1" memberName="_irTabComponent"
-                   virtualName="" explicitFocusOrder="0" pos="12 12 542 204" orientation="top"
+                   virtualName="" explicitFocusOrder="0" pos="16 12 542 204" orientation="top"
                    tabBarDepth="30" initialTab="0">
     <TAB name="1-1" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
@@ -996,30 +947,27 @@ BEGIN_JUCER_METADATA
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <GENERICCOMPONENT name="LevelMeterDry" id="93270230a2db62e0" memberName="_levelMeterDry"
-                    virtualName="" explicitFocusOrder="0" pos="616 40 12 176" class="LevelMeter"
-                    params=""/>
-  <GENERICCOMPONENT name="LevelMeterWet" id="e4867bf99a47726a" memberName="_levelMeterWet"
-                    virtualName="" explicitFocusOrder="0" pos="704 40 24 176" class="LevelMeter"
+                    virtualName="" explicitFocusOrder="0" pos="620 40 12 176" class="LevelMeter"
                     params=""/>
   <LABEL name="DryLevelLabel" id="892bd8ba7f961215" memberName="_dryLevelLabel"
-         virtualName="" explicitFocusOrder="0" pos="584 220 60 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="588 220 60 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="-inf" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="34"/>
   <LABEL name="WetLevelLabel" id="3469fbc38286d2b6" memberName="_wetLevelLabel"
-         virtualName="" explicitFocusOrder="0" pos="680 220 64 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="672 220 64 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="-inf" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="34"/>
   <SLIDER name="DrySlider" id="3694f3553dea94b" memberName="_drySlider"
-          virtualName="" explicitFocusOrder="0" pos="624 32 24 192" min="0"
+          virtualName="" explicitFocusOrder="0" pos="628 32 24 192" min="0"
           max="10" int="0" style="LinearVertical" textBoxPos="NoTextBox"
           textBoxEditable="1" textBoxWidth="80" textBoxHeight="20" skewFactor="1"/>
   <GENERICCOMPONENT name="DecibelScale" id="f3824f7df1d2ea95" memberName="_decibelScale2"
-                    virtualName="" explicitFocusOrder="0" pos="668 40 32 176" class="DecibelScale"
+                    virtualName="" explicitFocusOrder="0" pos="672 40 32 176" class="DecibelScale"
                     params=""/>
   <SLIDER name="WetSlider" id="e50054d828347fbd" memberName="_wetSlider"
-          virtualName="" explicitFocusOrder="0" pos="724 32 24 192" min="0"
+          virtualName="" explicitFocusOrder="0" pos="716 32 24 192" min="0"
           max="10" int="0" style="LinearVertical" textBoxPos="NoTextBox"
           textBoxEditable="1" textBoxWidth="80" textBoxHeight="20" skewFactor="1"/>
   <TEXTBUTTON name="" id="e5cc4d9d88fb6d29" memberName="_browseButton" virtualName=""
@@ -1053,19 +1001,19 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <TEXTBUTTON name="" id="c0b279e2bae7030e" memberName="_wetButton" virtualName=""
-              explicitFocusOrder="0" pos="696 240 44 24" bgColOff="80bcbcbc"
+              explicitFocusOrder="0" pos="688 240 44 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Wet" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
   <TEXTBUTTON name="" id="499237d463b07642" memberName="_dryButton" virtualName=""
-              explicitFocusOrder="0" pos="596 240 44 24" bgColOff="80bcbcbc"
+              explicitFocusOrder="0" pos="600 240 44 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Dry" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
   <TEXTBUTTON name="" id="f25a3c5b0535fcca" memberName="_autogainButton" virtualName=""
-              explicitFocusOrder="0" pos="596 272 144 24" bgColOff="80bcbcbc"
+              explicitFocusOrder="0" pos="600 272 132 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Autogain 0.0dB" connectedEdges="3"
               needsCallback="1" radioGroupId="0"/>
   <TEXTBUTTON name="" id="fcb6829f0d6fc21f" memberName="_reverseButton" virtualName=""
-              explicitFocusOrder="0" pos="482 8 72 24" bgColOff="80bcbcbc"
+              explicitFocusOrder="0" pos="486 8 72 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Reverse" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
   <LABEL name="" id="33afc8fa0b56ce55" memberName="_predelayHeaderLabel"
@@ -1181,6 +1129,9 @@ BEGIN_JUCER_METADATA
               explicitFocusOrder="0" pos="300 220 56 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Lo Shelf" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
+  <GENERICCOMPONENT name="LevelMeterWet" id="e4867bf99a47726a" memberName="_levelMeterWet"
+                    virtualName="" explicitFocusOrder="0" pos="708 40 12 176" class="LevelMeter"
+                    params=""/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA
