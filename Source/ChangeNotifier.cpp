@@ -17,14 +17,17 @@
 
 #include "ChangeNotifier.h"
 
+#include <algorithm>
 
-ChangeNotifier::ChangeNotifier(int notificationInterval) :
+
+ChangeNotifier::ChangeNotifier() :
   juce::Timer(),
   _listenersMutex(),
   _listeners(),
-  _changePending(0)
+  _changePending(0),
+  _timerInterval(100)
 {
-  startTimer(notificationInterval);
+  startTimer(_timerInterval);
 }
   
 
@@ -48,10 +51,7 @@ void ChangeNotifier::addNotificationListener(ChangeNotifier::Listener* listener)
   if (listener)
   {
     juce::ScopedLock lock(_listenersMutex);
-    if (std::find(_listeners.begin(), _listeners.end(), listener) == _listeners.end())
-    {
-      _listeners.push_back(listener);
-    }
+    _listeners.insert(listener);
   }
 }
 
@@ -61,28 +61,35 @@ void ChangeNotifier::removeNotificationListener(ChangeNotifier::Listener* listen
   if (listener)
   {
     juce::ScopedLock lock(_listenersMutex);
-    std::vector<Listener*>::iterator it = std::find(_listeners.begin(), _listeners.end(), listener);
-    if (it != _listeners.end())
-    {
-      _listeners.erase(it);
-    }
+    _listeners.erase(listener);
   }
 }
   
 
 void ChangeNotifier::timerCallback()
-{
-  if (_changePending.get() == 1)
+{  
+  if (_changePending.compareAndSetValue(0, 1))
   {
-    _changePending.set(0);
+    juce::ScopedLock lock(_listenersMutex);    
+    // Some "juggling" with a copy to make sure that the callback can add/remove listeners...
+    std::set<Listener*> listeners(_listeners); 
+    for (std::set<Listener*>::iterator it=listeners.begin(); it!=listeners.end(); ++it)
     {
-      juce::ScopedLock lock(_listenersMutex);    
-      // Work on a copy which makes it safe that the callback can add/remove listeners...
-      std::vector<Listener*> listeners(_listeners); 
-      for (size_t i=0; i<listeners.size(); ++i)
+      Listener* current = (*it);
+      if (_listeners.find(current) != _listeners.end())
       {
-        listeners[i]->changeNotification();
+        current->changeNotification();
       }
     }
+    if (_timerInterval != 40)
+    {
+      _timerInterval = 40;
+      startTimer(_timerInterval);
+    }
+  }
+  else if (_timerInterval != 100)
+  {
+    _timerInterval = 100;
+    startTimer(_timerInterval);
   }
 }

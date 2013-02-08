@@ -62,7 +62,6 @@ private:
   
   double _sampleRate;
   size_t _samplesPerPx;
-  float _minDecibels;
   float _pxPerDecibel;
   int _predelayOffsetX;
   Rectangle<int> _area;

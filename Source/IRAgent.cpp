@@ -76,14 +76,14 @@ size_t IRAgent::getOutputChannel() const
 void IRAgent::initialize()
 {
   PluginAudioProcessor& processor = _manager.getProcessor();
-  const double loFreq = processor.getParameter(Parameters::EqLowFreq);
-  const double loQ = processor.getParameter(Parameters::EqLowQ);
-  const double hiFreq = processor.getParameter(Parameters::EqHighFreq);
-  const double hiQ = processor.getParameter(Parameters::EqHighQ);
+  const float loFreq = processor.getParameter(Parameters::EqLowFreq);
+  const float loQ = processor.getParameter(Parameters::EqLowQ);
+  const float hiFreq = processor.getParameter(Parameters::EqHighFreq);
+  const float hiQ = processor.getParameter(Parameters::EqHighQ);
   _eqLo.setFreqAndQ(loFreq, loQ);
   _eqHi.setFreqAndQ(hiFreq, hiQ);
   
-  const double eqSampleRate = _manager.getConvolverSampleRate();
+  const float eqSampleRate = static_cast<float>(_manager.getConvolverSampleRate());
   const size_t eqBlockSize = _manager.getConvolverBlockSize();
   _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
   _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
@@ -257,10 +257,10 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
   
   PluginAudioProcessor& processor = _manager.getProcessor();
   
-  const bool eqLoOn = (processor.getParameter(Parameters::EqLowOn) > 0.5f);
-  double eqLoFreq = 0.0;
-  double eqLoQ = 0.0;
-  double eqLoDecibels = 0.0;
+  const bool eqLoOn = processor.getParameter(Parameters::EqLowOn);
+  float eqLoFreq = -1.0f;
+  float eqLoQ = -1.0f;
+  float eqLoDecibels = 0.0f;
   if (eqLoOn)
   {
     eqLoFreq = processor.getParameter(Parameters::EqLowFreq);
@@ -268,10 +268,10 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
     eqLoDecibels = processor.getParameter(Parameters::EqLowDecibels);
   }
   
-  const bool eqHiOn = (processor.getParameter(Parameters::EqHighOn) > 0.5f);
-  double eqHiFreq = 0.0;
-  double eqHiQ = 0.0;
-  double eqHiDecibels = 0.0;
+  const bool eqHiOn = processor.getParameter(Parameters::EqHighOn);
+  float eqHiFreq = -1.0f;
+  float eqHiQ = -1.0f;
+  float eqHiDecibels = 0.0f;
   if (eqHiOn)
   {
     eqHiFreq = processor.getParameter(Parameters::EqHighFreq);

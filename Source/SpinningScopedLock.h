@@ -46,6 +46,10 @@ public:
   
 private:
   const T& _lockObject;
+
+  // Prevent uncontrolled usage
+  SpinningScopedLock(const SpinningScopedLock&);
+  SpinningScopedLock& operator=(const SpinningScopedLock&);
 };
 
 #endif // Header guard

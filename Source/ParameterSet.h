@@ -76,6 +76,10 @@ private:
   const juce::String _name;
   const juce::String _unit;
   const AutomationStatus _automationStatus;
+
+  // Prevent uncontrolled usage
+  ParameterDescriptor(const ParameterDescriptor&);
+  ParameterDescriptor& operator=(const ParameterDescriptor&);
 };
 
 

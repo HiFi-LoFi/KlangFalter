@@ -28,7 +28,6 @@ WaveformComponent::WaveformComponent() :
   _maxima(),
   _sampleRate(0.0),
   _samplesPerPx(0),
-  _minDecibels(-100.0),
   _pxPerDecibel(0),
   _predelayOffsetX(0),
   _area(),
@@ -66,7 +65,7 @@ void WaveformComponent::updateArea()
   _area.setY(marginTop);
   _area.setWidth(static_cast<int>(_maxima.size()));
   _area.setHeight(getHeight() - (heightTimeLine + marginTop + 1));
-  _pxPerDecibel = ::fabs(static_cast<float>(_area.getHeight()) / _minDecibels);
+  _pxPerDecibel = ::fabs(static_cast<float>(_area.getHeight()) / DecibelScaling::MinScaleDb());
   
   repaint();
 }
@@ -183,8 +182,8 @@ void WaveformComponent::paint(Graphics& g)
 
   for (size_t x=0; x<xLen; ++x)
   {
-    float db = std::min(0.0f, std::max(_minDecibels, Decibels::gainToDecibels(_maxima[x])));
-    const float top = bottom - (_pxPerDecibel * (db-_minDecibels));
+    float db = std::min(0.0f, std::max(DecibelScaling::MinScaleDb(), Decibels::gainToDecibels(_maxima[x])));
+    const float top = bottom - (_pxPerDecibel * (db-DecibelScaling::MinScaleDb()));
     g.drawVerticalLine(static_cast<int>(x)+_area.getX()+1, top, bottom);
   }
   g.setColour(Colours::darkgrey);
@@ -388,7 +387,7 @@ int WaveformComponent::calcEnvelopePosX(double x) const
 int WaveformComponent::calcEnvelopePosY(double y) const
 {
   const double db = Decibels::gainToDecibels(y);
-  return _area.getBottom() - static_cast<int>(_pxPerDecibel * (db-_minDecibels));
+  return _area.getBottom() - static_cast<int>(_pxPerDecibel * (db-DecibelScaling::MinScaleDb()));
 }
 
 
@@ -401,8 +400,8 @@ double WaveformComponent::calcEnvelopeValueX(int posX) const
 
 double WaveformComponent::calcEnvelopeValueY(int posY) const
 {
-  const double db = _minDecibels + (static_cast<double>(_area.getBottom()-posY) / _pxPerDecibel);
-  const double y = Decibels::decibelsToGain(db);
+  const double db = DecibelScaling::MinScaleDb() + (static_cast<double>(_area.getBottom()-posY) / _pxPerDecibel);
+  const double y = static_cast<double>(DecibelScaling::Db2Gain(static_cast<float>(db)));
   return std::min(1.0, std::max(0.0, y));
 }
 
