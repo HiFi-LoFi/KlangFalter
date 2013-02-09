@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  6 Feb 2013 2:44:47pm
+  Creation date:  9 Feb 2013 1:49:31pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_7F33059F__
-#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_7F33059F__
+#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_FDEEEBEB__
+#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_FDEEEBEB__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -81,6 +81,10 @@ private:
     Label* _numberOutputsLabel;
     Label* _sseOptimizationPrefixLabel;
     Label* _sseOptimizationLabel;
+    Label* _headBlockSizePrefixLabel;
+    Label* _headBlockSizeLabel;
+    Label* _tailBlockSizePrefixLabel;
+    Label* _tailBlockSizeLabel;
 
 
     //==============================================================================
@@ -90,4 +94,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_7F33059F__
+#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_FDEEEBEB__

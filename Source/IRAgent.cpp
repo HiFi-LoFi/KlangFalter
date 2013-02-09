@@ -83,7 +83,7 @@ void IRAgent::initialize()
   _eqHi.setFreqAndQ(hiFreq, hiQ);
   
   const float eqSampleRate = static_cast<float>(_manager.getConvolverSampleRate());
-  const size_t eqBlockSize = _manager.getConvolverBlockSize();
+  const size_t eqBlockSize = _manager.getConvolverHeadBlockSize();
   _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
   _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
 }

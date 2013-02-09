@@ -17,6 +17,7 @@
 #include "modules/juce_audio_basics/juce_audio_basics.h"
 #include "modules/juce_audio_devices/juce_audio_devices.h"
 #include "modules/juce_audio_formats/juce_audio_formats.h"
+#include "modules/juce_audio_plugin_client/juce_audio_plugin_client.h"
 #include "modules/juce_audio_processors/juce_audio_processors.h"
 #include "modules/juce_audio_utils/juce_audio_utils.h"
 #include "modules/juce_core/juce_core.h"
@@ -36,8 +37,8 @@
 namespace ProjectInfo
 {
     const char* const  projectName    = "KlangFalter";
-    const char* const  versionString  = "2013.02.03beta";
-    const int          versionNumber  = 0x7dd0203;
+    const char* const  versionString  = "2013.02.09beta";
+    const int          versionNumber  = 0x7dd0209;
 }
 
 #endif   // __APPHEADERFILE_IRCJCT__

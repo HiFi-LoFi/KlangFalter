@@ -44,10 +44,12 @@ public:
   PluginAudioProcessor& getProcessor();
   const PluginAudioProcessor& getProcessor() const;
   
-  void initialize(double convolverSampleRate, size_t convolverBlockSize);
+  void initialize(double sampleRate, size_t samplesToProcess);
   
   double getConvolverSampleRate() const;
-  size_t getConvolverBlockSize() const;
+  
+  size_t getConvolverHeadBlockSize() const;
+  size_t getConvolverTailBlockSize() const;
   
   IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
   size_t getAgentCount() const;
@@ -84,7 +86,8 @@ private:
   bool _reverse;
   Envelope _envelope;
   double _convolverSampleRate;
-  size_t _convolverBlockSize;
+  size_t _convolverHeadBlockSize;
+  size_t _convolverTailBlockSize;
   double _fileBeginSeconds;
   double _predelayMs;
   juce::CriticalSection _irCalculationMutex;

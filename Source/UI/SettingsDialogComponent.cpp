@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  6 Feb 2013 2:44:47pm
+  Creation date:  9 Feb 2013 1:49:31pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -49,7 +49,11 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
       _numberOutputsPrefixLabel (0),
       _numberOutputsLabel (0),
       _sseOptimizationPrefixLabel (0),
-      _sseOptimizationLabel (0)
+      _sseOptimizationLabel (0),
+      _headBlockSizePrefixLabel (0),
+      _headBlockSizeLabel (0),
+      _tailBlockSizePrefixLabel (0),
+      _tailBlockSizeLabel (0)
 {
     addAndMakeVisible (_irDirectoryGroupComponent = new GroupComponent (String::empty,
                                                                         L"Impulse Response Directory"));
@@ -172,11 +176,47 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     _sseOptimizationLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
     _sseOptimizationLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
+    addAndMakeVisible (_headBlockSizePrefixLabel = new Label (String::empty,
+                                                              L"Head Block Size:"));
+    _headBlockSizePrefixLabel->setFont (Font (15.0000f, Font::plain));
+    _headBlockSizePrefixLabel->setJustificationType (Justification::centredLeft);
+    _headBlockSizePrefixLabel->setEditable (false, false, false);
+    _headBlockSizePrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _headBlockSizePrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _headBlockSizePrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_headBlockSizeLabel = new Label (String::empty,
+                                                        L"<Unknown>"));
+    _headBlockSizeLabel->setFont (Font (15.0000f, Font::plain));
+    _headBlockSizeLabel->setJustificationType (Justification::centredLeft);
+    _headBlockSizeLabel->setEditable (false, false, false);
+    _headBlockSizeLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _headBlockSizeLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _headBlockSizeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_tailBlockSizePrefixLabel = new Label (String::empty,
+                                                              L"Tail Block Size:"));
+    _tailBlockSizePrefixLabel->setFont (Font (15.0000f, Font::plain));
+    _tailBlockSizePrefixLabel->setJustificationType (Justification::centredLeft);
+    _tailBlockSizePrefixLabel->setEditable (false, false, false);
+    _tailBlockSizePrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _tailBlockSizePrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _tailBlockSizePrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_tailBlockSizeLabel = new Label (String::empty,
+                                                        L"<Unknown>"));
+    _tailBlockSizeLabel->setFont (Font (15.0000f, Font::plain));
+    _tailBlockSizeLabel->setJustificationType (Justification::centredLeft);
+    _tailBlockSizeLabel->setEditable (false, false, false);
+    _tailBlockSizeLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _tailBlockSizeLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _tailBlockSizeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
 
     //[UserPreSize]
     //[/UserPreSize]
 
-    setSize (504, 372);
+    setSize (504, 400);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -186,6 +226,8 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     _numberInputsLabel->setText(juce::String(_processor.getNumInputChannels()), false);
     _numberOutputsLabel->setText(juce::String(_processor.getNumOutputChannels()), false);
     _sseOptimizationLabel->setText((fftconvolver::SSEOptimized() == true) ? juce::String("Yes") : juce::String("No"), false);
+    _headBlockSizeLabel->setText(juce::String(static_cast<int>(_processor.getIRManager().getConvolverHeadBlockSize())), false);
+    _tailBlockSizeLabel->setText(juce::String(static_cast<int>(_processor.getIRManager().getConvolverTailBlockSize())), false);
     //[/Constructor]
 }
 
@@ -210,6 +252,10 @@ SettingsDialogComponent::~SettingsDialogComponent()
     deleteAndZero (_numberOutputsLabel);
     deleteAndZero (_sseOptimizationPrefixLabel);
     deleteAndZero (_sseOptimizationLabel);
+    deleteAndZero (_headBlockSizePrefixLabel);
+    deleteAndZero (_headBlockSizeLabel);
+    deleteAndZero (_tailBlockSizePrefixLabel);
+    deleteAndZero (_tailBlockSizeLabel);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -237,15 +283,19 @@ void SettingsDialogComponent::resized()
     _nameVersionLabel->setBounds (24, 28, 456, 24);
     _copyrightLabel->setBounds (24, 52, 456, 24);
     _licenseHyperlink->setBounds (24, 76, 456, 24);
-    _infoGroupComponent->setBounds (16, 232, 472, 124);
+    _infoGroupComponent->setBounds (16, 232, 472, 152);
     _juceVersionPrefixLabel->setBounds (24, 252, 140, 24);
     _juceVersionLabel->setBounds (156, 252, 316, 24);
-    _numberInputsPrefixLabel->setBounds (24, 276, 140, 24);
-    _numberInputsLabel->setBounds (156, 276, 316, 24);
-    _numberOutputsPrefixLabel->setBounds (24, 300, 140, 24);
-    _numberOutputsLabel->setBounds (156, 300, 316, 24);
-    _sseOptimizationPrefixLabel->setBounds (24, 324, 140, 24);
-    _sseOptimizationLabel->setBounds (156, 324, 316, 24);
+    _numberInputsPrefixLabel->setBounds (24, 272, 140, 24);
+    _numberInputsLabel->setBounds (156, 272, 316, 24);
+    _numberOutputsPrefixLabel->setBounds (24, 292, 140, 24);
+    _numberOutputsLabel->setBounds (156, 292, 316, 24);
+    _sseOptimizationPrefixLabel->setBounds (24, 312, 140, 24);
+    _sseOptimizationLabel->setBounds (156, 312, 316, 24);
+    _headBlockSizePrefixLabel->setBounds (24, 332, 140, 24);
+    _headBlockSizeLabel->setBounds (156, 332, 316, 24);
+    _tailBlockSizePrefixLabel->setBounds (24, 352, 140, 24);
+    _tailBlockSizeLabel->setBounds (156, 352, 316, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -296,7 +346,7 @@ BEGIN_JUCER_METADATA
                  componentName="" parentClasses="public Component" constructorParams="PluginAudioProcessor&amp; processor"
                  variableInitialisers="_processor(processor)" snapPixels="4" snapActive="1"
                  snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="504"
-                 initialHeight="372">
+                 initialHeight="400">
   <BACKGROUND backgroundColour="ffe5e5f0"/>
   <GROUPCOMPONENT name="" id="54a84aa39bb27f4b" memberName="_irDirectoryGroupComponent"
                   virtualName="" explicitFocusOrder="0" pos="16 128 472 88" textcol="ff202020"
@@ -327,7 +377,7 @@ BEGIN_JUCER_METADATA
                    buttonText="Licensed under GPL3" connectedEdges="0" needsCallback="0"
                    radioGroupId="0" url="http://www.gnu.org/licenses"/>
   <GROUPCOMPONENT name="" id="25ac040a541cb0e7" memberName="_infoGroupComponent"
-                  virtualName="" explicitFocusOrder="0" pos="16 232 472 124" textcol="ff202020"
+                  virtualName="" explicitFocusOrder="0" pos="16 232 472 152" textcol="ff202020"
                   title="Plugin Information"/>
   <LABEL name="" id="c4a4ccf3c53f694f" memberName="_juceVersionPrefixLabel"
          virtualName="" explicitFocusOrder="0" pos="24 252 140 24" textCol="ff202020"
@@ -340,32 +390,52 @@ BEGIN_JUCER_METADATA
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="b930280e91f83049" memberName="_numberInputsPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 276 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 272 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Input Channels:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="26b792a855f83bf7" memberName="_numberInputsLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 276 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 272 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="7ecaf5ecb63407f4" memberName="_numberOutputsPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 300 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 292 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Output Channels:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="69f8c3850d35c1bd" memberName="_numberOutputsLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 300 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 292 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="ad7d4e6a39bb8ab5" memberName="_sseOptimizationPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 324 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 312 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="SSE Optimization:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="7a6359296851c399" memberName="_sseOptimizationLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 324 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 312 316 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
+  <LABEL name="" id="b9baa71c9fe56254" memberName="_headBlockSizePrefixLabel"
+         virtualName="" explicitFocusOrder="0" pos="24 332 140 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Head Block Size:"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
+  <LABEL name="" id="4156f958d766b1d1" memberName="_headBlockSizeLabel"
+         virtualName="" explicitFocusOrder="0" pos="156 332 316 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
+  <LABEL name="" id="a82e3cf23273bc55" memberName="_tailBlockSizePrefixLabel"
+         virtualName="" explicitFocusOrder="0" pos="24 352 140 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Tail Block Size:"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
+  <LABEL name="" id="9fa7e63d5dcac636" memberName="_tailBlockSizeLabel"
+         virtualName="" explicitFocusOrder="0" pos="156 352 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>

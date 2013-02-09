@@ -24,6 +24,8 @@
 #include "PluginProcessor.h"
 #include "Settings.h"
 
+#include <algorithm>
+
 
 class FloatBufferSource : public AudioSource
 {
@@ -209,8 +211,8 @@ public:
     }
     
     // Update convolvers
-    const size_t headBlockSize = _irManager.getConvolverBlockSize();
-    const size_t tailBlockSize = 4096;
+    const size_t headBlockSize = _irManager.getConvolverHeadBlockSize();
+    const size_t tailBlockSize = _irManager.getConvolverTailBlockSize();
     _irManager.getProcessor().setParameter(Parameters::AutoGainDecibels, DecibelScaling::Gain2Db(autoGain));
     for (size_t i=0; i<agents.size(); ++i)
     {
@@ -436,7 +438,8 @@ IRManager::IRManager(PluginAudioProcessor& processor, size_t inputChannels, size
   _reverse(false),
   _envelope(1.0, 1.0),
   _convolverSampleRate(0.0),
-  _convolverBlockSize(processor.getSettings().getConvolverBlockSize()),
+  _convolverHeadBlockSize(0),
+  _convolverTailBlockSize(0),
   _fileBeginSeconds(0.0),
   _predelayMs(0.0),
   _irCalculationMutex(),
@@ -474,15 +477,20 @@ const PluginAudioProcessor& IRManager::getProcessor() const
 }
 
 
-void IRManager::initialize(double convolverSampleRate, size_t convolverBlockSize)
+void IRManager::initialize(double sampleRate, size_t samplesToProcess)
 {
   bool changed = false;
   {
     juce::ScopedLock lock(_mutex);
-    if (::fabs(_convolverSampleRate-convolverSampleRate) > 0.00000001 || _convolverBlockSize != convolverBlockSize)
+    const size_t convolverHeadBlockSize = std::max(samplesToProcess, size_t(256));
+    const size_t convolverTailBlockSize = std::max(samplesToProcess, size_t(4096));
+    if (::fabs(_convolverSampleRate-sampleRate) > 0.00000001 ||
+        _convolverHeadBlockSize != convolverHeadBlockSize ||
+        _convolverTailBlockSize != convolverTailBlockSize)
     {
-      _convolverSampleRate = convolverSampleRate;
-      _convolverBlockSize = convolverBlockSize;
+      _convolverSampleRate = sampleRate;
+      _convolverHeadBlockSize = convolverHeadBlockSize;
+      _convolverTailBlockSize = convolverTailBlockSize;
       changed = true;
     }
   }
@@ -676,10 +684,17 @@ double IRManager::getConvolverSampleRate() const
 }
 
 
-size_t IRManager::getConvolverBlockSize() const
+size_t IRManager::getConvolverHeadBlockSize() const
 {
   juce::ScopedLock lock(_mutex);
-  return _convolverBlockSize;
+  return _convolverHeadBlockSize;
+}
+
+
+size_t IRManager::getConvolverTailBlockSize() const
+{
+  juce::ScopedLock lock(_mutex);
+  return _convolverTailBlockSize;
 }
 
 

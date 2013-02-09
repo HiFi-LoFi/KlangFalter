@@ -872,7 +872,7 @@ void KlangFalterEditor::processorChanged()
           {
             IRComponent* irComponent = new IRComponent();
             irComponent->init(&irManager, input, output);
-            _irTabComponent->addTab(juce::String(static_cast<int>(input)) + juce::String(" - ") + juce::String(static_cast<int>(output)),
+            _irTabComponent->addTab(juce::String(static_cast<int>(input)) + juce::String("-") + juce::String(static_cast<int>(output)),
                                     juce::Colour(0xffe5e5f0),
                                     irComponent,
                                     true);
