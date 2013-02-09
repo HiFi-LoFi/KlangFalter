@@ -91,6 +91,8 @@ public:
     bool producesMidi() const;
   
     bool silenceInProducesSilenceOut() const;
+  
+    void numChannelsChanged();
 
     //==============================================================================
     int getNumPrograms();

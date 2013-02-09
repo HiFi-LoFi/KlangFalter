@@ -82,8 +82,11 @@ void LevelMeter::resized()
 
 void LevelMeter::setChannelCount(size_t channelCount)
 {
-  _levels.resize(channelCount, 0.0f);
-  repaint();
+  if (channelCount != _levels.size())
+  {
+    _levels.resize(channelCount, 0.0f);
+    repaint();
+  }
 }
 
 

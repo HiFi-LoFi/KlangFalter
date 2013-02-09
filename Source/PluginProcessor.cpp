@@ -147,6 +147,12 @@ bool PluginAudioProcessor::silenceInProducesSilenceOut() const
   return false;
 }
 
+void PluginAudioProcessor::numChannelsChanged()
+{
+  juce::AudioProcessor::numChannelsChanged();
+  notifyAboutChange();
+}
+
 int PluginAudioProcessor::getNumPrograms()
 {
     return 0;
