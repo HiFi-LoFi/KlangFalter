@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  6 Feb 2013 7:51:45pm
+  Creation date:  9 Feb 2013 12:31:33pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_5AC77563__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_5AC77563__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C13E4B0C__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C13E4B0C__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -28,6 +28,7 @@
 #include "CustomLookAndFeel.h"
 #include "DecibelScale.h"
 #include "IRBrowserComponent.h"
+#include "IRComponent.h"
 #include "LevelMeter.h"
 #include "SettingsDialogComponent.h"
 #include "../PluginProcessor.h"
@@ -76,6 +77,7 @@ private:
     CustomLookAndFeel _customLookAndFeel;
     PluginAudioProcessor& _processor;
     juce::ScopedPointer<SettingsDialogComponent> _settingsDialog;
+    std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents; 
     //[/UserVariables]
 
     //==============================================================================
@@ -133,4 +135,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_5AC77563__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C13E4B0C__

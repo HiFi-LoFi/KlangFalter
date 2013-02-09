@@ -36,30 +36,24 @@ LevelMeter::~LevelMeter()
 
 void LevelMeter::paint(Graphics& g)
 {
-  const int w = getWidth();
-  const int h = getHeight();
-
-  const juce::Colour colour = CustomLookAndFeel::GetCustomLookAndFeel(this).getScaleColour();
-  g.setColour(colour);
-  
   if (!_levels.empty())
-  {    
-    const int wChannel = static_cast<int>(w / static_cast<float>(_levels.size()));
+  {
+    const int h = getHeight();
+    g.setColour(CustomLookAndFeel::GetCustomLookAndFeel(this).getScaleColour());
+    const int levelStripWidth = 6;
     for (size_t channel=0; channel<_levels.size(); ++channel)
     {
       const float level = _levels[channel];
       const int levelHeight = static_cast<int>(DecibelScaling::Gain2Scale(level) * h);
-      const int x = channel * wChannel;
+      const int x = channel * levelStripWidth;
       const int y = h - levelHeight;
-      
       if (levelHeight > 0)
       {
         g.setGradientFill(_colourGradient);
-        g.fillRect(x, y, wChannel-1, levelHeight);
+        g.fillRect(x, y, levelStripWidth-1, levelHeight);
       }
-
       g.setColour(Colours::black);
-      g.fillRect(x, 0, wChannel-1, h-levelHeight);
+      g.fillRect(x, 0, levelStripWidth-1, h-levelHeight);
     }
   }  
 }
