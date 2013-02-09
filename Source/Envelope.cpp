@@ -218,8 +218,8 @@ void Envelope::render(float* envelope, size_t len) const
   {
     const double x0 = _nodes[node0]._x;
     const double x1 = _nodes[node1]._x;
-    const double y0 = DecibelScaling::Gain2Db(_nodes[node0]._y);
-    const double y1 = DecibelScaling::Gain2Db(_nodes[node1]._y);
+    const double y0 = DecibelScaling::Gain2Db(static_cast<float>(_nodes[node0]._y));
+    const double y1 = DecibelScaling::Gain2Db(static_cast<float>(_nodes[node1]._y));
     const double deltaX = x1 - x0;
     const double deltaY = y1 - y0;
     ++node0;
@@ -231,7 +231,7 @@ void Envelope::render(float* envelope, size_t len) const
       size_t rangeEnd = static_cast<size_t>(x1 * static_cast<double>(len));
       while (sample < rangeEnd)
       {
-        envelope[sample] = static_cast<float>(DecibelScaling::Db2Gain(val));
+        envelope[sample] = static_cast<float>(DecibelScaling::Db2Gain(static_cast<float>(val)));
         val += inc;
         ++sample;
       }

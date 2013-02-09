@@ -20,7 +20,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include <vector>
+#include <set>
 
 
 /**
@@ -34,8 +34,7 @@
 class ChangeNotifier : public juce::Timer
 {
 public:
-  explicit ChangeNotifier(int notificationInterval = 50 /*ms*/);
-  
+  ChangeNotifier();  
   virtual ~ChangeNotifier();
   
   void notifyAboutChange();
@@ -62,8 +61,9 @@ public:
   
 private:
   juce::CriticalSection _listenersMutex;
-  std::vector<Listener*> _listeners;
+  std::set<Listener*> _listeners;
   juce::Atomic<juce::int32> _changePending;
+  int _timerInterval;
   
   ChangeNotifier (const ChangeNotifier&);
   ChangeNotifier& operator=(const ChangeNotifier&);

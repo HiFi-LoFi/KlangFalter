@@ -85,7 +85,12 @@ struct DecibelScaling
     }
     else
     {
-      return String(db, 1) + String("dB");
+      String decibelString(db, 1);
+      if (decibelString == "-0.0")
+      {
+        decibelString = "0.0";
+      }
+      return decibelString + String("dB");
     }
   }
   
