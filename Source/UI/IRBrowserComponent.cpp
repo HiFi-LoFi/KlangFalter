@@ -134,7 +134,7 @@ void IRBrowserComponent::selectionChanged()
     
     const juce::File file = _fileTreeComponent ? _fileTreeComponent->getSelectedFile() : juce::File::nonexistent;
 
-    if (!file.isDirectory())
+    if (!file.isDirectory() && _processor)
     {
       size_t channelCount = 0;
       size_t sampleCount = 0;
@@ -152,16 +152,19 @@ void IRBrowserComponent::selectionChanged()
         infoText += juce::String("\nChannels: ") + juce::String(static_cast<int>(channelCount));
         infoText += juce::String("\nSample Rate: ") + juce::String(static_cast<int>(sampleRate)) + juce::String("Hz");
 
-        const TrueStereoPairs trueStereoPairs = findTrueStereoPairs(file, sampleCount, sampleRate);        
-        for (size_t i=0; i<trueStereoPairs.size(); ++i)
+        if (_processor->getNumInputChannels() >= 2 && _processor->getNumOutputChannels() >= 2)
         {
-          if (trueStereoPairs[i].first != file && trueStereoPairs[i].first != juce::File::nonexistent)
+          const TrueStereoPairs trueStereoPairs = findTrueStereoPairs(file, sampleCount, sampleRate);        
+          for (size_t i=0; i<trueStereoPairs.size(); ++i)
           {
-            infoText += juce::String("\n");
-            infoText += juce::String("\nFile Pair For True-Stereo:");
-            infoText += juce::String("\n - ") + file.getFileName();
-            infoText += juce::String("\n - ") + trueStereoPairs[i].first.getFileName();
-            break;
+            if (trueStereoPairs[i].first != file && trueStereoPairs[i].first != juce::File::nonexistent)
+            {
+              infoText += juce::String("\n");
+              infoText += juce::String("\nFile Pair For True-Stereo:");
+              infoText += juce::String("\n - ") + file.getFileName();
+              infoText += juce::String("\n - ") + trueStereoPairs[i].first.getFileName();
+              break;
+            }
           }
         }
       }
@@ -188,7 +191,7 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     return;
   }
-
+  
   size_t channelCount = 0;
   size_t sampleCount = 0;
   double sampleRate = 0.0;
@@ -202,37 +205,64 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   IRAgent* agent01 = irManager.getAgent(0, 1);
   IRAgent* agent10 = irManager.getAgent(1, 0);
   IRAgent* agent11 = irManager.getAgent(1, 1);
-
-  if (channelCount == 1)
+  
+  const int inputChannels = _processor->getNumInputChannels();
+  const int outputChannels = _processor->getNumOutputChannels();
+  
+  if (inputChannels == 1 && outputChannels == 1)
   {
-    irManager.reset();
-    agent00->setFile(file, 0);
-    agent11->setFile(file, 0);
-  }
-  else if (channelCount == 2)
-  {
-    irManager.reset();
-    TrueStereoPairs trueStereoPairs = findTrueStereoPairs(file, sampleCount, sampleRate);
-    if (trueStereoPairs.size() == 4)
-    {
-      agent00->setFile(trueStereoPairs[0].first, trueStereoPairs[0].second);
-      agent01->setFile(trueStereoPairs[1].first, trueStereoPairs[1].second);
-      agent10->setFile(trueStereoPairs[2].first, trueStereoPairs[2].second);
-      agent11->setFile(trueStereoPairs[3].first, trueStereoPairs[3].second);
-    }
-    else
+    if (channelCount >= 1)
     {
       agent00->setFile(file, 0);
-      agent11->setFile(file, 1);
     }
   }
-  else if (channelCount == 4)
+  else if (inputChannels == 1 && outputChannels == 2)
   {
-    irManager.reset();
-    agent00->setFile(file, 0);
-    agent01->setFile(file, 1);
-    agent10->setFile(file, 2);
-    agent11->setFile(file, 3);
+    if (channelCount == 1)
+    {
+      irManager.reset();
+      agent00->setFile(file, 0);
+      agent01->setFile(file, 0);
+    }
+    else if (channelCount >= 2)
+    {
+      agent00->setFile(file, 0);
+      agent01->setFile(file, 1);
+    }
+  }
+  else if (inputChannels == 2 && outputChannels == 2)
+  {
+    if (channelCount == 1)
+    {
+      irManager.reset();
+      agent00->setFile(file, 0);
+      agent11->setFile(file, 0);
+    }
+    else if (channelCount == 2)
+    {
+      irManager.reset();
+      TrueStereoPairs trueStereoPairs = findTrueStereoPairs(file, sampleCount, sampleRate);
+      if (trueStereoPairs.size() == 4)
+      {
+        agent00->setFile(trueStereoPairs[0].first, trueStereoPairs[0].second);
+        agent01->setFile(trueStereoPairs[1].first, trueStereoPairs[1].second);
+        agent10->setFile(trueStereoPairs[2].first, trueStereoPairs[2].second);
+        agent11->setFile(trueStereoPairs[3].first, trueStereoPairs[3].second);
+      }
+      else
+      {
+        agent00->setFile(file, 0);
+        agent11->setFile(file, 1);
+      }
+    }
+    else if (channelCount >= 4)
+    {
+      irManager.reset();
+      agent00->setFile(file, 0);
+      agent01->setFile(file, 1);
+      agent10->setFile(file, 2);
+      agent11->setFile(file, 3);
+    }
   }
 }
 

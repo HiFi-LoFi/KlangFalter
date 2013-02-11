@@ -194,7 +194,7 @@
  #define JucePlugin_MaxNumOutputChannels   2
 #endif
 #ifndef  JucePlugin_PreferredChannelConfigurations
- #define JucePlugin_PreferredChannelConfigurations  {1, 1}, {2, 2}, {1, 2}, {2, 1}
+ #define JucePlugin_PreferredChannelConfigurations  {1, 1}, {2, 2}, {1, 2}
 #endif
 #ifndef  JucePlugin_IsSynth
  #define JucePlugin_IsSynth                0
