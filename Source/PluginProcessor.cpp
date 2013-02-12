@@ -33,7 +33,6 @@ PluginAudioProcessor::PluginAudioProcessor() :
   AudioProcessor(),
   ChangeNotifier(),
   _irManager(),
-  _sampleRate(0.0),
   _wetBuffer(1, 0),
   _convolutionBuffers(),
   _parameterSet(),
@@ -184,8 +183,7 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
   releaseResources();
   
   // Prepare convolution
-  _sampleRate = sampleRate;
-  _irManager->initialize(_sampleRate, static_cast<size_t>(samplesPerBlock));
+  _irManager->initialize(sampleRate, static_cast<size_t>(samplesPerBlock));
   _wetBuffer.setSize(2, samplesPerBlock);  
   for (size_t i=0; i<_irManager->getAgentCount(); ++i)
   {
@@ -204,7 +202,6 @@ void PluginAudioProcessor::releaseResources()
   }
   _convolutionBuffers.clear();
   _wetBuffer.setSize(1, 0, false, true, false);
-  _sampleRate = 0.0;
   notifyAboutChange();
 }
 
@@ -373,12 +370,6 @@ void PluginAudioProcessor::setStateInformation (const void* data, int sizeInByte
 
 
 //==============================================================================
-
-
-double PluginAudioProcessor::getSampleRate() const
-{
-  return _sampleRate;
-}
 
 
 IRManager& PluginAudioProcessor::getIRManager()

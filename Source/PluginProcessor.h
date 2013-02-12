@@ -110,16 +110,13 @@ public:
     IRManager& getIRManager();
     const IRManager& getIRManager() const;
   
-    double getSampleRate() const;
-  
     float getLevelDry(size_t channel) const;
     float getLevelWet(size_t channel) const;
 
     Settings& getSettings();
   
 private:
-    juce::ScopedPointer<IRManager> _irManager; 
-    double _sampleRate;
+    juce::ScopedPointer<IRManager> _irManager;
     juce::AudioSampleBuffer _wetBuffer;
     std::vector<fftconvolver::SampleBuffer*> _convolutionBuffers;
     ParameterSet _parameterSet;  
