@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  9 Feb 2013 12:31:33pm
+  Creation date:  12 Feb 2013 7:02:30pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -72,20 +72,14 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
       _predelayLabel (0),
       _hiFreqLabel (0),
       _hiGainLabel (0),
-      _hiQLabel (0),
-      _hiQHeaderLabel (0),
       _hiGainHeaderLabel (0),
       _hiFreqHeaderLabel (0),
-      _hiQSlider (0),
       _hiGainSlider (0),
       _hiFreqSlider (0),
       _loFreqLabel (0),
       _loGainLabel (0),
-      _loQLabel (0),
-      _loQHeaderLabel (0),
       _loGainHeaderLabel (0),
       _loFreqHeaderLabel (0),
-      _loQSlider (0),
       _loGainSlider (0),
       _loFreqSlider (0),
       _hiEqButton (0),
@@ -275,24 +269,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _hiGainLabel->setColour (TextEditor::textColourId, Colours::black);
     _hiGainLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
-    addAndMakeVisible (_hiQLabel = new Label (String::empty,
-                                              L"1.00"));
-    _hiQLabel->setFont (Font (11.0000f, Font::plain));
-    _hiQLabel->setJustificationType (Justification::centred);
-    _hiQLabel->setEditable (false, false, false);
-    _hiQLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _hiQLabel->setColour (TextEditor::textColourId, Colours::black);
-    _hiQLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_hiQHeaderLabel = new Label (String::empty,
-                                                    L"Slope"));
-    _hiQHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _hiQHeaderLabel->setJustificationType (Justification::centred);
-    _hiQHeaderLabel->setEditable (false, false, false);
-    _hiQHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _hiQHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _hiQHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
     addAndMakeVisible (_hiGainHeaderLabel = new Label (String::empty,
                                                        L"Gain"));
     _hiGainHeaderLabel->setFont (Font (11.0000f, Font::plain));
@@ -310,14 +286,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _hiFreqHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
     _hiFreqHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
     _hiFreqHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_hiQSlider = new Slider (String::empty));
-    _hiQSlider->setRange (1, 2, 0);
-    _hiQSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _hiQSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _hiQSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _hiQSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _hiQSlider->addListener (this);
 
     addAndMakeVisible (_hiGainSlider = new Slider (String::empty));
     _hiGainSlider->setRange (-30, 30, 0);
@@ -353,24 +321,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _loGainLabel->setColour (TextEditor::textColourId, Colours::black);
     _loGainLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
-    addAndMakeVisible (_loQLabel = new Label (String::empty,
-                                              L"1.00"));
-    _loQLabel->setFont (Font (11.0000f, Font::plain));
-    _loQLabel->setJustificationType (Justification::centred);
-    _loQLabel->setEditable (false, false, false);
-    _loQLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _loQLabel->setColour (TextEditor::textColourId, Colours::black);
-    _loQLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_loQHeaderLabel = new Label (String::empty,
-                                                    L"Slope"));
-    _loQHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _loQHeaderLabel->setJustificationType (Justification::centred);
-    _loQHeaderLabel->setEditable (false, false, false);
-    _loQHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _loQHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _loQHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
     addAndMakeVisible (_loGainHeaderLabel = new Label (String::empty,
                                                        L"Gain"));
     _loGainHeaderLabel->setFont (Font (11.0000f, Font::plain));
@@ -388,14 +338,6 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _loFreqHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
     _loFreqHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
     _loFreqHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_loQSlider = new Slider (String::empty));
-    _loQSlider->setRange (1, 2, 0);
-    _loQSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _loQSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _loQSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _loQSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _loQSlider->addListener (this);
 
     addAndMakeVisible (_loGainSlider = new Slider (String::empty));
     _loGainSlider->setRange (-30, 30, 0);
@@ -449,7 +391,7 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _reverseButton->setClickingTogglesState(true);
     _loEqButton->setClickingTogglesState(true);
     _hiEqButton->setClickingTogglesState(true);
-  
+
     IRManager& irManager = _processor.getIRManager();
     _processor.addNotificationListener(this);
     irManager.addNotificationListener(this);
@@ -492,20 +434,14 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_predelayLabel);
     deleteAndZero (_hiFreqLabel);
     deleteAndZero (_hiGainLabel);
-    deleteAndZero (_hiQLabel);
-    deleteAndZero (_hiQHeaderLabel);
     deleteAndZero (_hiGainHeaderLabel);
     deleteAndZero (_hiFreqHeaderLabel);
-    deleteAndZero (_hiQSlider);
     deleteAndZero (_hiGainSlider);
     deleteAndZero (_hiFreqSlider);
     deleteAndZero (_loFreqLabel);
     deleteAndZero (_loGainLabel);
-    deleteAndZero (_loQLabel);
-    deleteAndZero (_loQHeaderLabel);
     deleteAndZero (_loGainHeaderLabel);
     deleteAndZero (_loFreqHeaderLabel);
-    deleteAndZero (_loQSlider);
     deleteAndZero (_loGainSlider);
     deleteAndZero (_loFreqSlider);
     deleteAndZero (_hiEqButton);
@@ -559,26 +495,20 @@ void KlangFalterEditor::resized()
     _predelayHeaderLabel->setBounds (144, 220, 84, 24);
     _predelaySlider->setBounds (144, 244, 84, 40);
     _predelayLabel->setBounds (144, 280, 84, 24);
-    _hiFreqLabel->setBounds (428, 284, 52, 24);
-    _hiGainLabel->setBounds (468, 284, 52, 24);
-    _hiQLabel->setBounds (508, 284, 52, 24);
-    _hiQHeaderLabel->setBounds (508, 240, 52, 24);
-    _hiGainHeaderLabel->setBounds (468, 240, 52, 24);
-    _hiFreqHeaderLabel->setBounds (428, 240, 52, 24);
-    _hiQSlider->setBounds (516, 260, 36, 28);
-    _hiGainSlider->setBounds (476, 260, 36, 28);
-    _hiFreqSlider->setBounds (436, 260, 36, 28);
-    _loFreqLabel->setBounds (264, 284, 52, 24);
-    _loGainLabel->setBounds (304, 284, 52, 24);
-    _loQLabel->setBounds (344, 284, 52, 24);
-    _loQHeaderLabel->setBounds (344, 240, 52, 24);
-    _loGainHeaderLabel->setBounds (304, 240, 52, 24);
-    _loFreqHeaderLabel->setBounds (264, 240, 52, 24);
-    _loQSlider->setBounds (352, 260, 36, 28);
-    _loGainSlider->setBounds (312, 260, 36, 28);
-    _loFreqSlider->setBounds (272, 260, 36, 28);
-    _hiEqButton->setBounds (464, 220, 56, 24);
-    _loEqButton->setBounds (300, 220, 56, 24);
+    _hiFreqLabel->setBounds (476, 284, 52, 24);
+    _hiGainLabel->setBounds (516, 284, 52, 24);
+    _hiGainHeaderLabel->setBounds (516, 240, 52, 24);
+    _hiFreqHeaderLabel->setBounds (476, 240, 52, 24);
+    _hiGainSlider->setBounds (524, 260, 36, 28);
+    _hiFreqSlider->setBounds (484, 260, 36, 28);
+    _loFreqLabel->setBounds (364, 284, 52, 24);
+    _loGainLabel->setBounds (404, 284, 52, 24);
+    _loGainHeaderLabel->setBounds (404, 240, 52, 24);
+    _loFreqHeaderLabel->setBounds (364, 240, 52, 24);
+    _loGainSlider->setBounds (412, 260, 36, 28);
+    _loFreqSlider->setBounds (372, 260, 36, 28);
+    _hiEqButton->setBounds (492, 220, 56, 24);
+    _loEqButton->setBounds (380, 220, 56, 24);
     _levelMeterWet->setBounds (720, 40, 12, 176);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
@@ -629,12 +559,6 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         _processor.getIRManager().setPredelayMs(_predelaySlider->getValue());
         //[/UserSliderCode__predelaySlider]
     }
-    else if (sliderThatWasMoved == _hiQSlider)
-    {
-        //[UserSliderCode__hiQSlider] -- add your slider handling code here..
-        _processor.setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(_hiQSlider->getValue()));
-        //[/UserSliderCode__hiQSlider]
-    }
     else if (sliderThatWasMoved == _hiGainSlider)
     {
         //[UserSliderCode__hiGainSlider] -- add your slider handling code here..
@@ -646,12 +570,6 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         //[UserSliderCode__hiFreqSlider] -- add your slider handling code here..
         _processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(_hiFreqSlider->getValue()));
         //[/UserSliderCode__hiFreqSlider]
-    }
-    else if (sliderThatWasMoved == _loQSlider)
-    {
-        //[UserSliderCode__loQSlider] -- add your slider handling code here..
-        _processor.setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(_loQSlider->getValue()));
-        //[/UserSliderCode__loQSlider]
     }
     else if (sliderThatWasMoved == _loGainSlider)
     {
@@ -818,7 +736,6 @@ void KlangFalterEditor::processorChanged()
     const bool loEqOn = (_processor.getParameter(Parameters::EqLowOn) && loEqEnabled);
     const float freq = _processor.getParameter(Parameters::EqLowFreq);
     const float gainDb = _processor.getParameter(Parameters::EqLowDecibels);
-    const float q = _processor.getParameter(Parameters::EqLowQ);
     _loEqButton->setEnabled(loEqEnabled);
     _loEqButton->setToggleState(loEqOn, false);
     _loFreqSlider->setEnabled(loEqEnabled);
@@ -827,16 +744,12 @@ void KlangFalterEditor::processorChanged()
     _loGainSlider->setEnabled(loEqEnabled);
     _loGainSlider->setValue(gainDb, juce::dontSendNotification);
     _loGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
-    _loQSlider->setEnabled(loEqEnabled);
-    _loQSlider->setValue(q, juce::dontSendNotification);
-    _loQLabel->setText(juce::String(q, 2), false);
   }
   {
     const bool hiEqEnabled = irAvailable;
     const bool hiEqOn = (_processor.getParameter(Parameters::EqHighOn) && hiEqEnabled);
     const float freq = _processor.getParameter(Parameters::EqHighFreq);
     const float gainDb = _processor.getParameter(Parameters::EqHighDecibels);
-    const float q = _processor.getParameter(Parameters::EqHighQ);
     _hiEqButton->setEnabled(hiEqEnabled);
     _hiEqButton->setToggleState(hiEqOn, false);
     _hiFreqSlider->setEnabled(hiEqEnabled);
@@ -845,9 +758,6 @@ void KlangFalterEditor::processorChanged()
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(gainDb, juce::dontSendNotification);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
-    _hiQSlider->setEnabled(hiEqEnabled);
-    _hiQSlider->setValue(q, juce::dontSendNotification);
-    _hiQLabel->setText(juce::String(q, 2), false);
   }
   {
     _levelMeterDry->setChannelCount(numInputChannels);
@@ -1022,101 +932,71 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="841738a894cf241a" memberName="_hiFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="428 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="476 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="15.2kHz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="fc2c2b94ce457ca1" memberName="_hiGainLabel" virtualName=""
-         explicitFocusOrder="0" pos="468 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="516 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="0.0dB" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
-  <LABEL name="" id="161491a6ead977b9" memberName="_hiQLabel" virtualName=""
-         explicitFocusOrder="0" pos="508 284 52 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="1.00" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="11" bold="0" italic="0" justification="36"/>
-  <LABEL name="" id="7aab03eab440e020" memberName="_hiQHeaderLabel" virtualName=""
-         explicitFocusOrder="0" pos="508 240 52 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="Slope" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="56744cc537b91ad6" memberName="_hiGainHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="468 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="516 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Gain" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="71caf1a3b5a498dd" memberName="_hiFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="428 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="476 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
-  <SLIDER name="" id="1944ce1fdebbf7f2" memberName="_hiQSlider" virtualName=""
-          explicitFocusOrder="0" pos="516 260 36 28" thumbcol="ffafafff"
-          rotarysliderfill="b1606060" min="1" max="2" int="0" style="RotaryVerticalDrag"
-          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
-          textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="1c3776d0e6cbce1d" memberName="_hiGainSlider" virtualName=""
-          explicitFocusOrder="0" pos="476 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="524 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="-30" max="30" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="702db07b37c24f93" memberName="_hiFreqSlider" virtualName=""
-          explicitFocusOrder="0" pos="436 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="484 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="2000" max="20000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <LABEL name="" id="8b28430d938b39ca" memberName="_loFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="264 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="364 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="1234Hz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="390bab67dc140d90" memberName="_loGainLabel" virtualName=""
-         explicitFocusOrder="0" pos="304 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="404 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="0.0dB" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
-  <LABEL name="" id="4984034959d891fe" memberName="_loQLabel" virtualName=""
-         explicitFocusOrder="0" pos="344 284 52 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="1.00" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="11" bold="0" italic="0" justification="36"/>
-  <LABEL name="" id="6541bf5df875461d" memberName="_loQHeaderLabel" virtualName=""
-         explicitFocusOrder="0" pos="344 240 52 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="Slope" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="8d9e4adc7538b7dc" memberName="_loGainHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="304 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="404 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Gain" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="f3b3523aee42340f" memberName="_loFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="264 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="364 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
-  <SLIDER name="" id="5def02f7f0e3aedb" memberName="_loQSlider" virtualName=""
-          explicitFocusOrder="0" pos="352 260 36 28" thumbcol="ffafafff"
-          rotarysliderfill="b1606060" min="1" max="2" int="0" style="RotaryVerticalDrag"
-          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
-          textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="a3dc7342caaa661f" memberName="_loGainSlider" virtualName=""
-          explicitFocusOrder="0" pos="312 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="412 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="-30" max="30" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="313e885756edaea8" memberName="_loFreqSlider" virtualName=""
-          explicitFocusOrder="0" pos="272 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="372 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="20" max="2000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <TEXTBUTTON name="" id="6455cd468963d5f2" memberName="_hiEqButton" virtualName=""
-              explicitFocusOrder="0" pos="464 220 56 24" bgColOff="80bcbcbc"
+              explicitFocusOrder="0" pos="492 220 56 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Hi Shelf" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
   <TEXTBUTTON name="" id="a9ee81604acef972" memberName="_loEqButton" virtualName=""
-              explicitFocusOrder="0" pos="300 220 56 24" bgColOff="80bcbcbc"
+              explicitFocusOrder="0" pos="380 220 56 24" bgColOff="80bcbcbc"
               bgColOn="ffbcbcff" buttonText="Lo Shelf" connectedEdges="3" needsCallback="1"
               radioGroupId="0"/>
   <GENERICCOMPONENT name="LevelMeterWet" id="e4867bf99a47726a" memberName="_levelMeterWet"

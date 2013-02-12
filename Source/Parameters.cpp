@@ -83,22 +83,14 @@ const FloatParameterDescriptor Parameters::EqLowDecibels(8,
                                                          0.0f,
                                                          -30.0f,
                                                          +30.0f);
-                                                   
-const FloatParameterDescriptor Parameters::EqLowQ(9,
-                                                  "EQ Low Slope",
-                                                  "",
-                                                  ParameterDescriptor::Automatable,
-                                                  1.0f,
-                                                  1.0f,
-                                                  2.0f);
-
-const BoolParameterDescriptor Parameters::EqHighOn(10,
+                                                  
+const BoolParameterDescriptor Parameters::EqHighOn(9,
                                                    "EQ High On",
                                                    "",
                                                    ParameterDescriptor::Automatable,
                                                    true);
                                                    
-const FloatParameterDescriptor Parameters::EqHighFreq(11,
+const FloatParameterDescriptor Parameters::EqHighFreq(10,
                                                       "EQ High Freq",
                                                       "Hz",
                                                       ParameterDescriptor::Automatable,
@@ -106,18 +98,10 @@ const FloatParameterDescriptor Parameters::EqHighFreq(11,
                                                       2000.0f,
                                                       20000.0f);
                                                      
-const FloatParameterDescriptor Parameters::EqHighDecibels(12,
+const FloatParameterDescriptor Parameters::EqHighDecibels(11,
                                                           "EQ High Gain",
                                                           "dB",
                                                           ParameterDescriptor::Automatable,
                                                           0.0f,
                                                           -30.0,
                                                           +30.0);
-                                                       
-const FloatParameterDescriptor Parameters::EqHighQ(13,
-                                                   "EQ High Slope",
-                                                   "",
-                                                   ParameterDescriptor::Automatable,
-                                                   1.0f,
-                                                   1.0f,
-                                                   2.0f);

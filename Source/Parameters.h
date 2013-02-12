@@ -37,12 +37,10 @@ struct Parameters
   static const BoolParameterDescriptor EqLowOn;
   static const FloatParameterDescriptor EqLowFreq;
   static const FloatParameterDescriptor EqLowDecibels;
-  static const FloatParameterDescriptor EqLowQ;
   
   static const BoolParameterDescriptor EqHighOn;
   static const FloatParameterDescriptor EqHighFreq;
   static const FloatParameterDescriptor EqHighDecibels;
-  static const FloatParameterDescriptor EqHighQ;
 };
 
 #endif // Header guard

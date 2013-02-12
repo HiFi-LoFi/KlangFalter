@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  9 Feb 2013 12:31:33pm
+  Creation date:  12 Feb 2013 7:02:30pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C13E4B0C__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C13E4B0C__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C8698218__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C8698218__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -77,7 +77,7 @@ private:
     CustomLookAndFeel _customLookAndFeel;
     PluginAudioProcessor& _processor;
     juce::ScopedPointer<SettingsDialogComponent> _settingsDialog;
-    std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents; 
+    std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents;
     //[/UserVariables]
 
     //==============================================================================
@@ -107,20 +107,14 @@ private:
     Label* _predelayLabel;
     Label* _hiFreqLabel;
     Label* _hiGainLabel;
-    Label* _hiQLabel;
-    Label* _hiQHeaderLabel;
     Label* _hiGainHeaderLabel;
     Label* _hiFreqHeaderLabel;
-    Slider* _hiQSlider;
     Slider* _hiGainSlider;
     Slider* _hiFreqSlider;
     Label* _loFreqLabel;
     Label* _loGainLabel;
-    Label* _loQLabel;
-    Label* _loQHeaderLabel;
     Label* _loGainHeaderLabel;
     Label* _loFreqHeaderLabel;
-    Slider* _loQSlider;
     Slider* _loGainSlider;
     Slider* _loFreqSlider;
     TextButton* _hiEqButton;
@@ -135,4 +129,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C13E4B0C__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C8698218__

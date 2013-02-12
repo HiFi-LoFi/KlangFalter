@@ -41,8 +41,8 @@ IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) 
   _convolver(nullptr),
   _fadeFactor(0.0),
   _fadeIncrement(0.0),
-  _eqLo(CookbookEq::LoShelf, Parameters::EqLowFreq.getMinValue(), Parameters::EqLowQ.getMinValue()),
-  _eqHi(CookbookEq::HiShelf, Parameters::EqLowFreq.getMaxValue(), Parameters::EqLowQ.getMinValue())
+  _eqLo(CookbookEq::LoShelf, Parameters::EqLowFreq.getMinValue(), 1.0f),
+  _eqHi(CookbookEq::HiShelf, Parameters::EqLowFreq.getMaxValue(), 1.0f)
 {
   initialize();
 }
@@ -75,15 +75,12 @@ size_t IRAgent::getOutputChannel() const
 void IRAgent::initialize()
 {
   PluginAudioProcessor& processor = _manager.getProcessor();
-  const float loFreq = processor.getParameter(Parameters::EqLowFreq);
-  const float loQ = processor.getParameter(Parameters::EqLowQ);
-  const float hiFreq = processor.getParameter(Parameters::EqHighFreq);
-  const float hiQ = processor.getParameter(Parameters::EqHighQ);
-  _eqLo.setFreqAndQ(loFreq, loQ);
-  _eqHi.setFreqAndQ(hiFreq, hiQ);
-  
   const float eqSampleRate = static_cast<float>(_manager.getConvolverSampleRate());
   const size_t eqBlockSize = _manager.getConvolverHeadBlockSize();
+  
+  _eqLo.setFreq(processor.getParameter(Parameters::EqLowFreq));
+  _eqHi.setFreq(processor.getParameter(Parameters::EqHighFreq));
+  
   _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
   _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
 }
@@ -255,28 +252,6 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
   
   PluginAudioProcessor& processor = _manager.getProcessor();
   
-  const bool eqLoOn = processor.getParameter(Parameters::EqLowOn);
-  float eqLoFreq = -1.0f;
-  float eqLoQ = -1.0f;
-  float eqLoDecibels = 0.0f;
-  if (eqLoOn)
-  {
-    eqLoFreq = processor.getParameter(Parameters::EqLowFreq);
-    eqLoQ = processor.getParameter(Parameters::EqLowQ);
-    eqLoDecibels = processor.getParameter(Parameters::EqLowDecibels);
-  }
-  
-  const bool eqHiOn = processor.getParameter(Parameters::EqHighOn);
-  float eqHiFreq = -1.0f;
-  float eqHiQ = -1.0f;
-  float eqHiDecibels = 0.0f;
-  if (eqHiOn)
-  {
-    eqHiFreq = processor.getParameter(Parameters::EqHighFreq);
-    eqHiQ = processor.getParameter(Parameters::EqHighQ);
-    eqHiDecibels = processor.getParameter(Parameters::EqHighDecibels);
-  }
-  
   // Lock the convolver mutex by spinning because this method
   // is called in the realtime audio thread...
   SpinningScopedLock<juce::CriticalSection> convolverLock(_convolverMutex);
@@ -313,17 +288,17 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
     _fadeIncrement = 0.0;
   }
   
-  if (eqLoOn)
+  if (processor.getParameter(Parameters::EqLowOn))
   {
-    _eqLo.setFreqAndQ(eqLoFreq, eqLoQ);
-    _eqLo.setGain(eqLoDecibels);
+    _eqLo.setFreq(processor.getParameter(Parameters::EqLowFreq));
+    _eqLo.setGain(processor.getParameter(Parameters::EqLowDecibels));
     _eqLo.filterOut(output, len);
   }
   
-  if (eqHiOn)
+  if (processor.getParameter(Parameters::EqHighOn))
   {
-    _eqHi.setFreqAndQ(eqHiFreq, eqHiQ);
-    _eqHi.setGain(eqHiDecibels);
+    _eqHi.setFreq(processor.getParameter(Parameters::EqHighFreq));
+    _eqHi.setGain(processor.getParameter(Parameters::EqHighDecibels));
     _eqHi.filterOut(output, len);
   }
 }

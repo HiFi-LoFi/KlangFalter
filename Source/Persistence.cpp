@@ -54,12 +54,10 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   convolutionElement->setAttribute("eqLoShelfOn", processor.getParameter(Parameters::EqLowOn));
   convolutionElement->setAttribute("eqLoShelfFreq", processor.getParameter(Parameters::EqLowFreq));
   convolutionElement->setAttribute("eqLoShelfDecibels", processor.getParameter(Parameters::EqLowDecibels));
-  convolutionElement->setAttribute("eqLoShelfQ", processor.getParameter(Parameters::EqLowQ));
   
   convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(Parameters::EqHighOn));
   convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(Parameters::EqHighFreq));
   convolutionElement->setAttribute("eqHiShelfDecibels", processor.getParameter(Parameters::EqHighDecibels));
-  convolutionElement->setAttribute("eqHiShelfQ", processor.getParameter(Parameters::EqHighQ));
   
   const IRManager& irManager = processor.getIRManager();
 
@@ -139,13 +137,10 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   bool eqLoShelfOn = element.getBoolAttribute("eqLoShelfOn", false);
   double eqLoShelfFreq = element.getDoubleAttribute("eqLoShelfFreq", 20.0);
   double eqLoShelfDecibels = element.getDoubleAttribute("eqLoShelfDecibels", 0.0);
-  double eqLoShelfQ = element.getDoubleAttribute("eqLoShelfQ", 1.0);
-  
   
   bool eqHiShelfOn = element.getBoolAttribute("eqHiShelfOn", false);
   double eqHiShelfFreq = element.getDoubleAttribute("eqHiShelfFreq", 20000.0);
   double eqHiShelfDecibels = element.getDoubleAttribute("eqHiShelfDecibels", 0.0);
-  double eqHiShelfQ = element.getDoubleAttribute("eqHiShelfQ", 1.0);
   
   Envelope envelope;
   XmlElement* envelopeElement = element.getChildByName("Envelope");
@@ -211,12 +206,10 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   processor.setParameterNotifyingHost(Parameters::EqLowOn, eqLoShelfOn);
   processor.setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(eqLoShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqLowDecibels, static_cast<float>(eqLoShelfDecibels));
-  processor.setParameterNotifyingHost(Parameters::EqLowQ, static_cast<float>(eqLoShelfQ));
   
   processor.setParameterNotifyingHost(Parameters::EqHighOn, eqHiShelfOn);
   processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(eqHiShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(eqHiShelfDecibels));
-  processor.setParameterNotifyingHost(Parameters::EqHighQ, static_cast<float>(eqHiShelfQ));
   
   irManager.setFileBeginSeconds(fileBeginSeconds);
   irManager.setPredelayMs(predelayMs);

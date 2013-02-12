@@ -49,11 +49,9 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _parameterSet.registerParameter(Parameters::EqLowOn);
   _parameterSet.registerParameter(Parameters::EqLowFreq);
   _parameterSet.registerParameter(Parameters::EqLowDecibels);
-  _parameterSet.registerParameter(Parameters::EqLowQ);
   _parameterSet.registerParameter(Parameters::EqHighOn);
   _parameterSet.registerParameter(Parameters::EqHighFreq);
   _parameterSet.registerParameter(Parameters::EqHighDecibels);
-  _parameterSet.registerParameter(Parameters::EqHighQ);
   
   _irManager = new IRManager(*this, 2, 2);
 }
