@@ -392,9 +392,7 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _loEqButton->setClickingTogglesState(true);
     _hiEqButton->setClickingTogglesState(true);
 
-    IRManager& irManager = _processor.getIRManager();
     _processor.addNotificationListener(this);
-    irManager.addNotificationListener(this);
     _irBrowserComponent->init(&_processor);
     processorChanged();
     startTimer(100);
@@ -405,7 +403,6 @@ KlangFalterEditor::~KlangFalterEditor()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
     _processor.removeNotificationListener(this);
-    _processor.getIRManager().removeNotificationListener(this);
     //[/Destructor_pre]
 
     deleteAndZero (_decibelScale);
@@ -528,7 +525,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
           sliderVal = 1.0;
           _stretchSlider->setValue(1.0, juce::dontSendNotification);
         }
-        _processor.getIRManager().setStretch(sliderVal);
+        _processor.setStretch(sliderVal);
         //[/UserSliderCode__stretchSlider]
     }
     else if (sliderThatWasMoved == _drySlider)
@@ -550,13 +547,13 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     else if (sliderThatWasMoved == _beginSlider)
     {
         //[UserSliderCode__beginSlider] -- add your slider handling code here..
-        _processor.getIRManager().setFileBeginSeconds(_beginSlider->getValue());
+        _processor.setFileBeginSeconds(_beginSlider->getValue());
         //[/UserSliderCode__beginSlider]
     }
     else if (sliderThatWasMoved == _predelaySlider)
     {
         //[UserSliderCode__predelaySlider] -- add your slider handling code here..
-        _processor.getIRManager().setPredelayMs(_predelaySlider->getValue());
+        _processor.setPredelayMs(_predelaySlider->getValue());
         //[/UserSliderCode__predelaySlider]
     }
     else if (sliderThatWasMoved == _hiGainSlider)
@@ -648,7 +645,7 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == _reverseButton)
     {
         //[UserButtonCode__reverseButton] -- add your button handler code here..
-        _processor.getIRManager().setReverse(_reverseButton->getToggleState());
+        _processor.setReverse(_reverseButton->getToggleState());
         //[/UserButtonCode__reverseButton]
     }
     else if (buttonThatWasClicked == _hiEqButton)
@@ -674,13 +671,12 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
 
 void KlangFalterEditor::processorChanged()
 {
-  IRManager& irManager = _processor.getIRManager();
-  const double maxFileDuration = irManager.getMaxFileDuration();
+  const double maxFileDuration = _processor.getMaxFileDuration();
   const bool irAvailable = (maxFileDuration > 0.0);
   const size_t numInputChannels = static_cast<size_t>(std::min(_processor.getNumInputChannels(), 2));
   const size_t numOutputChannels = static_cast<size_t>(std::min(_processor.getNumOutputChannels(), 2));
   {
-    const double stretch = irManager.getStretch();
+    const double stretch = _processor.getStretch();
     _stretchSlider->setEnabled(irAvailable);
     _stretchSlider->setRange(0.5, 1.5);
     _stretchSlider->setValue(stretch, juce::dontSendNotification);
@@ -706,10 +702,10 @@ void KlangFalterEditor::processorChanged()
   }
   {
     _reverseButton->setEnabled(true);
-    _reverseButton->setToggleState(irManager.getReverse(), false);
+    _reverseButton->setToggleState(_processor.getReverse(), false);
   }
   {
-    const double fileBeginSeconds = std::min(irManager.getFileBeginSeconds(), maxFileDuration);
+    const double fileBeginSeconds = std::min(_processor.getFileBeginSeconds(), maxFileDuration);
     _beginSlider->setEnabled(irAvailable);
     if (maxFileDuration > 0.0)
     {
@@ -719,7 +715,7 @@ void KlangFalterEditor::processorChanged()
     _beginLabel->setText(juce::String(static_cast<int>(fileBeginSeconds*1000.0 + 0.5)) + juce::String("ms"), true);
   }
   {
-    const double predelayMs = irManager.getPredelayMs();
+    const double predelayMs = _processor.getPredelayMs();
     _predelaySlider->setValue(predelayMs);
     _predelaySlider->setEnabled(irAvailable);
     _predelayLabel->setText(juce::String(static_cast<int>(predelayMs+0.5)) + juce::String("ms"), true);
@@ -776,12 +772,12 @@ void KlangFalterEditor::processorChanged()
       {
         if (_irComponents.find(std::make_pair(input, output)) == _irComponents.end())
         {
-          IRAgent* agent = irManager.getAgent(input, output);
+          IRAgent* agent = _processor.getAgent(input, output);
           jassert(agent);
           if (agent)
           {
             IRComponent* irComponent = new IRComponent();
-            irComponent->init(&irManager, input, output);
+            irComponent->init(_processor.getAgent(input, output));
             _irTabComponent->addTab(juce::String(static_cast<int>(input)) + juce::String("-") + juce::String(static_cast<int>(output)),
                                     juce::Colour(0xffe5e5f0),
                                     irComponent,

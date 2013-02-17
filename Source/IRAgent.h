@@ -28,7 +28,7 @@
 
 
 // Forward declarations
-class IRManager;
+class PluginAudioProcessor;
 
 
 // ====================================================
@@ -81,11 +81,11 @@ private:
 class IRAgent : public ChangeNotifier
 {
 public:
-  IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel);
+  IRAgent(PluginAudioProcessor& manager, size_t inputChannel, size_t outputChannel);
   virtual ~IRAgent();
   
-  // Manager
-  IRManager& getManager() const;
+  // Processor
+  PluginAudioProcessor& getProcessor() const;
   
   // Input/output
   size_t getInputChannel() const;
@@ -124,7 +124,7 @@ public:
 private:
   void propagateChange();
   
-  IRManager& _manager;
+  PluginAudioProcessor& _processor;
   size_t _inputChannel;
   size_t _outputChannel;
   
@@ -152,5 +152,7 @@ private:
   IRAgent& operator=(const IRAgent&);
 };
 
+
+typedef std::vector<IRAgent*> IRAgentContainer;
 
 #endif  // Header guard

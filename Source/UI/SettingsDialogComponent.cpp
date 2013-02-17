@@ -226,8 +226,8 @@ SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processo
     _numberInputsLabel->setText(juce::String(_processor.getNumInputChannels()), false);
     _numberOutputsLabel->setText(juce::String(_processor.getNumOutputChannels()), false);
     _sseOptimizationLabel->setText((fftconvolver::SSEOptimized() == true) ? juce::String("Yes") : juce::String("No"), false);
-    _headBlockSizeLabel->setText(juce::String(static_cast<int>(_processor.getIRManager().getConvolverHeadBlockSize())), false);
-    _tailBlockSizeLabel->setText(juce::String(static_cast<int>(_processor.getIRManager().getConvolverTailBlockSize())), false);
+    _headBlockSizeLabel->setText(juce::String(static_cast<int>(_processor.getConvolverHeadBlockSize())), false);
+    _tailBlockSizeLabel->setText(juce::String(static_cast<int>(_processor.getConvolverTailBlockSize())), false);
     //[/Constructor]
 }
 

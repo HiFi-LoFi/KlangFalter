@@ -18,6 +18,7 @@
 #include "PluginProcessor.h"
 
 #include "IRAgent.h"
+#include "IRCalculation.h"
 #include "Parameters.h"
 #include "Persistence.h"
 #include "Settings.h"
@@ -32,13 +33,24 @@
 PluginAudioProcessor::PluginAudioProcessor() :
   AudioProcessor(),
   ChangeNotifier(),
-  _irManager(),
   _wetBuffer(1, 0),
   _convolutionBuffers(),
   _parameterSet(),
   _levelMeasurementsDry(2),
   _levelMeasurementsWet(2),
-  _settings()
+  _settings(),
+  _convolverMutex(),
+  _agents(),
+  _stretch(1.0),
+  _reverse(false),
+  _envelope(1.0, 1.0),
+  _convolverSampleRate(0.0),
+  _convolverHeadBlockSize(0),
+  _convolverTailBlockSize(0),
+  _fileBeginSeconds(0.0),
+  _predelayMs(0.0),
+  _irCalculationMutex(),
+  _irCalculation()
 { 
   _parameterSet.registerParameter(Parameters::WetOn);
   _parameterSet.registerParameter(Parameters::WetDecibels);
@@ -53,13 +65,22 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _parameterSet.registerParameter(Parameters::EqHighFreq);
   _parameterSet.registerParameter(Parameters::EqHighDecibels);
   
-  _irManager = new IRManager(*this, 2, 2);
+  _agents.push_back(new IRAgent(*this, 0, 0));
+  _agents.push_back(new IRAgent(*this, 0, 1));
+  _agents.push_back(new IRAgent(*this, 1, 0));
+  _agents.push_back(new IRAgent(*this, 1, 1));
 }
 
 
 PluginAudioProcessor::~PluginAudioProcessor()
 {
   PluginAudioProcessor::releaseResources();
+  
+  for (size_t i=0; i<_agents.size(); ++i)
+  {
+    delete _agents[i];
+  }
+  _agents.clear();
 }
 
 
@@ -180,15 +201,30 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
   // Play safe to be clean
   releaseResources();
   
-  // Prepare convolution
-  _irManager->initialize(sampleRate, static_cast<size_t>(samplesPerBlock));
+  // Prepare convolvers
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    const size_t convolverHeadBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 256));
+    const size_t convolverTailBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 4096));
+    if (::fabs(_convolverSampleRate-sampleRate) > 0.00000001 ||
+        _convolverHeadBlockSize != convolverHeadBlockSize ||
+        _convolverTailBlockSize != convolverTailBlockSize)
+    {
+      _convolverSampleRate = sampleRate;
+      _convolverHeadBlockSize = convolverHeadBlockSize;
+      _convolverTailBlockSize = convolverTailBlockSize;
+    }
+  }
+  
+  // Prepare convolution buffers
   _wetBuffer.setSize(2, samplesPerBlock);  
-  for (size_t i=0; i<_irManager->getAgentCount(); ++i)
+  for (size_t i=0; i<_agents.size(); ++i)
   {
     _convolutionBuffers.push_back(new fftconvolver::SampleBuffer(samplesPerBlock));
   }
   
   notifyAboutChange();
+  updateConvolvers();
 }
 
 
@@ -255,10 +291,10 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
 
   if (channelData0 && channelData1)
   {
-    IRAgent* irAgent00 = _irManager->getAgent(0, 0);
-    IRAgent* irAgent01 = _irManager->getAgent(0, 1);
-    IRAgent* irAgent10 = _irManager->getAgent(1, 0);
-    IRAgent* irAgent11 = _irManager->getAgent(1, 1);
+    IRAgent* irAgent00 = getAgent(0, 0);
+    IRAgent* irAgent01 = getAgent(0, 1);
+    IRAgent* irAgent10 = getAgent(1, 0);
+    IRAgent* irAgent11 = getAgent(1, 1);
     
     fftconvolver::SampleBuffer* convolutionBuffer00 = nullptr;
     fftconvolver::SampleBuffer* convolutionBuffer01 = nullptr;
@@ -356,6 +392,7 @@ void PluginAudioProcessor::getStateInformation (MemoryBlock& destData)
   }
 }
 
+
 void PluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
   juce::ScopedPointer<juce::XmlElement> element(getXmlFromBinary(data, sizeInBytes));
@@ -364,21 +401,6 @@ void PluginAudioProcessor::setStateInformation (const void* data, int sizeInByte
     const juce::File irDirectory = _settings.getImpulseResponseDirectory();
     LoadState(irDirectory, *element, *this);
   }
-}
-
-
-//==============================================================================
-
-
-IRManager& PluginAudioProcessor::getIRManager()
-{
-  return *_irManager;
-}
-
-
-const IRManager& PluginAudioProcessor::getIRManager() const
-{
-  return *_irManager;
 }
 
 
@@ -404,4 +426,266 @@ Settings& PluginAudioProcessor::getSettings()
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PluginAudioProcessor();
+}
+
+
+// =============================================================================
+
+
+IRAgent* PluginAudioProcessor::getAgent(size_t inputChannel, size_t outputChannel) const
+{
+  for (size_t i=0; i<_agents.size(); ++i)
+  {
+    IRAgent* agent = _agents[i];
+    if (agent->getInputChannel() == inputChannel && agent->getOutputChannel() == outputChannel)
+    {
+      return agent;
+    }
+  }
+  return nullptr;
+}
+
+
+size_t PluginAudioProcessor::getAgentCount() const
+{
+  return _agents.size();
+}
+
+
+IRAgentContainer PluginAudioProcessor::getAgents() const
+{
+  return _agents;
+}
+
+
+void PluginAudioProcessor::reset()
+{
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    _reverse = false;
+    _stretch = 1.0;
+    _fileBeginSeconds = 0.0;
+    _envelope.reset();
+  }
+  
+  setParameterNotifyingHost(Parameters::EqLowOn, Parameters::EqLowOn.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqLowFreq, Parameters::EqLowFreq.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqLowDecibels, Parameters::EqLowDecibels.getDefaultValue());
+
+  setParameterNotifyingHost(Parameters::EqHighOn, Parameters::EqHighOn.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqHighFreq, Parameters::EqHighFreq.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqHighDecibels, Parameters::EqHighDecibels.getDefaultValue());
+  
+  for (size_t i=0; i<_agents.size(); ++i)
+  {
+    _agents[i]->clear();
+  }
+  
+  notifyAboutChange();
+  updateConvolvers();
+}
+
+
+void PluginAudioProcessor::setStretch(double stretch)
+{
+  bool changed = false;
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    if (::fabs(_stretch-stretch) > 0.000001)
+    {
+      _stretch = stretch;
+      changed = true;
+    }
+  }
+  if (changed)
+  {
+    notifyAboutChange();
+    updateConvolvers();
+  }
+}
+
+
+double PluginAudioProcessor::getStretch() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _stretch;
+}
+
+
+void PluginAudioProcessor::setReverse(bool reverse)
+{
+  bool changed = false;
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    if (_reverse != reverse)
+    {
+      _reverse = reverse;
+      _envelope.setReverse(reverse);    
+      changed = true;
+    }
+  }
+  if (changed)
+  {
+    notifyAboutChange();
+    updateConvolvers();
+  }
+}
+
+
+bool PluginAudioProcessor::getReverse() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _reverse;
+}
+
+
+void PluginAudioProcessor::setEnvelope(const Envelope& envelope)
+{
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    _envelope = envelope;
+  }
+  notifyAboutChange();
+  updateConvolvers();
+}
+
+
+Envelope PluginAudioProcessor::getEnvelope() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _envelope;
+}
+
+
+void PluginAudioProcessor::setPredelayMs(double predelayMs)
+{
+  bool changed = false;
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    if (_predelayMs != predelayMs)
+    {
+      _predelayMs = predelayMs;
+      changed = true;
+    }
+  }
+  if (changed)
+  {
+    notifyAboutChange();
+    updateConvolvers();
+  }
+}
+
+
+double PluginAudioProcessor::getPredelayMs() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _predelayMs;
+}
+
+
+void PluginAudioProcessor::setFileBeginSeconds(double fileBeginSeconds)
+{
+  bool changed = false;
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    if (_fileBeginSeconds != fileBeginSeconds)
+    {
+      _fileBeginSeconds = fileBeginSeconds;
+      changed = true;
+    }    
+  }
+  if (changed)
+  {
+    notifyAboutChange();
+    updateConvolvers();
+  }
+}
+
+
+double PluginAudioProcessor::getFileBeginSeconds() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return std::max(0.0, std::min(getMaxFileDuration(), _fileBeginSeconds));
+}
+
+
+double PluginAudioProcessor::getConvolverSampleRate() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _convolverSampleRate;
+}
+
+
+size_t PluginAudioProcessor::getConvolverHeadBlockSize() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _convolverHeadBlockSize;
+}
+
+
+size_t PluginAudioProcessor::getConvolverTailBlockSize() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  return _convolverTailBlockSize;
+}
+
+
+size_t PluginAudioProcessor::getMaxIRSampleCount() const
+{
+  size_t maxSampleCount = 0;
+  for (auto it=_agents.begin(); it!=_agents.end(); ++it)
+  {
+    FloatBuffer::Ptr ir = (*it)->getImpulseResponse();
+    if (ir)
+    {
+      maxSampleCount = std::max(maxSampleCount, ir->getSize());
+    }
+  }
+  return maxSampleCount;
+}
+
+
+size_t PluginAudioProcessor::getMaxFileSampleCount() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  size_t maxSampleCount = 0;
+  for (auto it=_agents.begin(); it!=_agents.end(); ++it)
+  {
+    const size_t sampleCount = (*it)->getFileSampleCount();
+    if (sampleCount > maxSampleCount)
+    {
+      maxSampleCount = sampleCount;
+    }
+  }
+  return maxSampleCount;
+}
+
+
+double PluginAudioProcessor::getMaxFileDuration() const
+{
+  juce::ScopedLock convolverLock(_convolverMutex);
+  double maxDuration = 0.0;
+  for (auto it=_agents.begin(); it!=_agents.end(); ++it)
+  {
+    const size_t sampleCount = (*it)->getFileSampleCount();
+    const double sampleRate = (*it)->getFileSampleRate();
+    const double duration = static_cast<double>(sampleCount) / sampleRate;
+    if (duration > maxDuration)
+    {
+      maxDuration = duration;
+    }
+  }
+  return maxDuration;
+}
+
+
+void PluginAudioProcessor::updateConvolvers()
+{
+  juce::ScopedLock irCalculationlock(_irCalculationMutex);
+  if (_irCalculation)
+  {
+    _irCalculation->stopThread(-1);
+    _irCalculation = nullptr;
+  }
+  _irCalculation = new IRCalculation(*this);
 }

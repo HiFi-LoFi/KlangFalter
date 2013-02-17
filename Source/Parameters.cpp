@@ -66,7 +66,7 @@ const BoolParameterDescriptor Parameters::EqLowOn(6,
                                                   "EQ Low On",
                                                   "",
                                                   ParameterDescriptor::Automatable,
-                                                  true);
+                                                  false);
 
 const FloatParameterDescriptor Parameters::EqLowFreq(7,
                                                      "EQ Low Freq",
@@ -88,7 +88,7 @@ const BoolParameterDescriptor Parameters::EqHighOn(9,
                                                    "EQ High On",
                                                    "",
                                                    ParameterDescriptor::Automatable,
-                                                   true);
+                                                   false);
                                                    
 const FloatParameterDescriptor Parameters::EqHighFreq(10,
                                                       "EQ High Freq",

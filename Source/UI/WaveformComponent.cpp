@@ -19,7 +19,7 @@
 
 #include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"
-#include "../IRManager.h"
+#include "../PluginProcessor.h"
 
  
 WaveformComponent::WaveformComponent() :
@@ -238,12 +238,12 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
   
   if (irAgent != nullptr && sampleRate > 0.0 && samplesPerPx > 0)
   {
-    const IRManager& irManager = irAgent->getManager(); 
+    const PluginAudioProcessor& processor = irAgent->getProcessor(); 
     _irAgent = irAgent;
     _sampleRate = sampleRate;
     _samplesPerPx = std::max(static_cast<size_t>(1), samplesPerPx);
-    _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * irManager.getPredelayMs()) / _samplesPerPx;
-    _envelope = irManager.getEnvelope();
+    _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * processor.getPredelayMs()) / _samplesPerPx;
+    _envelope = processor.getEnvelope();
     
     const FloatBuffer::Ptr ir = _irAgent->getImpulseResponse();
     if (ir)
@@ -410,7 +410,7 @@ void WaveformComponent::envelopeChanged()
 {
   if (_irAgent)
   {
-    _irAgent->getManager().setEnvelope(_envelope);
+    _irAgent->getProcessor().setEnvelope(_envelope);
   }
 }
 

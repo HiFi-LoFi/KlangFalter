@@ -18,7 +18,6 @@
 #include "Persistence.h"
 
 #include "IRAgent.h"
-#include "IRManager.h"
 #include "Parameters.h"
 
 #include <algorithm>
@@ -58,18 +57,16 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(Parameters::EqHighOn));
   convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(Parameters::EqHighFreq));
   convolutionElement->setAttribute("eqHiShelfDecibels", processor.getParameter(Parameters::EqHighDecibels));
-  
-  const IRManager& irManager = processor.getIRManager();
 
   // Parameters
-  convolutionElement->setAttribute("fileBeginSeconds", irManager.getFileBeginSeconds());
-  convolutionElement->setAttribute("stretch", irManager.getStretch());
-  convolutionElement->setAttribute("predelayMs", irManager.getPredelayMs());
-  convolutionElement->setAttribute("reverse", irManager.getReverse());
+  convolutionElement->setAttribute("fileBeginSeconds", processor.getFileBeginSeconds());
+  convolutionElement->setAttribute("stretch", processor.getStretch());
+  convolutionElement->setAttribute("predelayMs", processor.getPredelayMs());
+  convolutionElement->setAttribute("reverse", processor.getReverse());
         
   // Envelope
   {
-    Envelope envelope = irManager.getEnvelope();
+    Envelope envelope = processor.getEnvelope();
     if (!envelope.isNeutral())
     {
       envelope.setReverse(false);
@@ -86,7 +83,7 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
     }
           
     // IRs
-    auto irAgents = irManager.getAgents();
+    auto irAgents = processor.getAgents();
     for (auto it=irAgents.begin(); it!=irAgents.end(); ++it)
     {
       IRAgent* irAgent = (*it);
@@ -120,8 +117,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   if (element.getTagName() != "Convolution")
   {
     return false;
-  }  
-  IRManager& irManager = processor.getIRManager();
+  }
 
   // Phase 1: Load all data
   bool wetOn = element.getBoolAttribute("wetOn", 1.0);
@@ -182,7 +178,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
       return false;
     }
     
-    IRAgent* irAgent = irManager.getAgent(inputChannel, outputChannel);
+    IRAgent* irAgent = processor.getAgent(inputChannel, outputChannel);
     if (!irAgent)
     {
       return false;
@@ -195,7 +191,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   }
   
   // Phase 2: Restore the state
-  irManager.reset();
+  processor.reset();
   
   processor.setParameterNotifyingHost(Parameters::WetOn, wetOn);
   processor.setParameterNotifyingHost(Parameters::WetDecibels, static_cast<float>(wetDecibels));
@@ -211,11 +207,11 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(eqHiShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(eqHiShelfDecibels));
   
-  irManager.setFileBeginSeconds(fileBeginSeconds);
-  irManager.setPredelayMs(predelayMs);
-  irManager.setStretch(stretch);
-  irManager.setReverse(reverse);
-  irManager.setEnvelope(envelope);
+  processor.setFileBeginSeconds(fileBeginSeconds);
+  processor.setPredelayMs(predelayMs);
+  processor.setStretch(stretch);
+  processor.setReverse(reverse);
+  processor.setEnvelope(envelope);
   
   for (auto it=irConfigurations.begin(); it!=irConfigurations.end(); ++it)
   {

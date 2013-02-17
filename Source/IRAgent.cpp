@@ -17,7 +17,6 @@
 
 #include "IRAgent.h"
 
-#include "IRManager.h"
 #include "Parameters.h"
 #include "PluginProcessor.h"
 #include "SpinningScopedLock.h"
@@ -25,9 +24,9 @@
 #include <algorithm>
 
 
-IRAgent::IRAgent(IRManager& manager, size_t inputChannel, size_t outputChannel) :
+IRAgent::IRAgent(PluginAudioProcessor& processor, size_t inputChannel, size_t outputChannel) :
   ChangeNotifier(),
-  _manager(manager),
+  _processor(processor),
   _inputChannel(inputChannel),
   _outputChannel(outputChannel),
   _mutex(),
@@ -54,9 +53,9 @@ IRAgent::~IRAgent()
 }
 
 
-IRManager& IRAgent::getManager() const
+PluginAudioProcessor& IRAgent::getProcessor() const
 {
-  return _manager;
+  return _processor;
 }
 
 
@@ -74,12 +73,11 @@ size_t IRAgent::getOutputChannel() const
 
 void IRAgent::initialize()
 {
-  PluginAudioProcessor& processor = _manager.getProcessor();
-  const float eqSampleRate = static_cast<float>(_manager.getConvolverSampleRate());
-  const size_t eqBlockSize = _manager.getConvolverHeadBlockSize();
+  const float eqSampleRate = static_cast<float>(_processor.getConvolverSampleRate());
+  const size_t eqBlockSize = _processor.getConvolverHeadBlockSize();
   
-  _eqLo.setFreq(processor.getParameter(Parameters::EqLowFreq));
-  _eqHi.setFreq(processor.getParameter(Parameters::EqHighFreq));
+  _eqLo.setFreq(_processor.getParameter(Parameters::EqLowFreq));
+  _eqHi.setFreq(_processor.getParameter(Parameters::EqHighFreq));
   
   _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
   _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
@@ -181,7 +179,7 @@ FloatBuffer::Ptr IRAgent::getImpulseResponse() const
 
 void IRAgent::updateConvolver()
 {
-  _manager.updateConvolvers();
+  _processor.updateConvolvers();
 }
 
 
@@ -242,15 +240,13 @@ void IRAgent::setConvolver(Convolver* convolver)
 void IRAgent::propagateChange()
 {
   notifyAboutChange();
-  _manager.notifyAboutChange();
+  _processor.notifyAboutChange();
 }
 
 
 void IRAgent::process(const float* input, float* output, size_t len, float autoGain)
 {
   const float Epsilon = 0.0001f;
-  
-  PluginAudioProcessor& processor = _manager.getProcessor();
   
   // Lock the convolver mutex by spinning because this method
   // is called in the realtime audio thread...
@@ -288,17 +284,17 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
     _fadeIncrement = 0.0;
   }
   
-  if (processor.getParameter(Parameters::EqLowOn))
+  if (_processor.getParameter(Parameters::EqLowOn))
   {
-    _eqLo.setFreq(processor.getParameter(Parameters::EqLowFreq));
-    _eqLo.setGain(processor.getParameter(Parameters::EqLowDecibels));
+    _eqLo.setFreq(_processor.getParameter(Parameters::EqLowFreq));
+    _eqLo.setGain(_processor.getParameter(Parameters::EqLowDecibels));
     _eqLo.filterOut(output, len);
   }
   
-  if (processor.getParameter(Parameters::EqHighOn))
+  if (_processor.getParameter(Parameters::EqHighOn))
   {
-    _eqHi.setFreq(processor.getParameter(Parameters::EqHighFreq));
-    _eqHi.setGain(processor.getParameter(Parameters::EqHighDecibels));
+    _eqHi.setFreq(_processor.getParameter(Parameters::EqHighFreq));
+    _eqHi.setGain(_processor.getParameter(Parameters::EqHighDecibels));
     _eqHi.filterOut(output, len);
   }
 }

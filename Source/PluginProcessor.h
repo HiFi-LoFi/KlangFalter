@@ -21,7 +21,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 #include "ChangeNotifier.h"
-#include "IRManager.h"
+#include "Envelope.h"
+#include "IRAgent.h"
 #include "LevelMeasurement.h"
 #include "Parameterset.h"
 #include "Settings.h"
@@ -106,23 +107,66 @@ public:
     void setStateInformation(const void* data, int sizeInBytes);
 
   
-    //==============================================================================    
-    IRManager& getIRManager();
-    const IRManager& getIRManager() const;
-  
+    //==============================================================================      
     float getLevelDry(size_t channel) const;
     float getLevelWet(size_t channel) const;
 
     Settings& getSettings();
   
+  
+    //==============================================================================
+  
+  double getConvolverSampleRate() const;
+  size_t getConvolverHeadBlockSize() const;
+  size_t getConvolverTailBlockSize() const;
+  
+  IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
+  size_t getAgentCount() const;
+  IRAgentContainer getAgents() const;
+  void reset();
+  
+  void setStretch(double stretch);
+  double getStretch() const;
+  
+  void setReverse(bool reverse);
+  bool getReverse() const;
+  
+  void setEnvelope(const Envelope& envelope);
+  Envelope getEnvelope() const; 
+  
+  size_t getMaxIRSampleCount() const;
+  size_t getMaxFileSampleCount() const;
+  double getMaxFileDuration() const;
+  
+  void setFileBeginSeconds(double fileBeginSeconds);
+  double getFileBeginSeconds() const;
+  
+  void setPredelayMs(double predelayMs);
+  double getPredelayMs() const;
+  
+  void updateConvolvers();
+  
 private:
-    juce::ScopedPointer<IRManager> _irManager;
     juce::AudioSampleBuffer _wetBuffer;
     std::vector<fftconvolver::SampleBuffer*> _convolutionBuffers;
     ParameterSet _parameterSet;  
     std::vector<LevelMeasurement> _levelMeasurementsDry;
     std::vector<LevelMeasurement> _levelMeasurementsWet;
     Settings _settings;
+  
+    mutable juce::CriticalSection _convolverMutex;
+    IRAgentContainer _agents;
+    double _stretch;
+    bool _reverse;
+    Envelope _envelope;
+    double _convolverSampleRate;
+    size_t _convolverHeadBlockSize;
+    size_t _convolverTailBlockSize;
+    double _fileBeginSeconds;
+    double _predelayMs;
+  
+    mutable juce::CriticalSection _irCalculationMutex;
+    juce::ScopedPointer<juce::Thread> _irCalculation;
   
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessor);

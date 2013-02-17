@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.02.09beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="guiapp" version="2013.02.09beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -98,8 +98,9 @@
     <FILE id="iWDpt2" name="Envelope.h" compile="0" resource="0" file="Source/Envelope.h"/>
     <FILE id="piTFx6" name="IRAgent.cpp" compile="1" resource="0" file="Source/IRAgent.cpp"/>
     <FILE id="SynzbE" name="IRAgent.h" compile="0" resource="0" file="Source/IRAgent.h"/>
-    <FILE id="sS25aG" name="IRManager.cpp" compile="1" resource="0" file="Source/IRManager.cpp"/>
-    <FILE id="z0N8GF" name="IRManager.h" compile="0" resource="0" file="Source/IRManager.h"/>
+    <FILE id="Z6HLyH" name="IRCalculation.cpp" compile="1" resource="0"
+          file="Source/IRCalculation.cpp"/>
+    <FILE id="GYyVDS" name="IRCalculation.h" compile="0" resource="0" file="Source/IRCalculation.h"/>
     <FILE id="vF7jUl" name="LevelMeasurement.cpp" compile="1" resource="0"
           file="Source/LevelMeasurement.cpp"/>
     <FILE id="mYCk2O" name="LevelMeasurement.h" compile="0" resource="0"
@@ -131,7 +132,6 @@
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
   </MODULES>
   <JUCEOPTIONS/>
 </JUCERPROJECT>

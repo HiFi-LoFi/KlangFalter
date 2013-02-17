@@ -51,7 +51,7 @@ IRBrowserComponent::~IRBrowserComponent()
 void IRBrowserComponent::init(PluginAudioProcessor* processor)
 {
   _processor = processor;
-  Settings* settings = _processor ? &_processor->getSettings() : nullptr;
+  Settings* settings = _processor ? &(_processor->getSettings()) : nullptr;
   if (settings)
   {
     settings->addChangeListener(this);
@@ -199,12 +199,11 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     return;
   }
-   
-  IRManager& irManager = _processor->getIRManager();
-  IRAgent* agent00 = irManager.getAgent(0, 0);
-  IRAgent* agent01 = irManager.getAgent(0, 1);
-  IRAgent* agent10 = irManager.getAgent(1, 0);
-  IRAgent* agent11 = irManager.getAgent(1, 1);
+  
+  IRAgent* agent00 = _processor->getAgent(0, 0);
+  IRAgent* agent01 = _processor->getAgent(0, 1);
+  IRAgent* agent10 = _processor->getAgent(1, 0);
+  IRAgent* agent11 = _processor->getAgent(1, 1);
   
   const int inputChannels = _processor->getNumInputChannels();
   const int outputChannels = _processor->getNumOutputChannels();
@@ -213,6 +212,7 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     if (channelCount >= 1)
     {
+      _processor->reset();
       agent00->setFile(file, 0);
     }
   }
@@ -220,12 +220,13 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     if (channelCount == 1)
     {
-      irManager.reset();
+      _processor->reset();
       agent00->setFile(file, 0);
       agent01->setFile(file, 0);
     }
     else if (channelCount >= 2)
     {
+      _processor->reset();
       agent00->setFile(file, 0);
       agent01->setFile(file, 1);
     }
@@ -234,16 +235,16 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     if (channelCount == 1)
     {
-      irManager.reset();
+      _processor->reset();
       agent00->setFile(file, 0);
       agent11->setFile(file, 0);
     }
     else if (channelCount == 2)
     {
-      irManager.reset();
       TrueStereoPairs trueStereoPairs = findTrueStereoPairs(file, sampleCount, sampleRate);
       if (trueStereoPairs.size() == 4)
       {
+        _processor->reset();
         agent00->setFile(trueStereoPairs[0].first, trueStereoPairs[0].second);
         agent01->setFile(trueStereoPairs[1].first, trueStereoPairs[1].second);
         agent10->setFile(trueStereoPairs[2].first, trueStereoPairs[2].second);
@@ -251,13 +252,14 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
       }
       else
       {
+        _processor->reset();
         agent00->setFile(file, 0);
         agent11->setFile(file, 1);
       }
     }
     else if (channelCount >= 4)
     {
-      irManager.reset();
+      _processor->reset();
       agent00->setFile(file, 0);
       agent01->setFile(file, 1);
       agent10->setFile(file, 2);

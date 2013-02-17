@@ -27,7 +27,6 @@
 
 #include "WaveformComponent.h"
 #include "../IRAgent.h"
-#include "../IRManager.h"
 #include "../PluginProcessor.h"
 //[/Headers]
 
@@ -54,7 +53,7 @@ public:
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
 
-    void init(IRManager* irManager, size_t inputChannel, size_t outputChannel);
+    void init(IRAgent* irAgent);
     void irChanged();
     virtual void changeNotification();
 
@@ -73,7 +72,6 @@ public:
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     IRAgent* _irAgent;
-    IRManager* _irManager;
     //[/UserVariables]
 
     //==============================================================================

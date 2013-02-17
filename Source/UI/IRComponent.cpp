@@ -82,29 +82,14 @@ IRComponent::IRComponent ()
 
 
     //[Constructor] You can add your own custom stuff here..
-
     _irAgent = nullptr;
-    _irManager = nullptr;
-
     //[/Constructor]
 }
 
 IRComponent::~IRComponent()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
-
-    if (_irManager)
-    {
-      _irManager->removeNotificationListener(this);
-      _irManager = nullptr;
-    }
-
-    if (_irAgent)
-    {
-      _irAgent->removeNotificationListener(this);
-      _irAgent = nullptr;
-    }
-
+    IRComponent::init(nullptr);
     //[/Destructor_pre]
 
     deleteAndZero (_waveformComponent);
@@ -149,19 +134,16 @@ void IRComponent::buttonClicked (Button* buttonThatWasClicked)
     if (buttonThatWasClicked == _loadButton)
     {
         //[UserButtonCode__loadButton] -- add your button handler code here..
-        if (_irAgent)
+        AudioFormatManager formatManager;
+        formatManager.registerBasicFormats();
+        FileChooser fileChooser("Choose a file to open...",
+                                _irAgent->getProcessor().getSettings().getImpulseResponseDirectory(),
+                                formatManager.getWildcardForAllFormats(),
+                                true);
+        if (fileChooser.browseForFileToOpen() && fileChooser.getResults().size() == 1)
         {
-          AudioFormatManager formatManager;
-          formatManager.registerBasicFormats();
-          FileChooser fileChooser("Choose a file to open...",
-                                  _irManager->getProcessor().getSettings().getImpulseResponseDirectory(),
-                                  formatManager.getWildcardForAllFormats(),
-                                  true);
-          if (fileChooser.browseForFileToOpen() && fileChooser.getResults().size() == 1)
-          {
-            const File file = fileChooser.getResults().getReference(0);
-            _irAgent->setFile(file, 0);
-          }
+          const File file = fileChooser.getResults().getReference(0);
+          _irAgent->setFile(file, 0);
         }
         //[/UserButtonCode__loadButton]
     }
@@ -203,17 +185,20 @@ void IRComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 
-void IRComponent::init(IRManager* irManager, size_t inputChannel, size_t outputChannel)
+void IRComponent::init(IRAgent* irAgent)
 {
-  jassert(irManager);
-  jassert(!_irManager && !_irAgent);
-  IRAgent* irAgent = irManager ? irManager->getAgent(inputChannel, outputChannel) : nullptr;
-  if (irManager && irAgent)
+  if (_irAgent)
   {
-    _irManager = irManager;
-    _irManager->addNotificationListener(this);
+    _irAgent->removeNotificationListener(this);
+    _irAgent->getProcessor().removeNotificationListener(this);
+    _irAgent = nullptr;
+  }
+  
+  if (irAgent)
+  {
     _irAgent = irAgent;
     _irAgent->addNotificationListener(this);
+    _irAgent->getProcessor().addNotificationListener(this);
   }
   irChanged();
 }
@@ -228,11 +213,12 @@ void IRComponent::irChanged()
 
   juce::String toolTip("No Impulse Response");
 
-  if (_irAgent && _irManager)
+  if (_irAgent)
   {
     const File file = _irAgent->getFile();
     if (file != File::nonexistent)
     {
+      const PluginAudioProcessor& processor = _irAgent->getProcessor();
       const unsigned fileSampleCount = static_cast<unsigned>(_irAgent->getFileSampleCount());
       const double fileSampleRate = _irAgent->getFileSampleRate();
       const double fileSeconds = static_cast<double>(fileSampleCount) / fileSampleRate;
@@ -245,8 +231,8 @@ void IRComponent::irChanged()
       }
       _channelComboBox->setSelectedId(static_cast<int>(_irAgent->getFileChannel()+1));
 
-      const double sampleRate = _irManager->getConvolverSampleRate();
-      const size_t samplesPerPx = (2 * _irManager->getMaxFileSampleCount()) / _waveformComponent->getWidth();
+      const double sampleRate = processor.getConvolverSampleRate();
+      const size_t samplesPerPx = (2 * processor.getMaxFileSampleCount()) / _waveformComponent->getWidth();
       _waveformComponent->init(_irAgent, sampleRate, samplesPerPx);
     }
   }
