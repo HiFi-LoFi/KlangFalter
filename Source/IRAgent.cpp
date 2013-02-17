@@ -73,7 +73,7 @@ size_t IRAgent::getOutputChannel() const
 
 void IRAgent::initialize()
 {
-  const float eqSampleRate = static_cast<float>(_processor.getConvolverSampleRate());
+  const float eqSampleRate = static_cast<float>(_processor.getSampleRate());
   const size_t eqBlockSize = _processor.getConvolverHeadBlockSize();
   
   _eqLo.setFreq(_processor.getParameter(Parameters::EqLowFreq));

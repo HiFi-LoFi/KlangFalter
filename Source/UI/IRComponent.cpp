@@ -231,7 +231,7 @@ void IRComponent::irChanged()
       }
       _channelComboBox->setSelectedId(static_cast<int>(_irAgent->getFileChannel()+1));
 
-      const double sampleRate = processor.getConvolverSampleRate();
+      const double sampleRate = processor.getSampleRate();
       const size_t samplesPerPx = (2 * processor.getMaxFileSampleCount()) / _waveformComponent->getWidth();
       _waveformComponent->init(_irAgent, sampleRate, samplesPerPx);
     }

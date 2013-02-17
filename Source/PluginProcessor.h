@@ -115,36 +115,35 @@ public:
   
   
     //==============================================================================
+    size_t getConvolverHeadBlockSize() const;
+    size_t getConvolverTailBlockSize() const;
   
-  double getConvolverSampleRate() const;
-  size_t getConvolverHeadBlockSize() const;
-  size_t getConvolverTailBlockSize() const;
+    IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
+    size_t getAgentCount() const;
+    IRAgentContainer getAgents() const;
+    
+    void reset();
   
-  IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
-  size_t getAgentCount() const;
-  IRAgentContainer getAgents() const;
-  void reset();
+    void setStretch(double stretch);
+    double getStretch() const;
   
-  void setStretch(double stretch);
-  double getStretch() const;
+    void setReverse(bool reverse);
+    bool getReverse() const;
   
-  void setReverse(bool reverse);
-  bool getReverse() const;
+    void setEnvelope(const Envelope& envelope);
+    Envelope getEnvelope() const; 
   
-  void setEnvelope(const Envelope& envelope);
-  Envelope getEnvelope() const; 
+    size_t getMaxIRSampleCount() const;
+    size_t getMaxFileSampleCount() const;
+    double getMaxFileDuration() const;
   
-  size_t getMaxIRSampleCount() const;
-  size_t getMaxFileSampleCount() const;
-  double getMaxFileDuration() const;
+    void setFileBeginSeconds(double fileBeginSeconds);
+    double getFileBeginSeconds() const;
   
-  void setFileBeginSeconds(double fileBeginSeconds);
-  double getFileBeginSeconds() const;
+    void setPredelayMs(double predelayMs);
+    double getPredelayMs() const;
   
-  void setPredelayMs(double predelayMs);
-  double getPredelayMs() const;
-  
-  void updateConvolvers();
+    void updateConvolvers();
   
 private:
     juce::AudioSampleBuffer _wetBuffer;
@@ -159,7 +158,6 @@ private:
     double _stretch;
     bool _reverse;
     Envelope _envelope;
-    double _convolverSampleRate;
     size_t _convolverHeadBlockSize;
     size_t _convolverTailBlockSize;
     double _fileBeginSeconds;

@@ -305,7 +305,7 @@ void IRCalculation::run()
   }
 
   // Sample rate
-  const double convolverSampleRate = _processor.getConvolverSampleRate();
+  const double convolverSampleRate = _processor.getSampleRate();
   const double stretch = _processor.getStretch();
   const double stretchSampleRate = convolverSampleRate / stretch;
   for (size_t i=0; i<agents.size(); ++i)

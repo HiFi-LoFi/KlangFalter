@@ -44,7 +44,6 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _stretch(1.0),
   _reverse(false),
   _envelope(1.0, 1.0),
-  _convolverSampleRate(0.0),
   _convolverHeadBlockSize(0),
   _convolverTailBlockSize(0),
   _fileBeginSeconds(0.0),
@@ -204,16 +203,8 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
   // Prepare convolvers
   {
     juce::ScopedLock convolverLock(_convolverMutex);
-    const size_t convolverHeadBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 256));
-    const size_t convolverTailBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 4096));
-    if (::fabs(_convolverSampleRate-sampleRate) > 0.00000001 ||
-        _convolverHeadBlockSize != convolverHeadBlockSize ||
-        _convolverTailBlockSize != convolverTailBlockSize)
-    {
-      _convolverSampleRate = sampleRate;
-      _convolverHeadBlockSize = convolverHeadBlockSize;
-      _convolverTailBlockSize = convolverTailBlockSize;
-    }
+    _convolverHeadBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 256));
+    _convolverTailBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 4096));
   }
   
   // Prepare convolution buffers
@@ -606,13 +597,6 @@ double PluginAudioProcessor::getFileBeginSeconds() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return std::max(0.0, std::min(getMaxFileDuration(), _fileBeginSeconds));
-}
-
-
-double PluginAudioProcessor::getConvolverSampleRate() const
-{
-  juce::ScopedLock convolverLock(_convolverMutex);
-  return _convolverSampleRate;
 }
 
 
