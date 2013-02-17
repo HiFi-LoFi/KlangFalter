@@ -24,6 +24,74 @@
 #include <algorithm>
 
 
+
+
+
+class ReferencingAudioSource : public AudioSource
+{
+public:
+  explicit ReferencingAudioSource(float* buffer, size_t len) :
+    juce::AudioSource(),
+    _buffer(buffer),
+    _len(len),
+    _pos(0)
+  {
+  }
+  
+  virtual void prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+  {
+    (void) samplesPerBlockExpected;
+    (void) sampleRate;
+    _pos = 0;
+  }
+  
+  virtual void releaseResources()
+  {
+    _buffer = nullptr;
+    _len = 0;
+    _pos = 0;
+  }
+  
+  virtual void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
+  {
+    AudioSampleBuffer* destBuffer = bufferToFill.buffer;
+    const int len = std::min(bufferToFill.numSamples, static_cast<int>(_len-_pos));
+    if (destBuffer)
+    {
+      for (int channel=0; channel<destBuffer->getNumChannels(); ++channel)
+      {
+        if (channel == 0 && _buffer)
+        {
+          destBuffer->copyFrom(channel, bufferToFill.startSample, _buffer+_pos, len);
+          if (len < bufferToFill.numSamples)
+          {
+            const int startClear = bufferToFill.startSample + len;
+            const int lenClear = bufferToFill.numSamples - len;
+            destBuffer->clear(startClear, lenClear);
+          }
+        }
+        else
+        {
+          destBuffer->clear(channel, bufferToFill.startSample, len);
+        }
+      }
+    }
+    _pos += len;
+  }
+  
+private:
+  float* _buffer;
+  size_t _len;
+  size_t _pos;
+  
+  ReferencingAudioSource(const ReferencingAudioSource&);
+  ReferencingAudioSource& operator=(const ReferencingAudioSource&);
+};
+
+
+// =====================================================
+
+
 IRAgent::IRAgent(PluginAudioProcessor& processor, size_t inputChannel, size_t outputChannel) :
   ChangeNotifier(),
   _processor(processor),
