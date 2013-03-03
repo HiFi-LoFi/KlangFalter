@@ -109,3 +109,28 @@ void Settings::setImpulseResponseDirectory(const juce::File& directory)
     }
   }
 }
+
+
+Settings::ResultLevelMeterDisplay Settings::getResultLevelMeterDisplay()
+{
+  ResultLevelMeterDisplay resultDisplay = Out;
+  juce::PropertiesFile* propertiesFile = _properties.getUserSettings();
+  if (propertiesFile)
+  {
+    const juce::String resultDisplayStr = propertiesFile->getValue("ResultLevelMeterDisplay");
+    resultDisplay = (resultDisplayStr == juce::String("Out")) ? Out : Wet;
+  }
+  return resultDisplay;
+}
+
+
+void Settings::setResultLevelMeterDisplay(ResultLevelMeterDisplay resultDisplay)
+{
+  juce::PropertiesFile* propertiesFile = _properties.getUserSettings();
+  if (propertiesFile)
+  {
+    propertiesFile->setValue("ResultLevelMeterDisplay", (resultDisplay == Out) ? "Out" : "Wet");
+    propertiesFile->saveIfNeeded();
+  }
+}
+

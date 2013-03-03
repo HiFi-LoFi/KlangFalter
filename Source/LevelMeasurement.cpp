@@ -17,34 +17,90 @@
 
 #include "LevelMeasurement.h"
 
+#include <algorithm>
 
-LevelMeasurement::LevelMeasurement() :
+
+LevelMeasurement::LevelMeasurement(float decay) :
   _level(0.0f),
-  _decay(0.9999f)
+  _decay(decay)
 {
 }
 
 
-void LevelMeasurement::process(const float* data, size_t len)
+void LevelMeasurement::process(size_t len, const float* data0)
 {
-  float level = _level.get();
-  for (size_t i=0; i<len; ++i)
+  if (len > 0)
   {
-    const float val = data[i];
-    if (level < val)
+    float level = _level.get();
+    if (data0)
     {
-      level = val;
-    }
-    else if (level > 0.0001)
-    {
-      level *= _decay;
+      for (size_t i=0; i<len; ++i)
+      {
+        const float val = data0[i];
+        if (level < val)
+        {
+          level = val;
+        }
+        else if (level > 0.0001f)
+        {
+          level *= _decay;
+        }
+        else
+        {
+          level = 0.0f;
+        }
+      }
     }
     else
     {
-      level = 0.0f;
-    }
+      if (level > 0.0001f)
+      {
+        for (size_t i=0; i<len; ++i)
+        {
+          if (level > 0.0001f)
+          {
+            level *= _decay;
+          }
+          else
+          {
+            level = 0.0f;
+            break;
+          }
+        }
+      }
+    }    
+    _level.set(level);
   }
-  _level.set(level);
+}
+
+
+void LevelMeasurement::process(size_t len, const float* data0, const float* data1)
+{
+  if (len > 0 && data0 && data1)
+  {
+    float level = _level.get();
+    for (size_t i=0; i<len; ++i)
+    {
+      const float val = std::max(data0[i], data1[i]);
+      if (level < val)
+      {
+        level = val;
+      }
+      else if (level > 0.0001f)
+      {
+        level *= _decay;
+      }
+      else
+      {
+        level = 0.0f;
+      }
+    }
+    _level.set(level);
+  }
+  else
+  {
+    process(len, data0);
+  }
 }
 
 

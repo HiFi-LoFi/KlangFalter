@@ -26,7 +26,6 @@
 #include "LevelMeasurement.h"
 #include "Parameterset.h"
 #include "Settings.h"
-#include "FFTConvolver/Sample.h"
 
 #include <map>
 #include <vector>
@@ -110,6 +109,7 @@ public:
     //==============================================================================      
     float getLevelDry(size_t channel) const;
     float getLevelWet(size_t channel) const;
+    float getLevelOut(size_t channel) const;
 
     Settings& getSettings();
   
@@ -147,10 +147,11 @@ public:
   
 private:
     juce::AudioSampleBuffer _wetBuffer;
-    std::vector<fftconvolver::SampleBuffer*> _convolutionBuffers;
+    std::vector<std::vector<float> > _convolutionBuffers;
     ParameterSet _parameterSet;  
     std::vector<LevelMeasurement> _levelMeasurementsDry;
     std::vector<LevelMeasurement> _levelMeasurementsWet;
+    std::vector<LevelMeasurement> _levelMeasurementsOut;
     Settings _settings;
   
     mutable juce::CriticalSection _convolverMutex;

@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  24 Nov 2012 2:32:12pm
+  Creation date:  3 Mar 2013 5:09:56pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -59,6 +59,7 @@ IRComponent::IRComponent ()
     _clearButton->addListener (this);
 
     addAndMakeVisible (_channelComboBox = new ComboBox (L"ChannelComboBox"));
+    _channelComboBox->setTooltip (L"Select Channel Of Currently Loaded Audio File");
     _channelComboBox->setEditableText (false);
     _channelComboBox->setJustificationType (Justification::centred);
     _channelComboBox->setTextWhenNothingSelected (String::empty);
@@ -193,7 +194,7 @@ void IRComponent::init(IRAgent* irAgent)
     _irAgent->getProcessor().removeNotificationListener(this);
     _irAgent = nullptr;
   }
-  
+
   if (irAgent)
   {
     _irAgent = irAgent;
@@ -258,9 +259,9 @@ void IRComponent::changeNotification()
 BEGIN_JUCER_METADATA
 
 <JUCER_COMPONENT documentType="Component" className="IRComponent" componentName="IRComponent"
-                 parentClasses="public Component, public ChangeListener" constructorParams=""
-                 variableInitialisers="" snapPixels="4" snapActive="1" snapShown="1"
-                 overlayOpacity="0.330000013" fixedSize="1" initialWidth="540"
+                 parentClasses="public Component, public ChangeNotifier::Listener"
+                 constructorParams="" variableInitialisers="" snapPixels="4" snapActive="1"
+                 snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="540"
                  initialHeight="172">
   <BACKGROUND backgroundColour="ffe5e5f0"/>
   <GENERICCOMPONENT name="WaveformComponent" id="c9f33b0ee0917f49" memberName="_waveformComponent"
@@ -275,8 +276,8 @@ BEGIN_JUCER_METADATA
               virtualName="" explicitFocusOrder="0" pos="516 148 20 20" tooltip="Clear Impulse Response"
               buttonText="X" connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <COMBOBOX name="ChannelComboBox" id="c1bafd26d5583017" memberName="_channelComboBox"
-            virtualName="" explicitFocusOrder="0" pos="468 148 40 20" editable="0"
-            layout="36" items="" textWhenNonSelected="" textWhenNoItems="(no choices)"/>
+            virtualName="" explicitFocusOrder="0" pos="468 148 40 20" tooltip="Select Channel Of Currently Loaded Audio File"
+            editable="0" layout="36" items="" textWhenNonSelected="" textWhenNoItems="(no choices)"/>
   <LABEL name="" id="7dd1e4a23ce6582b" memberName="_channelHeaderLabel"
          virtualName="" explicitFocusOrder="0" pos="404 152 64 15" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Channel:" editableSingleClick="0"

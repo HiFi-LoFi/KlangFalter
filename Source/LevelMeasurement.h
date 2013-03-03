@@ -26,8 +26,10 @@
 class LevelMeasurement
 {
 public:
-  LevelMeasurement();  
-  void process(const float* data, size_t len);  
+  explicit LevelMeasurement(float decay = 0.9999f);  
+  void process(size_t len, const float* data0);
+  void process(size_t len, const float* data0, const float* data1);
+  void updateLevel(size_t len, float maxLevel);
   float getLevel() const;  
   void reset();
   

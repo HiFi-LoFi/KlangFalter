@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  12 Feb 2013 7:02:30pm
+  Creation date:  3 Mar 2013 5:04:03pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C8698218__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C8698218__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_A89957A6__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_A89957A6__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -46,6 +46,7 @@
 */
 class KlangFalterEditor  : public AudioProcessorEditor,
                            public ChangeNotifier::Listener,
+                           public ChangeListener,
                            public Timer,
                            public SliderListener,
                            public ButtonListener
@@ -57,7 +58,8 @@ public:
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
-    void processorChanged();
+    void updateUI();
+    virtual void changeListenerCallback (ChangeBroadcaster* source);
     virtual void changeNotification();
     virtual void timerCallback();
     //[/UserMethods]
@@ -81,7 +83,7 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    DecibelScale* _decibelScale;
+    DecibelScale* _decibelScaleDry;
     TabbedComponent* _irTabComponent;
     Label* _stretchHeaderLabel;
     Slider* _stretchSlider;
@@ -89,7 +91,7 @@ private:
     Label* _dryLevelLabel;
     Label* _wetLevelLabel;
     Slider* _drySlider;
-    DecibelScale* _decibelScale2;
+    DecibelScale* _decibelScaleOut;
     Slider* _wetSlider;
     TextButton* _browseButton;
     IRBrowserComponent* _irBrowserComponent;
@@ -119,7 +121,9 @@ private:
     Slider* _loFreqSlider;
     TextButton* _hiEqButton;
     TextButton* _loEqButton;
-    LevelMeter* _levelMeterWet;
+    LevelMeter* _levelMeterOut;
+    TextButton* _levelMeterOutLabelButton;
+    Label* _levelMeterDryLabel;
 
 
     //==============================================================================
@@ -129,4 +133,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C8698218__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_A89957A6__

@@ -35,6 +35,14 @@ public:
 
   juce::File getImpulseResponseDirectory();
   void setImpulseResponseDirectory(const juce::File& directory);
+  
+  enum ResultLevelMeterDisplay
+  {
+    Wet,
+    Out
+  };
+  ResultLevelMeterDisplay getResultLevelMeterDisplay();
+  void setResultLevelMeterDisplay(ResultLevelMeterDisplay resultDisplay);
 
 private:
   juce::ApplicationProperties _properties;
