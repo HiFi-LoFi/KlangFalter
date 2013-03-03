@@ -212,7 +212,7 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     if (channelCount >= 1)
     {
-      _processor->reset();
+      _processor->clearConvolvers();
       agent00->setFile(file, 0);
     }
   }
@@ -220,13 +220,13 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     if (channelCount == 1)
     {
-      _processor->reset();
+      _processor->clearConvolvers();
       agent00->setFile(file, 0);
       agent01->setFile(file, 0);
     }
     else if (channelCount >= 2)
     {
-      _processor->reset();
+      _processor->clearConvolvers();
       agent00->setFile(file, 0);
       agent01->setFile(file, 1);
     }
@@ -235,7 +235,7 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
   {
     if (channelCount == 1)
     {
-      _processor->reset();
+      _processor->clearConvolvers();
       agent00->setFile(file, 0);
       agent11->setFile(file, 0);
     }
@@ -244,7 +244,7 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
       TrueStereoPairs trueStereoPairs = findTrueStereoPairs(file, sampleCount, sampleRate);
       if (trueStereoPairs.size() == 4)
       {
-        _processor->reset();
+        _processor->clearConvolvers();
         agent00->setFile(trueStereoPairs[0].first, trueStereoPairs[0].second);
         agent01->setFile(trueStereoPairs[1].first, trueStereoPairs[1].second);
         agent10->setFile(trueStereoPairs[2].first, trueStereoPairs[2].second);
@@ -252,14 +252,14 @@ void IRBrowserComponent::fileDoubleClicked(const File &file)
       }
       else
       {
-        _processor->reset();
+        _processor->clearConvolvers();
         agent00->setFile(file, 0);
         agent11->setFile(file, 1);
       }
     }
     else if (channelCount >= 4)
     {
-      _processor->reset();
+      _processor->clearConvolvers();
       agent00->setFile(file, 0);
       agent01->setFile(file, 1);
       agent10->setFile(file, 2);

@@ -457,7 +457,7 @@ IRAgentContainer PluginAudioProcessor::getAgents() const
 }
 
 
-void PluginAudioProcessor::reset()
+void PluginAudioProcessor::clearConvolvers()
 {
   {
     juce::ScopedLock convolverLock(_convolverMutex);

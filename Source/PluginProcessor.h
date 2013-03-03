@@ -122,7 +122,7 @@ public:
     size_t getAgentCount() const;
     IRAgentContainer getAgents() const;
     
-    void reset();
+    void clearConvolvers();
   
     void setStretch(double stretch);
     double getStretch() const;

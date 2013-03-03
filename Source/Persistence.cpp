@@ -191,7 +191,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   }
   
   // Phase 2: Restore the state
-  processor.reset();
+  processor.clearConvolvers();
   
   processor.setParameterNotifyingHost(Parameters::WetOn, wetOn);
   processor.setParameterNotifyingHost(Parameters::WetDecibels, static_cast<float>(wetDecibels));
