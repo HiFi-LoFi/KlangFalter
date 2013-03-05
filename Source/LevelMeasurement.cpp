@@ -21,9 +21,32 @@
 
 
 LevelMeasurement::LevelMeasurement(float decay) :
-  _level(0.0f),
-  _decay(decay)
+  _decay(decay),
+  _level(0.0f)  
 {
+}
+
+
+LevelMeasurement::LevelMeasurement(const LevelMeasurement& other) :
+  _decay(other._decay),
+  _level(other._level)
+{
+}
+
+
+LevelMeasurement::~LevelMeasurement()
+{
+}
+
+
+LevelMeasurement& LevelMeasurement::operator=(const LevelMeasurement& other)
+{
+  if (this != &other)
+  {
+    _decay = other._decay;
+    _level = other._level;
+  }
+  return (*this);
 }
 
 
@@ -70,36 +93,6 @@ void LevelMeasurement::process(size_t len, const float* data0)
       }
     }    
     _level.set(level);
-  }
-}
-
-
-void LevelMeasurement::process(size_t len, const float* data0, const float* data1)
-{
-  if (len > 0 && data0 && data1)
-  {
-    float level = _level.get();
-    for (size_t i=0; i<len; ++i)
-    {
-      const float val = std::max(data0[i], data1[i]);
-      if (level < val)
-      {
-        level = val;
-      }
-      else if (level > 0.0001f)
-      {
-        level *= _decay;
-      }
-      else
-      {
-        level = 0.0f;
-      }
-    }
-    _level.set(level);
-  }
-  else
-  {
-    process(len, data0);
   }
 }
 

@@ -102,14 +102,14 @@ void CookbookEq::computeFilterCoefs()
   
   // do not allow frequencies bigger than samplerate/2
   float freq = _freq;
-  if (freq > (_sampleRate / 2 - 500.0))
+  if (freq > (static_cast<float>(_sampleRate) / 2.0f - 500.0f))
   {
-    freq = _sampleRate / 2 - 500.0;
+    freq = static_cast<float>(_sampleRate) / 2.0f - 500.0f;
     zeroCoefs = true;
   }
   freq = std::max(freq, 0.1f);
   
-  const float gain = ::exp(_gainDb * Log10() / 20.0);
+  const float gain = static_cast<float>(::exp(_gainDb * Log10() / 20.0));
   
   // do not allow bogus Q
   float q = std::max(_q, 0.0f);
@@ -121,13 +121,13 @@ void CookbookEq::computeFilterCoefs()
     case LoPass1:
       if (!zeroCoefs)
       {
-        tmp = exp(-2.0 * Pi() * freq / _sampleRate);
+        tmp = static_cast<float>(::exp(-2.0 * Pi() * freq / _sampleRate));
       }
-      _c[0] = 1.0 - tmp;
-      _c[1] = 0.0;
-      _c[2] = 0.0;
+      _c[0] = 1.0f - tmp;
+      _c[1] = 0.0f;
+      _c[2] = 0.0f;
       _d[1] = tmp;
-      _d[2] = 0.0;
+      _d[2] = 0.0f;
       _order = 1;
       break;
     case HiPass1:
@@ -135,11 +135,11 @@ void CookbookEq::computeFilterCoefs()
       {
         tmp = exp (-2.0 * Pi() * freq / _sampleRate);
       }
-      _c[0] = (1.0 + tmp) / 2.0;
-      _c[1] = -(1.0 + tmp) / 2.0;
-      _c[2] = 0.0;
+      _c[0] = (1.0f + tmp) / 2.0f;
+      _c[1] = -(1.0f + tmp) / 2.0f;
+      _c[2] = 0.0f;
       _d[1] = tmp;
-      _d[2] = 0.0;
+      _d[2] = 0.0f;
       _order = 1;
       break;
     case LoPass2:
@@ -150,19 +150,19 @@ void CookbookEq::computeFilterCoefs()
         cs = cos (omega);
         alpha = sn / (2 * q);
         tmp = 1 + alpha;
-        _c[0] = (1.0 - cs) / 2.0 / tmp;
-        _c[1] = (1.0 - cs) / tmp;
-        _c[2] = (1.0 - cs) / 2.0 / tmp;
+        _c[0] = (1.0f - cs) / 2.0 / tmp;
+        _c[1] = (1.0f - cs) / tmp;
+        _c[2] = (1.0f - cs) / 2.0f / tmp;
         _d[1] = -2 * cs / tmp * (-1);
         _d[2] = (1 - alpha) / tmp * (-1);
       }
       else
       {
-        _c[0] = 1.0;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[0] = 1.0f;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
@@ -174,9 +174,9 @@ void CookbookEq::computeFilterCoefs()
         cs = cos (omega);
         alpha = sn / (2 * q);
         tmp = 1 + alpha;
-        _c[0] = (1.0 + cs) / 2.0 / tmp;
+        _c[0] = (1.0 + cs) / 2.0f / tmp;
         _c[1] = -(1.0 + cs) / tmp;
-        _c[2] = (1.0 + cs) / 2.0 / tmp;
+        _c[2] = (1.0 + cs) / 2.0f / tmp;
         _d[1] = -2 * cs / tmp * (-1);
         _d[2] = (1 - alpha) / tmp * (-1);
       }
@@ -437,7 +437,7 @@ void CookbookEq::filterOut(float* smp, int numSamples)
 {
   if (_needsInterpolation)
   {
-    if (_interpolationBuffer.size() < numSamples)
+    if (static_cast<int>(_interpolationBuffer.size()) < numSamples)
     {
       _interpolationBuffer.resize(numSamples); // Better re-allocation than crashing...
     }

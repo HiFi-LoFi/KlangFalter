@@ -15,19 +15,25 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#ifndef _FFTCONVOLVER_SAMPLE_H
-#define _FFTCONVOLVER_SAMPLE_H
+#include "StereoWidth.h"
 
-#include "Buffer.h"
+#include <algorithm>
+#include <cmath>
 
 
-namespace fftconvolver
+void StereoWidth(float width, float* left, float* right, size_t len)
 {
-
-typedef float Sample;
-
-typedef Buffer<Sample> SampleBuffer;
-  
-} // End of namespace
-
-#endif // Header guard
+  if (::fabs(width-1.0f) > 0.00001f)
+  {
+    const float tmp = 1.0f / std::max(1.0f + width, 2.0f);
+    const float cm = 1.0f * tmp;
+    const float cs = width * tmp;
+    for (size_t i=0; i<len; ++i)
+    {
+      const float m = (right[i] + left[i]) * cm;
+      const float s = (right[i] - left[i]) * cs;
+      left[i] = m - s;
+      right[i] = m + s;
+    }
+  }
+}

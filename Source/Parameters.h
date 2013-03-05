@@ -41,6 +41,8 @@ struct Parameters
   static const BoolParameterDescriptor EqHighOn;
   static const FloatParameterDescriptor EqHighFreq;
   static const FloatParameterDescriptor EqHighDecibels;
+
+  static const FloatParameterDescriptor StereoWidth;
 };
 
 #endif // Header guard

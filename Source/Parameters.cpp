@@ -103,5 +103,13 @@ const FloatParameterDescriptor Parameters::EqHighDecibels(11,
                                                           "dB",
                                                           ParameterDescriptor::Automatable,
                                                           0.0f,
-                                                          -30.0,
-                                                          +30.0);
+                                                          -30.0f,
+                                                          +30.0f);
+
+const FloatParameterDescriptor Parameters::StereoWidth(12,
+                                                       "Stereo Width",
+                                                       "",
+                                                       ParameterDescriptor::NotAutomatable,
+                                                       1.0f,
+                                                       0.0f,
+                                                       10.0f);

@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  3 Mar 2013 5:04:03pm
+  Creation date:  5 Mar 2013 2:30:56pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -34,7 +34,7 @@
 
 
 template<typename T>
-T SnapValue(const T& val, const T& snapValue, const T& sensitivity)
+T SnapValue(T val, T snapValue, T sensitivity)
 {
   return (::fabs(val - snapValue) < sensitivity) ? snapValue : val;
 }
@@ -86,7 +86,10 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
       _loEqButton (0),
       _levelMeterOut (0),
       _levelMeterOutLabelButton (0),
-      _levelMeterDryLabel (0)
+      _levelMeterDryLabel (0),
+      _widthHeaderLabel (0),
+      _widthSlider (0),
+      _widthLabel (0)
 {
     addAndMakeVisible (_decibelScaleDry = new DecibelScale());
 
@@ -394,6 +397,34 @@ KlangFalterEditor::KlangFalterEditor (PluginAudioProcessor& processor)
     _levelMeterDryLabel->setColour (TextEditor::textColourId, Colours::black);
     _levelMeterDryLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
+    addAndMakeVisible (_widthHeaderLabel = new Label (String::empty,
+                                                      L"Width"));
+    _widthHeaderLabel->setFont (Font (15.0000f, Font::plain));
+    _widthHeaderLabel->setJustificationType (Justification::centred);
+    _widthHeaderLabel->setEditable (false, false, false);
+    _widthHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _widthHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _widthHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_widthSlider = new Slider (String::empty));
+    _widthSlider->setRange (0, 10, 0);
+    _widthSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _widthSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _widthSlider->setColour (Slider::backgroundColourId, Colour (0x0));
+    _widthSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _widthSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffafafff));
+    _widthSlider->addListener (this);
+    _widthSlider->setSkewFactor (0.30102);
+
+    addAndMakeVisible (_widthLabel = new Label (String::empty,
+                                                L"1.0"));
+    _widthLabel->setFont (Font (15.0000f, Font::plain));
+    _widthLabel->setJustificationType (Justification::centred);
+    _widthLabel->setEditable (false, false, false);
+    _widthLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _widthLabel->setColour (TextEditor::textColourId, Colours::black);
+    _widthLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
 
     //[UserPreSize]
 
@@ -471,6 +502,9 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_levelMeterOut);
     deleteAndZero (_levelMeterOutLabelButton);
     deleteAndZero (_levelMeterDryLabel);
+    deleteAndZero (_widthHeaderLabel);
+    deleteAndZero (_widthSlider);
+    deleteAndZero (_widthLabel);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -519,23 +553,26 @@ void KlangFalterEditor::resized()
     _predelayHeaderLabel->setBounds (144, 220, 84, 24);
     _predelaySlider->setBounds (144, 244, 84, 40);
     _predelayLabel->setBounds (144, 280, 84, 24);
-    _hiFreqLabel->setBounds (408, 284, 52, 24);
-    _hiGainLabel->setBounds (448, 284, 52, 24);
-    _hiGainHeaderLabel->setBounds (448, 240, 52, 24);
-    _hiFreqHeaderLabel->setBounds (408, 240, 52, 24);
-    _hiGainSlider->setBounds (456, 260, 36, 28);
-    _hiFreqSlider->setBounds (416, 260, 36, 28);
-    _loFreqLabel->setBounds (296, 284, 52, 24);
-    _loGainLabel->setBounds (336, 284, 52, 24);
-    _loGainHeaderLabel->setBounds (336, 240, 52, 24);
-    _loFreqHeaderLabel->setBounds (296, 240, 52, 24);
-    _loGainSlider->setBounds (344, 260, 36, 28);
-    _loFreqSlider->setBounds (304, 260, 36, 28);
-    _hiEqButton->setBounds (424, 220, 56, 24);
-    _loEqButton->setBounds (312, 220, 56, 24);
+    _hiFreqLabel->setBounds (436, 284, 52, 24);
+    _hiGainLabel->setBounds (476, 284, 52, 24);
+    _hiGainHeaderLabel->setBounds (476, 240, 52, 24);
+    _hiFreqHeaderLabel->setBounds (436, 240, 52, 24);
+    _hiGainSlider->setBounds (484, 260, 36, 28);
+    _hiFreqSlider->setBounds (444, 260, 36, 28);
+    _loFreqLabel->setBounds (324, 284, 52, 24);
+    _loGainLabel->setBounds (364, 284, 52, 24);
+    _loGainHeaderLabel->setBounds (364, 240, 52, 24);
+    _loFreqHeaderLabel->setBounds (324, 240, 52, 24);
+    _loGainSlider->setBounds (372, 260, 36, 28);
+    _loFreqSlider->setBounds (332, 260, 36, 28);
+    _hiEqButton->setBounds (452, 220, 56, 24);
+    _loEqButton->setBounds (340, 220, 56, 24);
     _levelMeterOut->setBounds (720, 40, 12, 176);
     _levelMeterOutLabelButton->setBounds (712, 20, 28, 18);
     _levelMeterDryLabel->setBounds (620, 16, 36, 24);
+    _widthHeaderLabel->setBounds (208, 220, 84, 24);
+    _widthSlider->setBounds (208, 244, 84, 40);
+    _widthLabel->setBounds (208, 280, 84, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -608,6 +645,12 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         //[UserSliderCode__loFreqSlider] -- add your slider handling code here..
         _processor.setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(_loFreqSlider->getValue()));
         //[/UserSliderCode__loFreqSlider]
+    }
+    else if (sliderThatWasMoved == _widthSlider)
+    {
+        //[UserSliderCode__widthSlider] -- add your slider handling code here..
+        _processor.setParameterNotifyingHost(Parameters::StereoWidth, SnapValue(static_cast<float>(_widthSlider->getValue()), 1.0f, 0.05f));
+        //[/UserSliderCode__widthSlider]
     }
 
     //[UsersliderValueChanged_Post]
@@ -789,6 +832,14 @@ void KlangFalterEditor::updateUI()
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(gainDb, juce::dontSendNotification);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
+  }
+  {
+    _widthHeaderLabel->setVisible(numOutputChannels >= 2);
+    _widthSlider->setVisible(numOutputChannels >= 2);
+    _widthLabel->setVisible(numOutputChannels >= 2);
+    const float stereoWidth = _processor.getParameter(Parameters::StereoWidth);
+    _widthSlider->setValue(stereoWidth, juce::dontSendNotification);
+    _widthLabel->setText(juce::String(stereoWidth, 2), false);
   }
   {
     _levelMeterDry->setChannelCount(numInputChannels);
@@ -976,71 +1027,71 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="841738a894cf241a" memberName="_hiFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="408 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="436 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="15.2kHz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="fc2c2b94ce457ca1" memberName="_hiGainLabel" virtualName=""
-         explicitFocusOrder="0" pos="448 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="476 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="0.0dB" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="56744cc537b91ad6" memberName="_hiGainHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="448 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="476 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Gain" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="71caf1a3b5a498dd" memberName="_hiFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="408 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="436 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="1c3776d0e6cbce1d" memberName="_hiGainSlider" virtualName=""
-          explicitFocusOrder="0" pos="456 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="484 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="-30" max="30" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="702db07b37c24f93" memberName="_hiFreqSlider" virtualName=""
-          explicitFocusOrder="0" pos="416 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="444 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="2000" max="20000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <LABEL name="" id="8b28430d938b39ca" memberName="_loFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="296 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="324 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="1234Hz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="390bab67dc140d90" memberName="_loGainLabel" virtualName=""
-         explicitFocusOrder="0" pos="336 284 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="364 284 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="0.0dB" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="8d9e4adc7538b7dc" memberName="_loGainHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="336 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="364 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Gain" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="f3b3523aee42340f" memberName="_loFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="296 240 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="324 240 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="a3dc7342caaa661f" memberName="_loGainSlider" virtualName=""
-          explicitFocusOrder="0" pos="344 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="372 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="-30" max="30" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="313e885756edaea8" memberName="_loFreqSlider" virtualName=""
-          explicitFocusOrder="0" pos="304 260 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="332 260 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="20" max="2000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <TEXTBUTTON name="" id="6455cd468963d5f2" memberName="_hiEqButton" virtualName=""
-              explicitFocusOrder="0" pos="424 220 56 24" tooltip="High Shelf EQ On/Off"
+              explicitFocusOrder="0" pos="452 220 56 24" tooltip="High Shelf EQ On/Off"
               bgColOff="80bcbcbc" bgColOn="ffbcbcff" buttonText="Hi Shelf"
               connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <TEXTBUTTON name="" id="a9ee81604acef972" memberName="_loEqButton" virtualName=""
-              explicitFocusOrder="0" pos="312 220 56 24" tooltip="Low Shelf EQ On/Off"
+              explicitFocusOrder="0" pos="340 220 56 24" tooltip="Low Shelf EQ On/Off"
               bgColOff="80bcbcbc" bgColOn="ffbcbcff" buttonText="Lo Shelf"
               connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <GENERICCOMPONENT name="" id="e4867bf99a47726a" memberName="_levelMeterOut" virtualName=""
@@ -1055,6 +1106,21 @@ BEGIN_JUCER_METADATA
          edTextCol="ff000000" edBkgCol="0" labelText="Dry" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="d56b184ced7d1910" memberName="_widthHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="208 220 84 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Width" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="731dc43e41eff903" memberName="_widthSlider" virtualName=""
+          explicitFocusOrder="0" pos="208 244 84 40" bkgcol="0" thumbcol="ffafafff"
+          rotarysliderfill="ffafafff" min="0" max="10" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="0.30102"/>
+  <LABEL name="" id="fff91dc356552479" memberName="_widthLabel" virtualName=""
+         explicitFocusOrder="0" pos="208 280 84 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="1.0" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

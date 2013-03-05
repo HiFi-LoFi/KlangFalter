@@ -15,29 +15,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#ifndef _FFTCONVOLVER_PREMULTIPLYADD_H
-#define _FFTCONVOLVER_PREMULTIPLYADD_H
-
-#include "Configuration.h"
-#include "SplitComplex.h"
+#ifndef _STEREOWIDTH_H
+#define _STEREOWIDTH_H
 
 #include <cstddef>
-#include <vector>
 
 
-namespace fftconvolver
-{ 
-  
-void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re, 
-                 Sample* FFTCONVOLVER_RESTRICT im,
-                 const Sample* FFTCONVOLVER_RESTRICT reA,
-                 const Sample* FFTCONVOLVER_RESTRICT imA,
-                 const Sample* FFTCONVOLVER_RESTRICT reB,
-                 const Sample* FFTCONVOLVER_RESTRICT imB,
-                 const size_t len);
+void StereoWidth(float width, float* left, float* right, size_t len);
 
-void MultiplyAdd(SplitComplex& result, const SplitComplex& a, const SplitComplex& b);
-
-} // End of namespace fftconvolver
 
 #endif // Header guard

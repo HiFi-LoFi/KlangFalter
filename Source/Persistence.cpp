@@ -58,10 +58,10 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(Parameters::EqHighFreq));
   convolutionElement->setAttribute("eqHiShelfDecibels", processor.getParameter(Parameters::EqHighDecibels));
 
-  // Parameters
   convolutionElement->setAttribute("fileBeginSeconds", processor.getFileBeginSeconds());
   convolutionElement->setAttribute("stretch", processor.getStretch());
   convolutionElement->setAttribute("predelayMs", processor.getPredelayMs());
+  convolutionElement->setAttribute("stereoWidth", processor.getParameter(Parameters::StereoWidth));
   convolutionElement->setAttribute("reverse", processor.getReverse());
         
   // Envelope
@@ -128,6 +128,7 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   double fileBeginSeconds = element.getDoubleAttribute("fileBeginSeconds", 0.0);
   double stretch = element.getDoubleAttribute("stretch", 1.0);
   double predelayMs = element.getDoubleAttribute("predelayMs", 0.0);
+  double stereoWidth = element.getDoubleAttribute("stereoWidth", 1.0);
   bool reverse = element.getBoolAttribute("reverse", false);
   
   bool eqLoShelfOn = element.getBoolAttribute("eqLoShelfOn", false);
@@ -207,8 +208,9 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(eqHiShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(eqHiShelfDecibels));
   
+  processor.setParameterNotifyingHost(Parameters::StereoWidth, static_cast<float>(stereoWidth));
   processor.setFileBeginSeconds(fileBeginSeconds);
-  processor.setPredelayMs(predelayMs);
+  processor.setPredelayMs(predelayMs);  
   processor.setStretch(stretch);
   processor.setReverse(reverse);
   processor.setEnvelope(envelope);

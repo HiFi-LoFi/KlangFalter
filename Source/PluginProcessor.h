@@ -37,138 +37,131 @@
 class PluginAudioProcessor  : public AudioProcessor, public ChangeNotifier
 {
 public:
-    //==============================================================================
-    PluginAudioProcessor();
-    virtual ~PluginAudioProcessor();
+  //==============================================================================
+  PluginAudioProcessor();
+  virtual ~PluginAudioProcessor();
 
-    //==============================================================================
-    void prepareToPlay(double sampleRate, int samplesPerBlock);
-    void releaseResources();
+  //==============================================================================
+  void prepareToPlay(double sampleRate, int samplesPerBlock);
+  void releaseResources();
 
-    void processBlock(juce::AudioSampleBuffer& buffer, MidiBuffer& midiMessages);
+  void processBlock(juce::AudioSampleBuffer& buffer, MidiBuffer& midiMessages);
 
-    //==============================================================================
-    juce::AudioProcessorEditor* createEditor();
-    bool hasEditor() const;
+  //==============================================================================
+  juce::AudioProcessorEditor* createEditor();
+  bool hasEditor() const;
 
-    //==============================================================================
-    const juce::String getName() const;
+  //==============================================================================
+  const juce::String getName() const;
 
-    int getNumParameters();
-    virtual float getParameter (int index);
-    virtual void setParameter (int index, float newValue);
-  
-    template<typename T>
-    T getParameter(const TypedParameterDescriptor<T>& parameter) const
+  int getNumParameters();
+  virtual float getParameter (int index);
+  virtual void setParameter (int index, float newValue);
+
+  template<typename T>
+  T getParameter(const TypedParameterDescriptor<T>& parameter) const
+  {
+    return _parameterSet.getParameter(parameter);
+  }
+
+  template<typename T>
+  void setParameter(const TypedParameterDescriptor<T>& parameter, T val)
+  {
+    if (_parameterSet.setParameter(parameter, val))
     {
-      return _parameterSet.getParameter(parameter);
+      notifyAboutChange();
     }
-  
-    template<typename T>
-    void setParameter(const TypedParameterDescriptor<T>& parameter, T val)
-    {
-      if (_parameterSet.setParameter(parameter, val))
-      {
-        notifyAboutChange();
-      }
-    }
-  
-    template<typename T>
-    void setParameterNotifyingHost(const TypedParameterDescriptor<T>& parameter, T val)
-    {
-      AudioProcessor::setParameterNotifyingHost(parameter.getIndex(), parameter.convertToNormalized(val));
-    }
-  
-    const juce::String getParameterName (int index);
-    const juce::String getParameterText (int index);
+  }
 
-    const juce::String getInputChannelName (int channelIndex) const;
-    const juce::String getOutputChannelName (int channelIndex) const;
-    bool isInputChannelStereoPair (int index) const;
-    bool isOutputChannelStereoPair (int index) const;
+  template<typename T>
+  void setParameterNotifyingHost(const TypedParameterDescriptor<T>& parameter, T val)
+  {
+    AudioProcessor::setParameterNotifyingHost(parameter.getIndex(), parameter.convertToNormalized(val));
+  }
 
-    bool acceptsMidi() const;
-    bool producesMidi() const;
-  
-    bool silenceInProducesSilenceOut() const;
-  
-    void numChannelsChanged();
+  const juce::String getParameterName (int index);
+  const juce::String getParameterText (int index);
 
-    //==============================================================================
-    int getNumPrograms();
-    int getCurrentProgram();
-    void setCurrentProgram (int index);
-    const juce::String getProgramName (int index);
-    void changeProgramName (int index, const juce::String& newName);
+  const juce::String getInputChannelName (int channelIndex) const;
+  const juce::String getOutputChannelName (int channelIndex) const;
+  bool isInputChannelStereoPair (int index) const;
+  bool isOutputChannelStereoPair (int index) const;
 
-    //==============================================================================
-    void getStateInformation(juce::MemoryBlock& destData);
-    void setStateInformation(const void* data, int sizeInBytes);
+  bool acceptsMidi() const;
+  bool producesMidi() const;
 
-  
-    //==============================================================================      
-    float getLevelDry(size_t channel) const;
-    float getLevelWet(size_t channel) const;
-    float getLevelOut(size_t channel) const;
+  bool silenceInProducesSilenceOut() const;
 
-    Settings& getSettings();
-  
-  
-    //==============================================================================
-    size_t getConvolverHeadBlockSize() const;
-    size_t getConvolverTailBlockSize() const;
-  
-    IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
-    size_t getAgentCount() const;
-    IRAgentContainer getAgents() const;
-    
-    void clearConvolvers();
-  
-    void setStretch(double stretch);
-    double getStretch() const;
-  
-    void setReverse(bool reverse);
-    bool getReverse() const;
-  
-    void setEnvelope(const Envelope& envelope);
-    Envelope getEnvelope() const; 
-  
-    size_t getMaxIRSampleCount() const;
-    size_t getMaxFileSampleCount() const;
-    double getMaxFileDuration() const;
-  
-    void setFileBeginSeconds(double fileBeginSeconds);
-    double getFileBeginSeconds() const;
-  
-    void setPredelayMs(double predelayMs);
-    double getPredelayMs() const;
-  
-    void updateConvolvers();
-  
+  void numChannelsChanged();
+
+  int getNumPrograms();
+  int getCurrentProgram();
+  void setCurrentProgram (int index);
+  const juce::String getProgramName (int index);
+  void changeProgramName (int index, const juce::String& newName);
+
+  void getStateInformation(juce::MemoryBlock& destData);
+  void setStateInformation(const void* data, int sizeInBytes);
+
+  float getLevelDry(size_t channel) const;
+  float getLevelWet(size_t channel) const;
+  float getLevelOut(size_t channel) const;
+
+  Settings& getSettings();
+
+  size_t getConvolverHeadBlockSize() const;
+  size_t getConvolverTailBlockSize() const;
+
+  IRAgent* getAgent(size_t inputChannel, size_t outputChannel) const;
+  size_t getAgentCount() const;
+  IRAgentContainer getAgents() const;
+
+  void setStretch(double stretch);
+  double getStretch() const;
+
+  void setReverse(bool reverse);
+  bool getReverse() const;
+
+  void setEnvelope(const Envelope& envelope);
+  Envelope getEnvelope() const; 
+
+  size_t getMaxIRSampleCount() const;
+  size_t getMaxFileSampleCount() const;
+  double getMaxFileDuration() const;
+
+  void setFileBeginSeconds(double fileBeginSeconds);
+  double getFileBeginSeconds() const;
+
+  void setPredelayMs(double predelayMs);
+  double getPredelayMs() const;
+
+  void clearConvolvers();
+  void updateConvolvers();
+
 private:
-    juce::AudioSampleBuffer _wetBuffer;
-    std::vector<std::vector<float> > _convolutionBuffers;
-    ParameterSet _parameterSet;  
-    std::vector<LevelMeasurement> _levelMeasurementsDry;
-    std::vector<LevelMeasurement> _levelMeasurementsWet;
-    std::vector<LevelMeasurement> _levelMeasurementsOut;
-    Settings _settings;
-  
-    mutable juce::CriticalSection _convolverMutex;
-    IRAgentContainer _agents;
-    double _stretch;
-    bool _reverse;
-    Envelope _envelope;
-    size_t _convolverHeadBlockSize;
-    size_t _convolverTailBlockSize;
-    double _fileBeginSeconds;
-    double _predelayMs;
-  
-    mutable juce::CriticalSection _irCalculationMutex;
-    juce::ScopedPointer<juce::Thread> _irCalculation;
-  
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessor);
+  juce::AudioSampleBuffer _wetBuffer;
+  std::vector<float> _convolutionBuffer;
+  ParameterSet _parameterSet;  
+  std::vector<LevelMeasurement> _levelMeasurementsDry;
+  std::vector<LevelMeasurement> _levelMeasurementsWet;
+  std::vector<LevelMeasurement> _levelMeasurementsOut;
+  Settings _settings;
+
+  mutable juce::CriticalSection _convolverMutex;
+  IRAgentContainer _agents;
+  double _stretch;
+  bool _reverse;
+  Envelope _envelope;
+  size_t _convolverHeadBlockSize;
+  size_t _convolverTailBlockSize;
+  double _fileBeginSeconds;
+  double _predelayMs;
+
+  mutable juce::CriticalSection _irCalculationMutex;
+  juce::ScopedPointer<juce::Thread> _irCalculation;
+
+  //==============================================================================
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessor);
 };
 
 #endif // Header guard

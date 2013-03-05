@@ -17,32 +17,11 @@
 
 #include "TwoStageFFTConvolver.h"
 
-#include "Buffer.h"
-
 #include <algorithm>
-#include <cassert>
 
 
 namespace fftconvolver
 {
-
-namespace internal
-{
-
-template<typename T>
-T NextPowerOf2(const T& val)
-{
-  T nextPowerOf2 = 1;
-  while (nextPowerOf2 < val)
-  {
-    nextPowerOf2 *= 2;
-  }
-  return nextPowerOf2;
-}
-
-} // End of namespace internal
-
-  
 
 TwoStageFFTConvolver::TwoStageFFTConvolver() :
   _headBlockSize(0),
@@ -117,8 +96,8 @@ bool TwoStageFFTConvolver::init(size_t headBlockSize,
     return true;
   }
   
-  _headBlockSize = internal::NextPowerOf2(headBlockSize);
-  _tailBlockSize = internal::NextPowerOf2(tailBlockSize);
+  _headBlockSize = NextPowerOf2(headBlockSize);
+  _tailBlockSize = NextPowerOf2(tailBlockSize);
 
   const size_t headIrLen = std::min(irLen, _tailBlockSize);
   _headConvolver.init(_headBlockSize, ir, headIrLen);

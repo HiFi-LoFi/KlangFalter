@@ -119,7 +119,7 @@ public:
   Convolver* getConvolver();
   void setConvolver(Convolver* convolver);
   
-  void process(const float* input, float* output, size_t len, float autoGain);
+  void process(const float* input, float* output, size_t len);
   
 private:
   void propagateChange();

@@ -15,29 +15,57 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#include "MultiplyAdd.h"
-
-#include "Buffer.h"
-
-#include <cassert>
-#include <cmath>
-
-
-#if defined (FFTCONVOLVER_USE_SSE)
-  #include <xmmintrin.h>
-#endif
+#include "Utilities.h"
 
 
 namespace fftconvolver
 {
 
-void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re, 
-                 Sample* FFTCONVOLVER_RESTRICT im,
-                 const Sample* FFTCONVOLVER_RESTRICT reA,
-                 const Sample* FFTCONVOLVER_RESTRICT imA,
-                 const Sample* FFTCONVOLVER_RESTRICT reB,
-                 const Sample* FFTCONVOLVER_RESTRICT imB,
-                 const size_t len)
+bool SSEEnabled()
+{
+#if defined(FFTCONVOLVER_USE_SSE)
+  return true;
+#else
+  return false;
+#endif
+}
+
+
+void Sum(Sample* FFTCONVOLVER_RESTRICT result,
+         const Sample* FFTCONVOLVER_RESTRICT a,
+         const Sample* FFTCONVOLVER_RESTRICT b,
+         size_t len)
+{
+  const size_t end4 = 4 * (len / 4);
+  for (size_t i=0; i<end4; i+=4)
+  {
+    result[i+0] = a[i+0] + b[i+0];
+    result[i+1] = a[i+1] + b[i+1];
+    result[i+2] = a[i+2] + b[i+2];
+    result[i+3] = a[i+3] + b[i+3];
+  }
+  for (size_t i=end4; i<len; ++i)
+  {
+    result[i] = a[i] + b[i];
+  }
+}
+
+
+void ComplexMultiplyAccumulate(SplitComplex& result, const SplitComplex& a, const SplitComplex& b)
+{
+  assert(result.size() == a.size());
+  assert(result.size() == b.size());
+  ComplexMultiplyAccumulate(result.re(), result.im(), a.re(), a.im(), b.re(), b.im(), result.size());
+}
+
+
+void ComplexMultiplyAccumulate(Sample* FFTCONVOLVER_RESTRICT re, 
+                               Sample* FFTCONVOLVER_RESTRICT im,
+                               const Sample* FFTCONVOLVER_RESTRICT reA,
+                               const Sample* FFTCONVOLVER_RESTRICT imA,
+                               const Sample* FFTCONVOLVER_RESTRICT reB,
+                               const Sample* FFTCONVOLVER_RESTRICT imB,
+                               const size_t len)
 {
 #if defined(FFTCONVOLVER_USE_SSE)
   const size_t end4 = 4 * (len / 4);
@@ -51,13 +79,13 @@ void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re,
     __m128 ib = _mm_load_ps(&imB[i]);
     __m128 real = _mm_load_ps(&re[i]);
     __m128 imag = _mm_load_ps(&im[i]);
-    
+
     mul1 = _mm_mul_ps(ra, rb);
     mul2 = _mm_mul_ps(ia, ib);
     real = _mm_add_ps(real, mul1);
     real = _mm_sub_ps(real, mul2);
     _mm_store_ps(&re[i], real);
-    
+
     mul1 = _mm_mul_ps(ra, ib);
     mul2 = _mm_mul_ps(ia, rb);
     imag = _mm_add_ps(imag, mul1);
@@ -88,14 +116,6 @@ void MultiplyAdd(Sample* FFTCONVOLVER_RESTRICT re,
     im[i] += reA[i] * imB[i] + imA[i] * reB[i];
   }
 #endif
-}
-
-
-void MultiplyAdd(SplitComplex& result, const SplitComplex& a, const SplitComplex& b)
-{
-  assert(result.size() == a.size());
-  assert(result.size() == b.size());
-  MultiplyAdd(result.re(), result.im(), a.re(), a.im(), b.re(), b.im(), result.size());
 }
 
 } // End of namespace fftconvolver

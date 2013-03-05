@@ -312,7 +312,7 @@ void IRAgent::propagateChange()
 }
 
 
-void IRAgent::process(const float* input, float* output, size_t len, float autoGain)
+void IRAgent::process(const float* input, float* output, size_t len)
 {
   const float Epsilon = 0.0001f;
   
@@ -322,16 +322,7 @@ void IRAgent::process(const float* input, float* output, size_t len, float autoG
   
   if (_convolver && (_fadeFactor > Epsilon || ::fabs(_fadeIncrement) > Epsilon))
   {
-    _convolver->process(input, output, len);
-
-    if (::fabs(autoGain-1.0f) > 0.000001f)
-    {
-      for (size_t i=0; i<len; ++i)
-      {
-        output[i] *= autoGain;
-      }
-    }
-    
+    _convolver->process(input, output, len);        
     if (::fabs(_fadeIncrement) > Epsilon || _fadeFactor < (1.0-Epsilon))
     {
       for (size_t i=0; i<len; ++i)

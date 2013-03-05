@@ -37,10 +37,8 @@ public:
   {
   }
 
-  virtual void prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+  virtual void prepareToPlay(int /*samplesPerBlockExpected*/, double /*sampleRate*/)
   {
-    (void) samplesPerBlockExpected;
-    (void) sampleRate;
     _pos = 0;
   }
 
@@ -88,174 +86,6 @@ private:
 // ===================================================================
 
 
-FloatBuffer::Ptr ImportAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double& fileSampleRate)
-{
-  fileSampleRate = 0.0;
-  
-  if (file == File::nonexistent)
-  {
-    return FloatBuffer::Ptr();
-  }
-  
-  juce::AudioFormatManager formatManager;
-  formatManager.registerBasicFormats();
-  ScopedPointer<AudioFormatReader> audioFormatReader(formatManager.createReaderFor(file));
-  if (!audioFormatReader)
-  {
-    return FloatBuffer::Ptr();
-  }
-  
-  const int fileChannels = audioFormatReader->numChannels;
-  const int fileLen = static_cast<int>(audioFormatReader->lengthInSamples);
-  if (static_cast<int>(fileChannel) >= fileChannels)
-  {
-    return FloatBuffer::Ptr();
-  }
-  
-  const size_t startSample = static_cast<size_t>(std::max(0.0, fileBeginSeconds) * audioFormatReader->sampleRate);
-  const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? (fileLen - startSample) : 0;
-  FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
-  
-  juce::AudioFormatReaderSource audioFormatReaderSource(audioFormatReader, false);
-  audioFormatReaderSource.setNextReadPosition(static_cast<juce::int64>(startSample));
-  size_t bufferPos = 0;
-  int filePos = static_cast<int>(startSample);
-  juce::AudioSampleBuffer importBuffer(fileChannels, 8192);
-  while (filePos < fileLen)
-  {
-    int loading = std::min(importBuffer.getNumSamples(), fileLen-filePos);
-    juce::AudioSourceChannelInfo info;
-    info.buffer = &importBuffer;
-    info.startSample = 0;
-    info.numSamples = loading;
-    audioFormatReaderSource.getNextAudioBlock(info);
-    ::memcpy(buffer->data()+bufferPos, importBuffer.getSampleData(fileChannel), loading * sizeof(float));
-    bufferPos += static_cast<size_t>(loading);
-    filePos += loading;
-  }
-  
-  fileSampleRate = audioFormatReader->sampleRate;
-  return buffer;
-}
-
-void ReverseBuffer(FloatBuffer::Ptr& buffer)
-{
-  if (buffer)
-  {
-    const size_t bufferSize = buffer->getSize();
-    if (bufferSize > 0)
-    {
-      float* a = buffer->data();
-      float* b = a + (bufferSize - 1);
-      while (a < b)
-      {
-        std::swap(*a, *b);
-        ++a;
-        --b;
-      }
-    }
-  }
-}
-
-FloatBuffer::Ptr ChangeSampleRate(const FloatBuffer::Ptr& inputBuffer, double inputSampleRate, double outputSampleRate)
-{
-  if (!inputBuffer)
-  {
-    return FloatBuffer::Ptr();
-  }
-  
-  if (::fabs(outputSampleRate-inputSampleRate) < 0.0000001)
-  {
-    return inputBuffer;
-  }
-  
-  assert(inputSampleRate >= 1.0);
-  assert(outputSampleRate >= 1.0);
-  
-  const double samplesInPerOutputSample = outputSampleRate / inputSampleRate;
-  const int inputSampleCount = inputBuffer->getSize();
-  const int outputSampleCount = static_cast<int>(::ceil(static_cast<double>(inputSampleCount) / samplesInPerOutputSample));
-  const int blockSize = 8192;
-  
-  FloatBufferSource inputSource(inputBuffer);
-  ResamplingAudioSource resamplingSource(&inputSource, false, 1);
-  resamplingSource.setResamplingRatio(samplesInPerOutputSample);
-  resamplingSource.prepareToPlay(blockSize, outputSampleRate);
-  
-  FloatBuffer::Ptr outputBuffer(new FloatBuffer(outputSampleCount));
-  juce::AudioSampleBuffer blockBuffer(1, blockSize);
-  int processed = 0;
-  while (processed < outputSampleCount)
-  {
-    const int remaining = outputSampleCount - processed;
-    const int processing = std::min(blockSize, remaining);
-    
-    juce::AudioSourceChannelInfo info;
-    info.buffer = &blockBuffer;
-    info.startSample = 0;
-    info.numSamples = processing;
-    resamplingSource.getNextAudioBlock(info);      
-    ::memcpy(outputBuffer->data()+static_cast<size_t>(processed), blockBuffer.getSampleData(0), processing * sizeof(float));
-    processed += processing;
-  }
-  
-  resamplingSource.releaseResources();
-  
-  return outputBuffer;
-}
-
-
-void UnifyBufferSize(std::vector<FloatBuffer::Ptr>& buffers)
-{
-  size_t bufferSize = 0;
-  for (size_t i=0; i<buffers.size(); ++i)
-  {
-    if (buffers[i] != nullptr)
-    {
-      bufferSize = std::max(bufferSize, buffers[i]->getSize());
-    }
-  }
-  for (size_t i=0; i<buffers.size(); ++i)
-  {
-    if (buffers[i] && buffers[i]->getSize() < bufferSize)
-    {
-      FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
-      const size_t copySize = buffers[i]->getSize();
-      const size_t padSize = bufferSize - copySize;
-      ::memcpy(buffer->data(), buffers[i]->data(), copySize * sizeof(float));
-      ::memset(buffer->data() + copySize, 0, padSize * sizeof(float));
-      buffers[i] = buffer;
-    }
-  }
-}
-
-
-float CalculateAutoGain(const std::vector<FloatBuffer::Ptr>& buffers)
-{
-  double autoGain = 1.0;
-  for (size_t buffer=0; buffer<buffers.size(); ++buffer)
-  {
-    if (buffers[buffer] != nullptr)
-    {
-      const float* data = buffers[buffer]->data();
-      const size_t len = buffers[buffer]->getSize();
-      double sum = 0.0;
-      for (size_t i=0; i<len; ++i)
-      {
-        const double val = static_cast<double>(data[i]);
-        sum += val * val;
-      }
-      const double x = 1.0 / std::sqrt(sum);
-      autoGain = std::min(autoGain, x);
-    }
-  }
-  return static_cast<float>(autoGain);
-}
-
-
-// ===================================================================
-
-
 IRCalculation::IRCalculation(PluginAudioProcessor& processor) :
   juce::Thread("IRCalculation"),
   _processor(processor)
@@ -294,7 +124,7 @@ void IRCalculation::run()
     if (file != juce::File::nonexistent)
     {
       double sampleRate;
-      FloatBuffer::Ptr buffer = ImportAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, sampleRate);
+      FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, sampleRate);
       if (!buffer || sampleRate < 0.0001 || threadShouldExit())
       {
         return;
@@ -312,7 +142,7 @@ void IRCalculation::run()
   { 
     if (buffers[i] != nullptr && fileSampleRates[i] > 0.00001)
     {
-      FloatBuffer::Ptr resampled = ChangeSampleRate(buffers[i], fileSampleRates[i], stretchSampleRate);
+      FloatBuffer::Ptr resampled = changeSampleRate(buffers[i], fileSampleRates[i], stretchSampleRate);
       if (!resampled || threadShouldExit())
       {
         return;
@@ -322,14 +152,14 @@ void IRCalculation::run()
   }
 
   // Unify buffer size
-  UnifyBufferSize(buffers);
+  unifyBufferSize(buffers);
   if (threadShouldExit())
   { 
     return;
   }
 
   // Calculate auto gain (should be done before applying the envelope!)
-  const float autoGain = CalculateAutoGain(buffers);
+  const float autoGain = calculateAutoGain(buffers);
   if (threadShouldExit())
   {
     return;
@@ -344,7 +174,7 @@ void IRCalculation::run()
     {
       if (reverse)
       {
-        ReverseBuffer(buffers[i]);
+        reverseBuffer(buffers[i]);
         if (threadShouldExit())
         {
           return;
@@ -403,3 +233,187 @@ void IRCalculation::run()
     agents[i]->fadeIn();
   }
 }
+
+
+
+FloatBuffer::Ptr IRCalculation::importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double& fileSampleRate) const
+{
+  fileSampleRate = 0.0;
+
+  if (file == File::nonexistent)
+  {
+    return FloatBuffer::Ptr();
+  }
+
+  juce::AudioFormatManager formatManager;
+  formatManager.registerBasicFormats();
+  ScopedPointer<AudioFormatReader> audioFormatReader(formatManager.createReaderFor(file));
+  if (!audioFormatReader)
+  {
+    return FloatBuffer::Ptr();
+  }
+
+  const int fileChannels = audioFormatReader->numChannels;
+  const int fileLen = static_cast<int>(audioFormatReader->lengthInSamples);
+  if (static_cast<int>(fileChannel) >= fileChannels)
+  {
+    return FloatBuffer::Ptr();
+  }
+
+  const size_t startSample = static_cast<size_t>(std::max(0.0, fileBeginSeconds) * audioFormatReader->sampleRate);
+  const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? (fileLen - startSample) : 0;
+  FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
+
+  juce::AudioFormatReaderSource audioFormatReaderSource(audioFormatReader, false);
+  audioFormatReaderSource.setNextReadPosition(static_cast<juce::int64>(startSample));
+  size_t bufferPos = 0;
+  int filePos = static_cast<int>(startSample);
+  juce::AudioSampleBuffer importBuffer(fileChannels, 8192);
+  while (filePos < fileLen)
+  {
+    if (threadShouldExit())
+    {
+      return FloatBuffer::Ptr();
+    }
+    int loading = std::min(importBuffer.getNumSamples(), fileLen-filePos);
+    juce::AudioSourceChannelInfo info;
+    info.buffer = &importBuffer;
+    info.startSample = 0;
+    info.numSamples = loading;
+    audioFormatReaderSource.getNextAudioBlock(info);
+    ::memcpy(buffer->data()+bufferPos, importBuffer.getSampleData(fileChannel), loading * sizeof(float));
+    bufferPos += static_cast<size_t>(loading);
+    filePos += loading;
+  }
+
+  fileSampleRate = audioFormatReader->sampleRate;
+  return buffer;
+}
+
+void IRCalculation::reverseBuffer(FloatBuffer::Ptr& buffer) const
+{
+  if (buffer)
+  {
+    const size_t bufferSize = buffer->getSize();
+    if (bufferSize > 0)
+    {
+      float* a = buffer->data();
+      float* b = a + (bufferSize - 1);
+      while (a < b)
+      {
+        std::swap(*a, *b);
+        ++a;
+        --b;
+      }
+    }
+  }
+}
+
+FloatBuffer::Ptr IRCalculation::changeSampleRate(const FloatBuffer::Ptr& inputBuffer, double inputSampleRate, double outputSampleRate) const
+{
+  if (!inputBuffer)
+  {
+    return FloatBuffer::Ptr();
+  }
+
+  if (::fabs(outputSampleRate-inputSampleRate) < 0.0000001)
+  {
+    return inputBuffer;
+  }
+
+  assert(inputSampleRate >= 1.0);
+  assert(outputSampleRate >= 1.0);
+
+  const double samplesInPerOutputSample = outputSampleRate / inputSampleRate;
+  const int inputSampleCount = inputBuffer->getSize();
+  const int outputSampleCount = static_cast<int>(::ceil(static_cast<double>(inputSampleCount) / samplesInPerOutputSample));
+  const int blockSize = 8192;
+
+  FloatBufferSource inputSource(inputBuffer);
+  ResamplingAudioSource resamplingSource(&inputSource, false, 1);
+  resamplingSource.setResamplingRatio(samplesInPerOutputSample);
+  resamplingSource.prepareToPlay(blockSize, outputSampleRate);
+
+  FloatBuffer::Ptr outputBuffer(new FloatBuffer(outputSampleCount));
+  juce::AudioSampleBuffer blockBuffer(1, blockSize);
+  int processed = 0;
+  while (processed < outputSampleCount)
+  {
+    if (threadShouldExit())
+    {
+      return FloatBuffer::Ptr();
+    }
+
+    const int remaining = outputSampleCount - processed;
+    const int processing = std::min(blockSize, remaining);
+
+    juce::AudioSourceChannelInfo info;
+    info.buffer = &blockBuffer;
+    info.startSample = 0;
+    info.numSamples = processing;
+    resamplingSource.getNextAudioBlock(info);      
+    ::memcpy(outputBuffer->data()+static_cast<size_t>(processed), blockBuffer.getSampleData(0), processing * sizeof(float));
+    processed += processing;
+  }
+
+  resamplingSource.releaseResources();
+
+  return outputBuffer;
+}
+
+
+void IRCalculation::unifyBufferSize(std::vector<FloatBuffer::Ptr>& buffers) const
+{
+  size_t bufferSize = 0;
+  for (size_t i=0; i<buffers.size(); ++i)
+  {
+    if (buffers[i] != nullptr)
+    {
+      bufferSize = std::max(bufferSize, buffers[i]->getSize());
+    }
+  }
+  for (size_t i=0; i<buffers.size(); ++i)
+  {
+    if (threadShouldExit())
+    {
+      return;
+    }
+    if (buffers[i] && buffers[i]->getSize() < bufferSize)
+    {
+      FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
+      const size_t copySize = buffers[i]->getSize();
+      const size_t padSize = bufferSize - copySize;
+      ::memcpy(buffer->data(), buffers[i]->data(), copySize * sizeof(float));
+      ::memset(buffer->data() + copySize, 0, padSize * sizeof(float));
+      buffers[i] = buffer;
+    }
+  }
+}
+
+
+float IRCalculation::calculateAutoGain(const std::vector<FloatBuffer::Ptr>& buffers) const
+{
+  double autoGain = 1.0;
+  for (size_t buffer=0; buffer<buffers.size(); ++buffer)
+  {
+    if (threadShouldExit())
+    {
+      return -1.0f;
+    }
+    if (buffers[buffer] != nullptr)
+    {
+      const float* data = buffers[buffer]->data();
+      const size_t len = buffers[buffer]->getSize();
+      double sum = 0.0;
+      for (size_t i=0; i<len; ++i)
+      {
+        const double val = static_cast<double>(data[i]);
+        sum += val * val;
+      }
+      const double x = 1.0 / std::sqrt(sum);
+      autoGain = std::min(autoGain, x);
+    }
+  }
+  return static_cast<float>(autoGain);
+}
+

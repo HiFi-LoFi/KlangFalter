@@ -27,15 +27,18 @@ class LevelMeasurement
 {
 public:
   explicit LevelMeasurement(float decay = 0.9999f);  
+  LevelMeasurement(const LevelMeasurement& other);
+  virtual ~LevelMeasurement();
+
+  LevelMeasurement& operator=(const LevelMeasurement& other);
+  
   void process(size_t len, const float* data0);
-  void process(size_t len, const float* data0, const float* data1);
-  void updateLevel(size_t len, float maxLevel);
   float getLevel() const;  
   void reset();
   
 private:
+  float _decay;
   juce::Atomic<float> _level;
-  const float _decay;
 };
 
 

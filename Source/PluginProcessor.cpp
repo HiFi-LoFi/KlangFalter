@@ -22,8 +22,7 @@
 #include "Parameters.h"
 #include "Persistence.h"
 #include "Settings.h"
-#include "FFTConvolver/Configuration.h"
-#include "FFTConvolver/Sample.h"
+#include "StereoWidth.h"
 #include "UI/KlangFalterEditor.h"
 
 #include <algorithm>
@@ -34,7 +33,7 @@ PluginAudioProcessor::PluginAudioProcessor() :
   AudioProcessor(),
   ChangeNotifier(),
   _wetBuffer(1, 0),
-  _convolutionBuffers(),
+  _convolutionBuffer(),
   _parameterSet(),
   _levelMeasurementsDry(2),
   _levelMeasurementsWet(2),
@@ -64,7 +63,8 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _parameterSet.registerParameter(Parameters::EqHighOn);
   _parameterSet.registerParameter(Parameters::EqHighFreq);
   _parameterSet.registerParameter(Parameters::EqHighDecibels);
-  
+  _parameterSet.registerParameter(Parameters::StereoWidth);
+
   _agents.push_back(new IRAgent(*this, 0, 0));
   _agents.push_back(new IRAgent(*this, 0, 1));
   _agents.push_back(new IRAgent(*this, 1, 0));
@@ -75,7 +75,7 @@ PluginAudioProcessor::PluginAudioProcessor() :
 PluginAudioProcessor::~PluginAudioProcessor()
 {
   PluginAudioProcessor::releaseResources();
-  
+
   for (size_t i=0; i<_agents.size(); ++i)
   {
     delete _agents[i];
@@ -124,39 +124,39 @@ const String PluginAudioProcessor::getParameterText(int index)
 
 const String PluginAudioProcessor::getInputChannelName(int channelIndex) const
 {
-    return String (channelIndex + 1);
+  return String (channelIndex + 1);
 }
 
 const String PluginAudioProcessor::getOutputChannelName(int channelIndex) const
 {
-    return String (channelIndex + 1);
+  return String (channelIndex + 1);
 }
 
 bool PluginAudioProcessor::isInputChannelStereoPair(int /*index*/) const
 {
-    return true;
+  return true;
 }
 
 bool PluginAudioProcessor::isOutputChannelStereoPair(int /*index*/) const
 {
-    return true;
+  return true;
 }
 
 bool PluginAudioProcessor::acceptsMidi() const
 {
 #if JucePlugin_WantsMidiInput
-    return true;
+  return true;
 #else
-    return false;
+  return false;
 #endif
 }
 
 bool PluginAudioProcessor::producesMidi() const
 {
 #if JucePlugin_ProducesMidiOutput
-    return true;
+  return true;
 #else
-    return false;
+  return false;
 #endif
 }
 
@@ -173,12 +173,12 @@ void PluginAudioProcessor::numChannelsChanged()
 
 int PluginAudioProcessor::getNumPrograms()
 {
-    return 0;
+  return 0;
 }
 
 int PluginAudioProcessor::getCurrentProgram()
 {
-    return 0;
+  return 0;
 }
 
 void PluginAudioProcessor::setCurrentProgram (int /*index*/)
@@ -187,7 +187,7 @@ void PluginAudioProcessor::setCurrentProgram (int /*index*/)
 
 const String PluginAudioProcessor::getProgramName (int /*index*/)
 {
-    return String::empty;
+  return String::empty;
 }
 
 void PluginAudioProcessor::changeProgramName (int /*index*/, const String& /*newName*/)
@@ -196,22 +196,22 @@ void PluginAudioProcessor::changeProgramName (int /*index*/, const String& /*new
 
 
 //==============================================================================
-void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void PluginAudioProcessor::prepareToPlay(double /*sampleRate*/, int samplesPerBlock)
 {
   // Play safe to be clean
   releaseResources();
-  
+
   // Prepare convolvers
   {
     juce::ScopedLock convolverLock(_convolverMutex);
     _convolverHeadBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 256));
     _convolverTailBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 4096));
   }
-  
+
   // Prepare convolution buffers
   _wetBuffer.setSize(2, samplesPerBlock);
-  _convolutionBuffers.resize(_agents.size(), std::vector<float>(samplesPerBlock, 0.0f));
-  
+  _convolutionBuffer.resize(samplesPerBlock);
+
   notifyAboutChange();
   updateConvolvers();
 }
@@ -219,8 +219,8 @@ void PluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 void PluginAudioProcessor::releaseResources()
 {
-  _convolutionBuffers.clear();
   _wetBuffer.setSize(1, 0, false, true, false);
+  _convolutionBuffer.clear();
   notifyAboutChange();
 }
 
@@ -232,15 +232,74 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
   const bool dryOn = getParameter(Parameters::DryOn);
   const float factorWet = DecibelScaling::Db2Gain(getParameter(Parameters::WetDecibels));
   const float factorDry = DecibelScaling::Db2Gain(getParameter(Parameters::DryDecibels));
-  
+
   const int numInputChannels = getNumInputChannels();
   const int numOutputChannels = getNumOutputChannels();
   const size_t samplesToProcess = buffer.getNumSamples();
-  
-  _wetBuffer = buffer;
-  _wetBuffer.applyGain(0, samplesToProcess, factorWet);
 
+  // Determine channel data
+  float* channelData0 = nullptr;
+  float* channelData1 = nullptr;
+  if (numInputChannels == 1)
+  {    
+    channelData0 = buffer.getSampleData(0);
+    channelData1 = buffer.getSampleData(0);
+  }
+  else if (numInputChannels == 2)
+  {
+    channelData0 = buffer.getSampleData(0);
+    channelData1 = buffer.getSampleData(1);
+  }
+
+  // Convolution
+  _wetBuffer.clear();
+  if (numInputChannels > 0 && numOutputChannels > 0)
+  {
+    float autoGain = 1.0f;
+    if (getParameter(Parameters::AutoGainOn))
+    {
+      autoGain = DecibelScaling::Db2Gain(getParameter(Parameters::AutoGainDecibels));
+    }
+
+    // Convolve
+    IRAgent* irAgent00 = getAgent(0, 0);
+    if (irAgent00 && irAgent00->getConvolver() && numInputChannels >= 1 && numOutputChannels >= 1)
+    {
+      irAgent00->process(channelData0, &_convolutionBuffer[0], samplesToProcess);
+      _wetBuffer.addFrom(0, 0, &_convolutionBuffer[0], samplesToProcess, autoGain);
+    }
+
+    IRAgent* irAgent01 = getAgent(0, 1);
+    if (irAgent01 && irAgent01->getConvolver() && numInputChannels >= 1 && numOutputChannels >= 2)
+    {
+      irAgent01->process(channelData0, &_convolutionBuffer[0], samplesToProcess);
+      _wetBuffer.addFrom(1, 0, &_convolutionBuffer[0], samplesToProcess, autoGain);
+    }
+
+    IRAgent* irAgent10 = getAgent(1, 0);
+    if (irAgent10 && irAgent10->getConvolver() && numInputChannels >= 2 && numOutputChannels >= 1)
+    {      
+      irAgent10->process(channelData1, &_convolutionBuffer[0], samplesToProcess);
+      _wetBuffer.addFrom(0, 0, &_convolutionBuffer[0], samplesToProcess, autoGain);
+    }
+
+    IRAgent* irAgent11 = getAgent(1, 1);
+    if (irAgent11 && irAgent11->getConvolver() && numInputChannels >= 2 && numOutputChannels >= 2)
+    {
+      irAgent11->process(channelData1, &_convolutionBuffer[0], samplesToProcess);
+      _wetBuffer.addFrom(1, 0, &_convolutionBuffer[0], samplesToProcess, autoGain);
+    }
+  }
+
+  // Stereo width
+  if (numOutputChannels >= 2)
+  {
+    StereoWidth(getParameter(Parameters::StereoWidth), _wetBuffer.getSampleData(0), _wetBuffer.getSampleData(1), samplesToProcess);
+  }
+
+  // Dry/wet gain
   buffer.applyGain(0, samplesToProcess, factorDry);
+  _wetBuffer.applyGain(0, samplesToProcess, factorWet);
 
   // Level measurement (dry)
   if (numInputChannels == 1)
@@ -254,106 +313,39 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
     _levelMeasurementsDry[1].process(samplesToProcess, buffer.getSampleData(1));
   }
 
-  // Determine channel data
-  float* channelData0 = nullptr;
-  float* channelData1 = nullptr;
-  if (numInputChannels == 1)
-  {    
-    channelData0 = _wetBuffer.getSampleData(0);
-    channelData1 = _wetBuffer.getSampleData(0);
-  }
-  else if (numInputChannels == 2)
-  {
-    channelData0 = _wetBuffer.getSampleData(0);
-    channelData1 = _wetBuffer.getSampleData(1);
-  }
-  
-  // Convolution
-  if (dryOn == false)
+  // Sum wet to dry signal
+  if (!dryOn)
   {
     buffer.clear();
   }
-  
-  std::vector<float>* convolutionBuffer00 = nullptr;
-  std::vector<float>* convolutionBuffer01 = nullptr;
-  std::vector<float>* convolutionBuffer10 = nullptr;
-  std::vector<float>* convolutionBuffer11 = nullptr;
-
-  if (channelData0 && channelData1)
+  if (wetOn)
   {
-    IRAgent* irAgent00 = getAgent(0, 0);
-    IRAgent* irAgent01 = getAgent(0, 1);
-    IRAgent* irAgent10 = getAgent(1, 0);
-    IRAgent* irAgent11 = getAgent(1, 1);
-
-    float autoGain = 1.0f;
-    if (getParameter(Parameters::AutoGainOn))
+    if (numOutputChannels > 0)
     {
-      autoGain = DecibelScaling::Db2Gain(getParameter(Parameters::AutoGainDecibels));
+      buffer.addFrom(0, 0, _wetBuffer.getSampleData(0), samplesToProcess);
     }
-    
-    // Convolve
-    if (irAgent00 && irAgent00->getConvolver() && numInputChannels >= 1 && numOutputChannels >= 1)
+    if (numOutputChannels > 1)
     {
-      convolutionBuffer00 = &_convolutionBuffers[0];
-      irAgent00->process(channelData0, convolutionBuffer00->data(), samplesToProcess, autoGain);
-      if (wetOn)
-      {
-        buffer.addFrom(0, 0, convolutionBuffer00->data(), samplesToProcess, 1.0f);
-      }
+      buffer.addFrom(1, 0, _wetBuffer.getSampleData(1), samplesToProcess);
     }
-    
-    if (irAgent01 && irAgent01->getConvolver() && numInputChannels >= 1 && numOutputChannels >= 2)
-    {
-      convolutionBuffer01 = &_convolutionBuffers[1];
-      irAgent01->process(channelData0, convolutionBuffer01->data(), samplesToProcess, autoGain);
-      if (wetOn)
-      {
-        buffer.addFrom(1, 0, &(*convolutionBuffer01)[0], samplesToProcess, 1.0f);
-      }
-    }
-    
-    if (irAgent10 && irAgent10->getConvolver() && numInputChannels >= 2 && numOutputChannels >= 1)
-    {
-      convolutionBuffer10 = &_convolutionBuffers[2];
-      irAgent10->process(channelData1, convolutionBuffer10->data(), samplesToProcess, autoGain);
-      if (wetOn)
-      {
-        buffer.addFrom(0, 0, convolutionBuffer10->data(), samplesToProcess, 1.0f);
-      }
-    }
-    
-    if (irAgent11 && irAgent11->getConvolver() && numInputChannels >= 2 && numOutputChannels >= 2)
-    {
-      convolutionBuffer11 = &_convolutionBuffers[3];
-      irAgent11->process(channelData1, convolutionBuffer11->data(), samplesToProcess, autoGain);
-      if (wetOn)
-      {
-        buffer.addFrom(1, 0, convolutionBuffer11->data(), samplesToProcess, 1.0f);
-      }
-    }  
   }
-  
-  // Level measurement
+
+  // Level measurement (wet/out)
   if (numOutputChannels == 1)
   {
-    _levelMeasurementsWet[0].process(samplesToProcess, convolutionBuffer00 ? convolutionBuffer00->data() : nullptr);
+    _levelMeasurementsWet[0].process(samplesToProcess, _wetBuffer.getSampleData(0));
     _levelMeasurementsWet[1].reset();
     _levelMeasurementsOut[0].process(samplesToProcess, buffer.getSampleData(0));
     _levelMeasurementsOut[1].reset();
   }
   else if (numOutputChannels == 2)
   {
-    _levelMeasurementsWet[0].process(samplesToProcess,
-                                     convolutionBuffer00 ? convolutionBuffer00->data() : nullptr,
-                                     convolutionBuffer10 ? convolutionBuffer10->data() : nullptr);
-    _levelMeasurementsWet[1].process(samplesToProcess,
-                                     convolutionBuffer01 ? convolutionBuffer01->data() : nullptr,
-                                     convolutionBuffer11 ? convolutionBuffer11->data() : nullptr);
+    _levelMeasurementsWet[0].process(samplesToProcess, _wetBuffer.getSampleData(0));
+    _levelMeasurementsWet[1].process(samplesToProcess, _wetBuffer.getSampleData(1));
     _levelMeasurementsOut[0].process(samplesToProcess, buffer.getSampleData(0));
     _levelMeasurementsOut[1].process(samplesToProcess, buffer.getSampleData(1));
   }
-  
+
   // In case we have more outputs than inputs, we'll clear any output
   // channels that didn't contain input data, (because these aren't
   // guaranteed to be empty - they may contain garbage).
@@ -366,7 +358,7 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
 //==============================================================================
 bool PluginAudioProcessor::hasEditor() const
 {
-    return true;
+  return true;
 }
 
 AudioProcessorEditor* PluginAudioProcessor::createEditor()
@@ -424,7 +416,7 @@ Settings& PluginAudioProcessor::getSettings()
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new PluginAudioProcessor();
+  return new PluginAudioProcessor();
 }
 
 
@@ -466,7 +458,7 @@ void PluginAudioProcessor::clearConvolvers()
     _fileBeginSeconds = 0.0;
     _envelope.reset();
   }
-  
+
   setParameterNotifyingHost(Parameters::EqLowOn, Parameters::EqLowOn.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqLowFreq, Parameters::EqLowFreq.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqLowDecibels, Parameters::EqLowDecibels.getDefaultValue());
@@ -474,12 +466,12 @@ void PluginAudioProcessor::clearConvolvers()
   setParameterNotifyingHost(Parameters::EqHighOn, Parameters::EqHighOn.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqHighFreq, Parameters::EqHighFreq.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqHighDecibels, Parameters::EqHighDecibels.getDefaultValue());
-  
+
   for (size_t i=0; i<_agents.size(); ++i)
   {
     _agents[i]->clear();
   }
-  
+
   notifyAboutChange();
   updateConvolvers();
 }

@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  3 Mar 2013 5:04:03pm
+  Creation date:  5 Mar 2013 2:30:56pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_A89957A6__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_A89957A6__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_4C8D6190__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_4C8D6190__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -124,6 +124,9 @@ private:
     LevelMeter* _levelMeterOut;
     TextButton* _levelMeterOutLabelButton;
     Label* _levelMeterDryLabel;
+    Label* _widthHeaderLabel;
+    Slider* _widthSlider;
+    Label* _widthLabel;
 
 
     //==============================================================================
@@ -133,4 +136,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_A89957A6__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_4C8D6190__

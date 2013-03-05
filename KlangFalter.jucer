@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.03.03beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="guiapp" version="2013.03.03beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -33,21 +33,17 @@
   </EXPORTFORMATS>
   <MAINGROUP id="tWkHhV" name="KlangFalter">
     <GROUP id="{25281D04-97AD-E16A-DD2E-04A6860714ED}" name="FFTConvolver">
+      <FILE id="aLGk1s" name="Utilities.cpp" compile="1" resource="0" file="Source/FFTConvolver/Utilities.cpp"/>
+      <FILE id="ePIVdC" name="Utilities.h" compile="0" resource="0" file="Source/FFTConvolver/Utilities.h"/>
       <FILE id="yg70fm" name="TwoStageFFTConvolver.cpp" compile="1" resource="0"
             file="Source/FFTConvolver/TwoStageFFTConvolver.cpp"/>
       <FILE id="Z2lYc4" name="TwoStageFFTConvolver.h" compile="0" resource="0"
             file="Source/FFTConvolver/TwoStageFFTConvolver.h"/>
       <FILE id="Dq7rky" name="AudioFFT.cpp" compile="1" resource="0" file="Source/FFTConvolver/AudioFFT.cpp"/>
       <FILE id="epp4dB" name="AudioFFT.h" compile="0" resource="0" file="Source/FFTConvolver/AudioFFT.h"/>
-      <FILE id="jU446I" name="Buffer.h" compile="0" resource="0" file="Source/FFTConvolver/Buffer.h"/>
-      <FILE id="VzEPLP" name="Configuration.h" compile="0" resource="0" file="Source/FFTConvolver/Configuration.h"/>
       <FILE id="wEkTRs" name="FFTConvolver.cpp" compile="1" resource="0"
             file="Source/FFTConvolver/FFTConvolver.cpp"/>
       <FILE id="iVHbus" name="FFTConvolver.h" compile="0" resource="0" file="Source/FFTConvolver/FFTConvolver.h"/>
-      <FILE id="Lgz7Ac" name="MultiplyAdd.cpp" compile="1" resource="0" file="Source/FFTConvolver/MultiplyAdd.cpp"/>
-      <FILE id="Cv3iOQ" name="MultiplyAdd.h" compile="0" resource="0" file="Source/FFTConvolver/MultiplyAdd.h"/>
-      <FILE id="jYiAAA" name="Sample.h" compile="0" resource="0" file="Source/FFTConvolver/Sample.h"/>
-      <FILE id="YHYGAU" name="SplitComplex.h" compile="0" resource="0" file="Source/FFTConvolver/SplitComplex.h"/>
     </GROUP>
     <GROUP id="{AF9AFB86-5BBB-A92F-6447-4B85AD586F22}" name="UI">
       <GROUP id="{0D39E3F9-DC00-E9BA-D76D-32943BC0F7A5}" name="Resources">
@@ -118,6 +114,8 @@
     <FILE id="OsElLF" name="Settings.h" compile="0" resource="0" file="Source/Settings.h"/>
     <FILE id="wRwMmM" name="SpinningScopedLock.h" compile="0" resource="0"
           file="Source/SpinningScopedLock.h"/>
+    <FILE id="e4ayW0" name="StereoWidth.cpp" compile="1" resource="0" file="Source/StereoWidth.cpp"/>
+    <FILE id="snyExm" name="StereoWidth.h" compile="0" resource="0" file="Source/StereoWidth.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
@@ -132,7 +130,6 @@
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
   </MODULES>
   <JUCEOPTIONS/>
 </JUCERPROJECT>

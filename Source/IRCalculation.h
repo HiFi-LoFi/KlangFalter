@@ -32,6 +32,12 @@ public:
   virtual void run();
   
 private:
+  FloatBuffer::Ptr importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double& fileSampleRate) const;
+  void reverseBuffer(FloatBuffer::Ptr& buffer) const;
+  FloatBuffer::Ptr changeSampleRate(const FloatBuffer::Ptr& inputBuffer, double inputSampleRate, double outputSampleRate) const;
+  void unifyBufferSize(std::vector<FloatBuffer::Ptr>& buffers) const;  
+  float calculateAutoGain(const std::vector<FloatBuffer::Ptr>& buffers) const;
+
   PluginAudioProcessor& _processor;
   
   // Prevent uncontrolled usage

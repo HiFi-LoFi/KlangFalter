@@ -171,7 +171,7 @@ public:
             setContentNonOwned(_editor, true);  
           }
 
-          _deviceManager.initialise(1, 1, nullptr, true);
+          _deviceManager.initialise(2, 2, nullptr, true);
 
           const AudioIODevice* currentDevice = _deviceManager.getCurrentAudioDevice();
           if (!currentDevice)
