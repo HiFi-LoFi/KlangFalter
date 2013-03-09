@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  3 Mar 2013 5:09:56pm
+  Creation date:  8 Mar 2013 10:37:54am
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,15 +19,15 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_FD0C8609__
-#define __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_FD0C8609__
+#ifndef __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_7F964DEC__
+#define __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_7F964DEC__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
 
 #include "WaveformComponent.h"
 #include "../IRAgent.h"
-#include "../PluginProcessor.h"
+#include "../Processor.h"
 //[/Headers]
 
 
@@ -89,4 +89,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_FD0C8609__
+#endif   // __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_7F964DEC__

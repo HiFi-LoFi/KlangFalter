@@ -40,7 +40,7 @@ namespace internal
 
 
 
-XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
+XmlElement* SaveState(const File& irDirectory, Processor& processor)
 { 
   ScopedPointer<XmlElement> convolutionElement(new XmlElement("Convolution"));
   convolutionElement->setAttribute("pluginVersion", juce::String(ProjectInfo::versionString));
@@ -50,11 +50,9 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
   convolutionElement->setAttribute("dryDecibels", processor.getParameter(Parameters::DryDecibels));
   convolutionElement->setAttribute("autoGainOn", processor.getParameter(Parameters::AutoGainOn));
 
-  convolutionElement->setAttribute("eqLoShelfOn", processor.getParameter(Parameters::EqLowOn));
   convolutionElement->setAttribute("eqLoShelfFreq", processor.getParameter(Parameters::EqLowFreq));
   convolutionElement->setAttribute("eqLoShelfDecibels", processor.getParameter(Parameters::EqLowDecibels));
   
-  convolutionElement->setAttribute("eqHiShelfOn", processor.getParameter(Parameters::EqHighOn));
   convolutionElement->setAttribute("eqHiShelfFreq", processor.getParameter(Parameters::EqHighFreq));
   convolutionElement->setAttribute("eqHiShelfDecibels", processor.getParameter(Parameters::EqHighDecibels));
 
@@ -112,7 +110,7 @@ XmlElement* SaveState(const File& irDirectory, PluginAudioProcessor& processor)
 
 
 
-bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcessor& processor)
+bool LoadState(const File& irDirectory, XmlElement& element, Processor& processor)
 {  
   if (element.getTagName() != "Convolution")
   {
@@ -131,11 +129,9 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   double stereoWidth = element.getDoubleAttribute("stereoWidth", 1.0);
   bool reverse = element.getBoolAttribute("reverse", false);
   
-  bool eqLoShelfOn = element.getBoolAttribute("eqLoShelfOn", false);
   double eqLoShelfFreq = element.getDoubleAttribute("eqLoShelfFreq", 20.0);
   double eqLoShelfDecibels = element.getDoubleAttribute("eqLoShelfDecibels", 0.0);
   
-  bool eqHiShelfOn = element.getBoolAttribute("eqHiShelfOn", false);
   double eqHiShelfFreq = element.getDoubleAttribute("eqHiShelfFreq", 20000.0);
   double eqHiShelfDecibels = element.getDoubleAttribute("eqHiShelfDecibels", 0.0);
   
@@ -200,11 +196,9 @@ bool LoadState(const File& irDirectory, XmlElement& element, PluginAudioProcesso
   processor.setParameterNotifyingHost(Parameters::DryDecibels, static_cast<float>(dryDecibels));
   processor.setParameterNotifyingHost(Parameters::AutoGainOn, autoGainOn);
   
-  processor.setParameterNotifyingHost(Parameters::EqLowOn, eqLoShelfOn);
   processor.setParameterNotifyingHost(Parameters::EqLowFreq, static_cast<float>(eqLoShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqLowDecibels, static_cast<float>(eqLoShelfDecibels));
   
-  processor.setParameterNotifyingHost(Parameters::EqHighOn, eqHiShelfOn);
   processor.setParameterNotifyingHost(Parameters::EqHighFreq, static_cast<float>(eqHiShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqHighDecibels, static_cast<float>(eqHiShelfDecibels));
   

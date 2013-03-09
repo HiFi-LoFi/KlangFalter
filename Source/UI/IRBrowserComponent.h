@@ -21,7 +21,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "../PluginProcessor.h"
+#include "../Processor.h"
 #include "../Settings.h"
 
 
@@ -33,7 +33,7 @@ public:
   IRBrowserComponent();
   virtual ~IRBrowserComponent();
   
-  virtual void init(PluginAudioProcessor* processor);
+  virtual void init(Processor* processor);
   virtual void updateLayout();
   
   virtual void paint(juce::Graphics& g);
@@ -64,7 +64,7 @@ private:
   juce::ScopedPointer<juce::DirectoryContentsList> _directoryContent;
   juce::ScopedPointer<juce::FileTreeComponent> _fileTreeComponent;
   juce::ScopedPointer<juce::Label> _infoLabel;
-  PluginAudioProcessor* _processor;
+  Processor* _processor;
   
   IRBrowserComponent(const IRBrowserComponent&);
   IRBrowserComponent& operator=(const IRBrowserComponent&);

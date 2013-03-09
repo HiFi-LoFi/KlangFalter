@@ -15,8 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#ifndef _PLUGINPROCESSOR_H
-#define _PLUGINPROCESSOR_H
+#ifndef _PROCESSOR_H
+#define _PROCESSOR_H
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
@@ -26,6 +26,8 @@
 #include "LevelMeasurement.h"
 #include "Parameterset.h"
 #include "Settings.h"
+#include "SmoothValue.h"
+#include "StereoWidth.h"
 
 #include <map>
 #include <vector>
@@ -34,12 +36,12 @@
 //==============================================================================
 /**
 */
-class PluginAudioProcessor  : public AudioProcessor, public ChangeNotifier
+class Processor : public AudioProcessor, public ChangeNotifier
 {
 public:
   //==============================================================================
-  PluginAudioProcessor();
-  virtual ~PluginAudioProcessor();
+  Processor();
+  virtual ~Processor();
 
   //==============================================================================
   void prepareToPlay(double sampleRate, int samplesPerBlock);
@@ -138,6 +140,8 @@ public:
   void clearConvolvers();
   void updateConvolvers();
 
+  float getBeatsPerMinute() const;
+
 private:
   juce::AudioSampleBuffer _wetBuffer;
   std::vector<float> _convolutionBuffer;
@@ -156,12 +160,18 @@ private:
   size_t _convolverTailBlockSize;
   double _fileBeginSeconds;
   double _predelayMs;
+  StereoWidth _stereoWidth;
+  SmoothValue<float> _dryOn;
+  SmoothValue<float> _wetOn;
+  SmoothValue<float> _dryGain;
+  SmoothValue<float> _wetGain;
+  juce::Atomic<float> _beatsPerMinute;
 
   mutable juce::CriticalSection _irCalculationMutex;
   juce::ScopedPointer<juce::Thread> _irCalculation;
 
   //==============================================================================
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginAudioProcessor);
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Processor);
 };
 
 #endif // Header guard

@@ -34,11 +34,9 @@ struct Parameters
   static const BoolParameterDescriptor AutoGainOn;
   static const FloatParameterDescriptor AutoGainDecibels;
 
-  static const BoolParameterDescriptor EqLowOn;
   static const FloatParameterDescriptor EqLowFreq;
   static const FloatParameterDescriptor EqLowDecibels;
   
-  static const BoolParameterDescriptor EqHighOn;
   static const FloatParameterDescriptor EqHighFreq;
   static const FloatParameterDescriptor EqHighDecibels;
 

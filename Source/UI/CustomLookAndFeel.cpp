@@ -51,7 +51,7 @@ const CustomLookAndFeel& CustomLookAndFeel::GetCustomLookAndFeel(juce::Component
 // ==============================================
 juce::Colour CustomLookAndFeel::getWaveformColour() const
 {
-  return juce::Colour(0xAA, 0xAA, 0xF8);
+  return juce::Colour(0x90, 0x90, 0xD0);
 }
 
 
@@ -67,7 +67,7 @@ juce::Colour CustomLookAndFeel::getWaveformBackgroundColour() const
 
 juce::Colour CustomLookAndFeel::getEnvelopeRestrictionColour() const
 {
-  return getEnvelopeNodeColour(false).withAlpha(32.0f/255.0f);
+  return getEnvelopeNodeColour(false).withAlpha(48.0f/255.0f);
 }
 
 

@@ -15,21 +15,20 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#include "PluginProcessor.h"
+#include "Processor.h"
 
 #include "IRAgent.h"
 #include "IRCalculation.h"
 #include "Parameters.h"
 #include "Persistence.h"
 #include "Settings.h"
-#include "StereoWidth.h"
 #include "UI/KlangFalterEditor.h"
 
 #include <algorithm>
 
 
 //==============================================================================
-PluginAudioProcessor::PluginAudioProcessor() :
+Processor::Processor() :
   AudioProcessor(),
   ChangeNotifier(),
   _wetBuffer(1, 0),
@@ -48,6 +47,12 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _convolverTailBlockSize(0),
   _fileBeginSeconds(0.0),
   _predelayMs(0.0),
+  _stereoWidth(),
+  _dryOn(Parameters::DryOn.getDefaultValue() ? 1.0f : 0.0f),
+  _wetOn(Parameters::WetOn.getDefaultValue() ? 1.0f : 0.0f),
+  _dryGain(DecibelScaling::Db2Gain(Parameters::DryDecibels.getDefaultValue())),
+  _wetGain(DecibelScaling::Db2Gain(Parameters::WetDecibels.getDefaultValue())),
+  _beatsPerMinute(0.0f),
   _irCalculationMutex(),
   _irCalculation()
 { 
@@ -57,10 +62,8 @@ PluginAudioProcessor::PluginAudioProcessor() :
   _parameterSet.registerParameter(Parameters::DryDecibels);
   _parameterSet.registerParameter(Parameters::AutoGainOn);
   _parameterSet.registerParameter(Parameters::AutoGainDecibels);
-  _parameterSet.registerParameter(Parameters::EqLowOn);
   _parameterSet.registerParameter(Parameters::EqLowFreq);
   _parameterSet.registerParameter(Parameters::EqLowDecibels);
-  _parameterSet.registerParameter(Parameters::EqHighOn);
   _parameterSet.registerParameter(Parameters::EqHighFreq);
   _parameterSet.registerParameter(Parameters::EqHighDecibels);
   _parameterSet.registerParameter(Parameters::StereoWidth);
@@ -72,9 +75,9 @@ PluginAudioProcessor::PluginAudioProcessor() :
 }
 
 
-PluginAudioProcessor::~PluginAudioProcessor()
+Processor::~Processor()
 {
-  PluginAudioProcessor::releaseResources();
+  Processor::releaseResources();
 
   for (size_t i=0; i<_agents.size(); ++i)
   {
@@ -85,7 +88,7 @@ PluginAudioProcessor::~PluginAudioProcessor()
 
 
 //==============================================================================
-const String PluginAudioProcessor::getName() const
+const String Processor::getName() const
 {
 #ifdef JucePlugin_Name
   return JucePlugin_Name;
@@ -94,17 +97,17 @@ const String PluginAudioProcessor::getName() const
 #endif
 }
 
-int PluginAudioProcessor::getNumParameters()
+int Processor::getNumParameters()
 {
   return _parameterSet.getParameterCount();
 }
 
-float PluginAudioProcessor::getParameter(int index)
+float Processor::getParameter(int index)
 {
   return _parameterSet.getNormalizedParameter(index);
 }
 
-void PluginAudioProcessor::setParameter(int index, float newValue)
+void Processor::setParameter(int index, float newValue)
 {
   if (_parameterSet.setNormalizedParameter(index, newValue))
   {
@@ -112,37 +115,37 @@ void PluginAudioProcessor::setParameter(int index, float newValue)
   }
 }
 
-const String PluginAudioProcessor::getParameterName(int index)
+const String Processor::getParameterName(int index)
 {
   return _parameterSet.getParameterDescriptor(index).getName();
 }
 
-const String PluginAudioProcessor::getParameterText(int index)
+const String Processor::getParameterText(int index)
 {
   return _parameterSet.getParameterDescriptor(index).getUnit();
 }
 
-const String PluginAudioProcessor::getInputChannelName(int channelIndex) const
+const String Processor::getInputChannelName(int channelIndex) const
 {
   return String (channelIndex + 1);
 }
 
-const String PluginAudioProcessor::getOutputChannelName(int channelIndex) const
+const String Processor::getOutputChannelName(int channelIndex) const
 {
   return String (channelIndex + 1);
 }
 
-bool PluginAudioProcessor::isInputChannelStereoPair(int /*index*/) const
+bool Processor::isInputChannelStereoPair(int /*index*/) const
 {
   return true;
 }
 
-bool PluginAudioProcessor::isOutputChannelStereoPair(int /*index*/) const
+bool Processor::isOutputChannelStereoPair(int /*index*/) const
 {
   return true;
 }
 
-bool PluginAudioProcessor::acceptsMidi() const
+bool Processor::acceptsMidi() const
 {
 #if JucePlugin_WantsMidiInput
   return true;
@@ -151,7 +154,7 @@ bool PluginAudioProcessor::acceptsMidi() const
 #endif
 }
 
-bool PluginAudioProcessor::producesMidi() const
+bool Processor::producesMidi() const
 {
 #if JucePlugin_ProducesMidiOutput
   return true;
@@ -160,43 +163,43 @@ bool PluginAudioProcessor::producesMidi() const
 #endif
 }
 
-bool PluginAudioProcessor::silenceInProducesSilenceOut() const
+bool Processor::silenceInProducesSilenceOut() const
 {
   return false;
 }
 
-void PluginAudioProcessor::numChannelsChanged()
+void Processor::numChannelsChanged()
 {
   juce::AudioProcessor::numChannelsChanged();
   notifyAboutChange();
 }
 
-int PluginAudioProcessor::getNumPrograms()
+int Processor::getNumPrograms()
 {
   return 0;
 }
 
-int PluginAudioProcessor::getCurrentProgram()
+int Processor::getCurrentProgram()
 {
   return 0;
 }
 
-void PluginAudioProcessor::setCurrentProgram (int /*index*/)
+void Processor::setCurrentProgram (int /*index*/)
 {
 }
 
-const String PluginAudioProcessor::getProgramName (int /*index*/)
+const String Processor::getProgramName (int /*index*/)
 {
   return String::empty;
 }
 
-void PluginAudioProcessor::changeProgramName (int /*index*/, const String& /*newName*/)
+void Processor::changeProgramName (int /*index*/, const String& /*newName*/)
 {
 }
 
 
 //==============================================================================
-void PluginAudioProcessor::prepareToPlay(double /*sampleRate*/, int samplesPerBlock)
+void Processor::prepareToPlay(double /*sampleRate*/, int samplesPerBlock)
 {
   // Play safe to be clean
   releaseResources();
@@ -212,27 +215,25 @@ void PluginAudioProcessor::prepareToPlay(double /*sampleRate*/, int samplesPerBl
   _wetBuffer.setSize(2, samplesPerBlock);
   _convolutionBuffer.resize(samplesPerBlock);
 
+  // Initialize parameters
+  _stereoWidth.initializeWidth(getParameter(Parameters::StereoWidth));
+
   notifyAboutChange();
   updateConvolvers();
 }
 
 
-void PluginAudioProcessor::releaseResources()
+void Processor::releaseResources()
 {
   _wetBuffer.setSize(1, 0, false, true, false);
   _convolutionBuffer.clear();
+  _beatsPerMinute.set(0);
   notifyAboutChange();
 }
 
 
-void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
+void Processor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /*midiMessages*/)
 { 
-  // Preparation
-  const bool wetOn = getParameter(Parameters::WetOn);
-  const bool dryOn = getParameter(Parameters::DryOn);
-  const float factorWet = DecibelScaling::Db2Gain(getParameter(Parameters::WetDecibels));
-  const float factorDry = DecibelScaling::Db2Gain(getParameter(Parameters::DryDecibels));
-
   const int numInputChannels = getNumInputChannels();
   const int numOutputChannels = getNumOutputChannels();
   const size_t samplesToProcess = buffer.getNumSamples();
@@ -294,12 +295,23 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
   // Stereo width
   if (numOutputChannels >= 2)
   {
-    StereoWidth(getParameter(Parameters::StereoWidth), _wetBuffer.getSampleData(0), _wetBuffer.getSampleData(1), samplesToProcess);
+    _stereoWidth.updateWidth(getParameter(Parameters::StereoWidth));
+    _stereoWidth.process(_wetBuffer.getSampleData(0), _wetBuffer.getSampleData(1), samplesToProcess);
   }
 
   // Dry/wet gain
-  buffer.applyGain(0, samplesToProcess, factorDry);
-  _wetBuffer.applyGain(0, samplesToProcess, factorWet);
+  {
+    float dryGain0, dryGain1;
+    _dryGain.updateValue(DecibelScaling::Db2Gain(getParameter(Parameters::DryDecibels)));
+    _dryGain.getSmoothValues(samplesToProcess, dryGain0, dryGain1);
+    buffer.applyGainRamp(0, samplesToProcess, dryGain0, dryGain1);
+  }
+  {
+    float wetGain0, wetGain1;
+    _wetGain.updateValue(DecibelScaling::Db2Gain(getParameter(Parameters::WetDecibels)));
+    _wetGain.getSmoothValues(samplesToProcess, wetGain0, wetGain1);
+    _wetBuffer.applyGainRamp(0, samplesToProcess, wetGain0, wetGain1);
+  }
 
   // Level measurement (dry)
   if (numInputChannels == 1)
@@ -314,19 +326,23 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
   }
 
   // Sum wet to dry signal
-  if (!dryOn)
   {
-    buffer.clear();
+    float dryOnGain0, dryOnGain1;
+    _dryOn.updateValue(getParameter(Parameters::DryOn) ? 1.0f : 0.0f);
+    _dryOn.getSmoothValues(samplesToProcess, dryOnGain0, dryOnGain1);
+    buffer.applyGainRamp(0, samplesToProcess, dryOnGain0, dryOnGain1);
   }
-  if (wetOn)
   {
+    float wetOnGain0, wetOnGain1;
+    _wetOn.updateValue(getParameter(Parameters::WetOn) ? 1.0f : 0.0f);
+    _wetOn.getSmoothValues(samplesToProcess, wetOnGain0, wetOnGain1);
     if (numOutputChannels > 0)
     {
-      buffer.addFrom(0, 0, _wetBuffer.getSampleData(0), samplesToProcess);
+      buffer.addFromWithRamp(0, 0, _wetBuffer.getSampleData(0), samplesToProcess, wetOnGain0, wetOnGain1);
     }
     if (numOutputChannels > 1)
     {
-      buffer.addFrom(1, 0, _wetBuffer.getSampleData(1), samplesToProcess);
+      buffer.addFromWithRamp(1, 0, _wetBuffer.getSampleData(1), samplesToProcess, wetOnGain0, wetOnGain1);
     }
   }
 
@@ -353,21 +369,37 @@ void PluginAudioProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& /
   {
     buffer.clear(i, 0, buffer.getNumSamples());
   }
+
+  // Update beats per minute info
+  float beatsPerMinute = 0.0f;
+  juce::AudioPlayHead* playHead = getPlayHead();
+  if (playHead)
+  {
+    juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
+    if (playHead->getCurrentPosition(currentPositionInfo))
+    {
+      beatsPerMinute = static_cast<float>(currentPositionInfo.bpm);
+    }
+  }
+  if (::fabs(_beatsPerMinute.exchange(beatsPerMinute)-beatsPerMinute) > 0.001f)
+  {
+    notifyAboutChange();
+  }
 }
 
 //==============================================================================
-bool PluginAudioProcessor::hasEditor() const
+bool Processor::hasEditor() const
 {
   return true;
 }
 
-AudioProcessorEditor* PluginAudioProcessor::createEditor()
+AudioProcessorEditor* Processor::createEditor()
 {
   return new KlangFalterEditor(*this);
 }
 
 //==============================================================================
-void PluginAudioProcessor::getStateInformation (MemoryBlock& destData)
+void Processor::getStateInformation (MemoryBlock& destData)
 {
   const juce::File irDirectory = _settings.getImpulseResponseDirectory();
   juce::ScopedPointer<juce::XmlElement> element(SaveState(irDirectory, *this));
@@ -378,7 +410,7 @@ void PluginAudioProcessor::getStateInformation (MemoryBlock& destData)
 }
 
 
-void PluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void Processor::setStateInformation (const void* data, int sizeInBytes)
 {
   juce::ScopedPointer<juce::XmlElement> element(getXmlFromBinary(data, sizeInBytes));
   if (element)
@@ -389,25 +421,25 @@ void PluginAudioProcessor::setStateInformation (const void* data, int sizeInByte
 }
 
 
-float PluginAudioProcessor::getLevelDry(size_t channel) const
+float Processor::getLevelDry(size_t channel) const
 {
   return (channel < _levelMeasurementsDry.size()) ? _levelMeasurementsDry[channel].getLevel() : 0.0f;
 }
 
 
-float PluginAudioProcessor::getLevelWet(size_t channel) const
+float Processor::getLevelWet(size_t channel) const
 {
   return (channel < _levelMeasurementsWet.size()) ? _levelMeasurementsWet[channel].getLevel() : 0.0f;
 }
 
 
-float PluginAudioProcessor::getLevelOut(size_t channel) const
+float Processor::getLevelOut(size_t channel) const
 {
   return (channel < _levelMeasurementsOut.size()) ? _levelMeasurementsOut[channel].getLevel() : 0.0f;
 }
 
 
-Settings& PluginAudioProcessor::getSettings()
+Settings& Processor::getSettings()
 {
   return _settings;
 }
@@ -416,14 +448,14 @@ Settings& PluginAudioProcessor::getSettings()
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-  return new PluginAudioProcessor();
+  return new Processor();
 }
 
 
 // =============================================================================
 
 
-IRAgent* PluginAudioProcessor::getAgent(size_t inputChannel, size_t outputChannel) const
+IRAgent* Processor::getAgent(size_t inputChannel, size_t outputChannel) const
 {
   for (size_t i=0; i<_agents.size(); ++i)
   {
@@ -437,19 +469,19 @@ IRAgent* PluginAudioProcessor::getAgent(size_t inputChannel, size_t outputChanne
 }
 
 
-size_t PluginAudioProcessor::getAgentCount() const
+size_t Processor::getAgentCount() const
 {
   return _agents.size();
 }
 
 
-IRAgentContainer PluginAudioProcessor::getAgents() const
+IRAgentContainer Processor::getAgents() const
 {
   return _agents;
 }
 
 
-void PluginAudioProcessor::clearConvolvers()
+void Processor::clearConvolvers()
 {
   {
     juce::ScopedLock convolverLock(_convolverMutex);
@@ -459,13 +491,11 @@ void PluginAudioProcessor::clearConvolvers()
     _envelope.reset();
   }
 
-  setParameterNotifyingHost(Parameters::EqLowOn, Parameters::EqLowOn.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqLowFreq, Parameters::EqLowFreq.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqLowDecibels, Parameters::EqLowDecibels.getDefaultValue());
-
-  setParameterNotifyingHost(Parameters::EqHighOn, Parameters::EqHighOn.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqHighFreq, Parameters::EqHighFreq.getDefaultValue());
   setParameterNotifyingHost(Parameters::EqHighDecibels, Parameters::EqHighDecibels.getDefaultValue());
+  setParameterNotifyingHost(Parameters::StereoWidth, Parameters::StereoWidth.getDefaultValue());
 
   for (size_t i=0; i<_agents.size(); ++i)
   {
@@ -477,7 +507,7 @@ void PluginAudioProcessor::clearConvolvers()
 }
 
 
-void PluginAudioProcessor::setStretch(double stretch)
+void Processor::setStretch(double stretch)
 {
   bool changed = false;
   {
@@ -496,14 +526,14 @@ void PluginAudioProcessor::setStretch(double stretch)
 }
 
 
-double PluginAudioProcessor::getStretch() const
+double Processor::getStretch() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return _stretch;
 }
 
 
-void PluginAudioProcessor::setReverse(bool reverse)
+void Processor::setReverse(bool reverse)
 {
   bool changed = false;
   {
@@ -523,14 +553,14 @@ void PluginAudioProcessor::setReverse(bool reverse)
 }
 
 
-bool PluginAudioProcessor::getReverse() const
+bool Processor::getReverse() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return _reverse;
 }
 
 
-void PluginAudioProcessor::setEnvelope(const Envelope& envelope)
+void Processor::setEnvelope(const Envelope& envelope)
 {
   {
     juce::ScopedLock convolverLock(_convolverMutex);
@@ -541,14 +571,14 @@ void PluginAudioProcessor::setEnvelope(const Envelope& envelope)
 }
 
 
-Envelope PluginAudioProcessor::getEnvelope() const
+Envelope Processor::getEnvelope() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return _envelope;
 }
 
 
-void PluginAudioProcessor::setPredelayMs(double predelayMs)
+void Processor::setPredelayMs(double predelayMs)
 {
   bool changed = false;
   {
@@ -567,14 +597,14 @@ void PluginAudioProcessor::setPredelayMs(double predelayMs)
 }
 
 
-double PluginAudioProcessor::getPredelayMs() const
+double Processor::getPredelayMs() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return _predelayMs;
 }
 
 
-void PluginAudioProcessor::setFileBeginSeconds(double fileBeginSeconds)
+void Processor::setFileBeginSeconds(double fileBeginSeconds)
 {
   bool changed = false;
   {
@@ -593,28 +623,28 @@ void PluginAudioProcessor::setFileBeginSeconds(double fileBeginSeconds)
 }
 
 
-double PluginAudioProcessor::getFileBeginSeconds() const
+double Processor::getFileBeginSeconds() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return std::max(0.0, std::min(getMaxFileDuration(), _fileBeginSeconds));
 }
 
 
-size_t PluginAudioProcessor::getConvolverHeadBlockSize() const
+size_t Processor::getConvolverHeadBlockSize() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return _convolverHeadBlockSize;
 }
 
 
-size_t PluginAudioProcessor::getConvolverTailBlockSize() const
+size_t Processor::getConvolverTailBlockSize() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   return _convolverTailBlockSize;
 }
 
 
-size_t PluginAudioProcessor::getMaxIRSampleCount() const
+size_t Processor::getMaxIRSampleCount() const
 {
   size_t maxSampleCount = 0;
   for (auto it=_agents.begin(); it!=_agents.end(); ++it)
@@ -629,7 +659,7 @@ size_t PluginAudioProcessor::getMaxIRSampleCount() const
 }
 
 
-size_t PluginAudioProcessor::getMaxFileSampleCount() const
+size_t Processor::getMaxFileSampleCount() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   size_t maxSampleCount = 0;
@@ -645,7 +675,7 @@ size_t PluginAudioProcessor::getMaxFileSampleCount() const
 }
 
 
-double PluginAudioProcessor::getMaxFileDuration() const
+double Processor::getMaxFileDuration() const
 {
   juce::ScopedLock convolverLock(_convolverMutex);
   double maxDuration = 0.0;
@@ -663,7 +693,7 @@ double PluginAudioProcessor::getMaxFileDuration() const
 }
 
 
-void PluginAudioProcessor::updateConvolvers()
+void Processor::updateConvolvers()
 {
   juce::ScopedLock irCalculationlock(_irCalculationMutex);
   if (_irCalculation)
@@ -672,4 +702,10 @@ void PluginAudioProcessor::updateConvolvers()
     _irCalculation = nullptr;
   }
   _irCalculation = new IRCalculation(*this);
+}
+
+
+float Processor::getBeatsPerMinute() const
+{
+  return _beatsPerMinute.get();
 }

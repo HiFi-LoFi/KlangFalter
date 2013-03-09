@@ -89,6 +89,5 @@ void Convolver::startBackgroundProcessing()
 
 void Convolver::waitForBackgroundProcessing()
 {
-  jassert(_backgroundProcessingFinished.get() == 1);
   _backgroundProcessingFinishedEvent.wait();
 }

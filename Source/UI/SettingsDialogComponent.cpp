@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  9 Feb 2013 1:49:31pm
+  Creation date:  8 Mar 2013 4:36:12pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -32,7 +32,7 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-SettingsDialogComponent::SettingsDialogComponent (PluginAudioProcessor& processor)
+SettingsDialogComponent::SettingsDialogComponent (Processor& processor)
     : _processor(processor),
       _irDirectoryGroupComponent (0),
       _irDirectoryBrowseButton (0),
@@ -343,7 +343,7 @@ void SettingsDialogComponent::buttonClicked (Button* buttonThatWasClicked)
 BEGIN_JUCER_METADATA
 
 <JUCER_COMPONENT documentType="Component" className="SettingsDialogComponent"
-                 componentName="" parentClasses="public Component" constructorParams="PluginAudioProcessor&amp; processor"
+                 componentName="" parentClasses="public Component" constructorParams="Processor&amp; processor"
                  variableInitialisers="_processor(processor)" snapPixels="4" snapActive="1"
                  snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="504"
                  initialHeight="400">

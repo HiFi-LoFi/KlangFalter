@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  3 Mar 2013 5:09:56pm
+  Creation date:  8 Mar 2013 10:37:54am
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -110,7 +110,7 @@ void IRComponent::paint (Graphics& g)
     //[UserPrePaint] Add your own custom painting code here..
     //[/UserPrePaint]
 
-    g.fillAll (Colour (0xffe5e5f0));
+    g.fillAll (Colour (0xffb0b0b6));
 
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
@@ -219,7 +219,7 @@ void IRComponent::irChanged()
     const File file = _irAgent->getFile();
     if (file != File::nonexistent)
     {
-      const PluginAudioProcessor& processor = _irAgent->getProcessor();
+      const Processor& processor = _irAgent->getProcessor();
       const unsigned fileSampleCount = static_cast<unsigned>(_irAgent->getFileSampleCount());
       const double fileSampleRate = _irAgent->getFileSampleRate();
       const double fileSeconds = static_cast<double>(fileSampleCount) / fileSampleRate;
@@ -263,7 +263,7 @@ BEGIN_JUCER_METADATA
                  constructorParams="" variableInitialisers="" snapPixels="4" snapActive="1"
                  snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="540"
                  initialHeight="172">
-  <BACKGROUND backgroundColour="ffe5e5f0"/>
+  <BACKGROUND backgroundColour="ffb0b0b6"/>
   <GENERICCOMPONENT name="WaveformComponent" id="c9f33b0ee0917f49" memberName="_waveformComponent"
                     virtualName="" explicitFocusOrder="0" pos="4 4 532 140" class="WaveformComponent"
                     params=""/>

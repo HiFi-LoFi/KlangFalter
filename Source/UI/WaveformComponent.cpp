@@ -19,7 +19,7 @@
 
 #include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"
-#include "../PluginProcessor.h"
+#include "../Processor.h"
 
  
 WaveformComponent::WaveformComponent() :
@@ -238,7 +238,7 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
   
   if (irAgent != nullptr && sampleRate > 0.0 && samplesPerPx > 0)
   {
-    const PluginAudioProcessor& processor = irAgent->getProcessor(); 
+    const Processor& processor = irAgent->getProcessor(); 
     _irAgent = irAgent;
     _sampleRate = sampleRate;
     _samplesPerPx = std::max(static_cast<size_t>(1), samplesPerPx);

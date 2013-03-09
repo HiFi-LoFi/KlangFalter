@@ -106,12 +106,11 @@
     <FILE id="QInZML" name="ParameterSet.h" compile="0" resource="0" file="Source/ParameterSet.h"/>
     <FILE id="izDfGd" name="Persistence.cpp" compile="1" resource="0" file="Source/Persistence.cpp"/>
     <FILE id="zBljGc" name="Persistence.h" compile="0" resource="0" file="Source/Persistence.h"/>
-    <FILE id="hmuxWn" name="PluginProcessor.cpp" compile="1" resource="0"
-          file="Source/PluginProcessor.cpp"/>
-    <FILE id="d8hXbk" name="PluginProcessor.h" compile="0" resource="0"
-          file="Source/PluginProcessor.h"/>
+    <FILE id="xWySQl" name="Processor.cpp" compile="1" resource="0" file="Source/Processor.cpp"/>
+    <FILE id="FjlYnw" name="Processor.h" compile="0" resource="0" file="Source/Processor.h"/>
     <FILE id="dxea9X" name="Settings.cpp" compile="1" resource="0" file="Source/Settings.cpp"/>
     <FILE id="OsElLF" name="Settings.h" compile="0" resource="0" file="Source/Settings.h"/>
+    <FILE id="pWwoGQ" name="SmoothValue.h" compile="0" resource="0" file="Source/SmoothValue.h"/>
     <FILE id="wRwMmM" name="SpinningScopedLock.h" compile="0" resource="0"
           file="Source/SpinningScopedLock.h"/>
     <FILE id="e4ayW0" name="StereoWidth.cpp" compile="1" resource="0" file="Source/StereoWidth.cpp"/>

@@ -21,15 +21,59 @@
 #include <cmath>
 
 
-void StereoWidth(float width, float* left, float* right, size_t len)
+StereoWidth::StereoWidth() :
+  _widthCurrent(1.0f),
+  _widthDesired(1.0f),
+  _interpolationStep(0.01f)
 {
-  if (::fabs(width-1.0f) > 0.00001f)
+}
+
+
+StereoWidth::~StereoWidth()
+{
+}
+
+
+void StereoWidth::initializeWidth(float width)
+{
+  _widthDesired = std::max(0.0f, width);
+  _widthCurrent = _widthDesired;
+}
+
+
+void StereoWidth::updateWidth(float width)
+{
+  _widthDesired = std::max(0.0f, width);
+}
+
+
+void StereoWidth::process(float* left, float* right, size_t len)
+{
+  if (::fabs(_widthCurrent-_widthDesired) < _interpolationStep)
   {
-    const float tmp = 1.0f / std::max(1.0f + width, 2.0f);
-    const float cm = 1.0f * tmp;
-    const float cs = width * tmp;
+    _widthCurrent = _widthDesired;
+    if (::fabs(_widthCurrent-1.0f) > 0.00001f)
+    {
+      const float cm = 1.0f / std::max(1.0f + _widthCurrent, 2.0f);
+      const float cs = _widthCurrent * cm;
+      for (size_t i=0; i<len; ++i)
+      {
+        const float m = (right[i] + left[i]) * cm;
+        const float s = (right[i] - left[i]) * cs;
+        left[i] = m - s;
+        right[i] = m + s;
+      }
+    }
+  }
+  else
+  { 
+    const float interpolation0 = 1.0f - _interpolationStep;
+    const float interpolation1 = _interpolationStep;
     for (size_t i=0; i<len; ++i)
     {
+      _widthCurrent = _widthCurrent * interpolation0 + _widthDesired * interpolation1;
+      const float cm = 1.0f / std::max(1.0f + _widthCurrent, 2.0f);
+      const float cs = _widthCurrent * cm;
       const float m = (right[i] + left[i]) * cm;
       const float s = (right[i] - left[i]) * cs;
       left[i] = m - s;

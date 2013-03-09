@@ -23,7 +23,7 @@
 #ifndef JucePlugin_Name
 
 
-#include "PluginProcessor.h"
+#include "Processor.h"
 #include "UI/KlangFalterEditor.h"
 
 #include <vector>

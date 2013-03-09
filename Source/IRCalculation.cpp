@@ -15,14 +15,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#include "PluginProcessor.h"
+#include "Processor.h"
 
 #include "Convolver.h"
 #include "DecibelScaling.h"
 #include "IRCalculation.h"
 #include "IRAgent.h"
 #include "Parameters.h"
-#include "PluginProcessor.h"
+#include "Processor.h"
 
 #include <algorithm>
 
@@ -86,7 +86,7 @@ private:
 // ===================================================================
 
 
-IRCalculation::IRCalculation(PluginAudioProcessor& processor) :
+IRCalculation::IRCalculation(Processor& processor) :
   juce::Thread("IRCalculation"),
   _processor(processor)
 {

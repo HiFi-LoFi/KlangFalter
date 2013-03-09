@@ -18,7 +18,7 @@
 #include "IRAgent.h"
 
 #include "Parameters.h"
-#include "PluginProcessor.h"
+#include "Processor.h"
 #include "SpinningScopedLock.h"
 
 #include <algorithm>
@@ -92,7 +92,7 @@ private:
 // =====================================================
 
 
-IRAgent::IRAgent(PluginAudioProcessor& processor, size_t inputChannel, size_t outputChannel) :
+IRAgent::IRAgent(Processor& processor, size_t inputChannel, size_t outputChannel) :
   ChangeNotifier(),
   _processor(processor),
   _inputChannel(inputChannel),
@@ -121,7 +121,7 @@ IRAgent::~IRAgent()
 }
 
 
-PluginAudioProcessor& IRAgent::getProcessor() const
+Processor& IRAgent::getProcessor() const
 {
   return _processor;
 }
@@ -343,17 +343,19 @@ void IRAgent::process(const float* input, float* output, size_t len)
     _fadeIncrement = 0.0;
   }
   
-  if (_processor.getParameter(Parameters::EqLowOn))
+  const float eqLowDecibels = _processor.getParameter(Parameters::EqLowDecibels);
+  if (::fabs(eqLowDecibels-0.0f) > 0.0001f)
   {
     _eqLo.setFreq(_processor.getParameter(Parameters::EqLowFreq));
-    _eqLo.setGain(_processor.getParameter(Parameters::EqLowDecibels));
+    _eqLo.setGain(eqLowDecibels);
     _eqLo.filterOut(output, len);
   }
   
-  if (_processor.getParameter(Parameters::EqHighOn))
+  const float eqHighDecibels = _processor.getParameter(Parameters::EqHighDecibels);
+  if (::fabs(eqHighDecibels-0.0f) > 0.0001f)
   {
     _eqHi.setFreq(_processor.getParameter(Parameters::EqHighFreq));
-    _eqHi.setGain(_processor.getParameter(Parameters::EqHighDecibels));
+    _eqHi.setGain(eqHighDecibels);
     _eqHi.filterOut(output, len);
   }
 }

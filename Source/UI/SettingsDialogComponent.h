@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  9 Feb 2013 1:49:31pm
+  Creation date:  8 Mar 2013 4:36:12pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,13 +19,13 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_FDEEEBEB__
-#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_FDEEEBEB__
+#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_BC283CCA__
+#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_BC283CCA__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "../PluginProcessor.h"
+#include "../Processor.h"
 //[/Headers]
 
 
@@ -43,7 +43,7 @@ class SettingsDialogComponent  : public Component,
 {
 public:
     //==============================================================================
-    SettingsDialogComponent (PluginAudioProcessor& processor);
+    SettingsDialogComponent (Processor& processor);
     ~SettingsDialogComponent();
 
     //==============================================================================
@@ -61,7 +61,7 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-    PluginAudioProcessor& _processor;
+    Processor& _processor;
     //[/UserVariables]
 
     //==============================================================================
@@ -94,4 +94,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_FDEEEBEB__
+#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_BC283CCA__

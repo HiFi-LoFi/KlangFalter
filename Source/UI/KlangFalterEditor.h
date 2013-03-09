@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  5 Mar 2013 2:30:56pm
+  Creation date:  8 Mar 2013 4:35:37pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_4C8D6190__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_4C8D6190__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C0B0AF22__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C0B0AF22__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -31,7 +31,7 @@
 #include "IRComponent.h"
 #include "LevelMeter.h"
 #include "SettingsDialogComponent.h"
-#include "../PluginProcessor.h"
+#include "../Processor.h"
 //[/Headers]
 
 
@@ -53,7 +53,7 @@ class KlangFalterEditor  : public AudioProcessorEditor,
 {
 public:
     //==============================================================================
-    KlangFalterEditor (PluginAudioProcessor& processor);
+    KlangFalterEditor (Processor& processor);
     ~KlangFalterEditor();
 
     //==============================================================================
@@ -77,7 +77,7 @@ public:
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     CustomLookAndFeel _customLookAndFeel;
-    PluginAudioProcessor& _processor;
+    Processor& _processor;
     juce::ScopedPointer<SettingsDialogComponent> _settingsDialog;
     std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents;
     //[/UserVariables]
@@ -119,14 +119,14 @@ private:
     Label* _loFreqHeaderLabel;
     Slider* _loGainSlider;
     Slider* _loFreqSlider;
-    TextButton* _hiEqButton;
-    TextButton* _loEqButton;
     LevelMeter* _levelMeterOut;
     TextButton* _levelMeterOutLabelButton;
     Label* _levelMeterDryLabel;
     Label* _widthHeaderLabel;
     Slider* _widthSlider;
     Label* _widthLabel;
+    Label* _hiEqLabel;
+    Label* _loEqLabel;
 
 
     //==============================================================================
@@ -136,4 +136,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_4C8D6190__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_C0B0AF22__

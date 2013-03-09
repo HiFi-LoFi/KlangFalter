@@ -20,13 +20,13 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "PluginProcessor.h"
+#include "Processor.h"
 
 
 class IRCalculation : public juce::Thread
 {
 public:
-  explicit IRCalculation(PluginAudioProcessor& processor);
+  explicit IRCalculation(Processor& processor);
   virtual ~IRCalculation();
   
   virtual void run();
@@ -38,7 +38,7 @@ private:
   void unifyBufferSize(std::vector<FloatBuffer::Ptr>& buffers) const;  
   float calculateAutoGain(const std::vector<FloatBuffer::Ptr>& buffers) const;
 
-  PluginAudioProcessor& _processor;
+  Processor& _processor;
   
   // Prevent uncontrolled usage
   IRCalculation(const IRCalculation&);

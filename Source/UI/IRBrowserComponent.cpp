@@ -48,7 +48,7 @@ IRBrowserComponent::~IRBrowserComponent()
 }
 
 
-void IRBrowserComponent::init(PluginAudioProcessor* processor)
+void IRBrowserComponent::init(Processor* processor)
 {
   _processor = processor;
   Settings* settings = _processor ? &(_processor->getSettings()) : nullptr;

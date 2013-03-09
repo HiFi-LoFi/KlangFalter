@@ -28,7 +28,7 @@
 
 
 // Forward declarations
-class PluginAudioProcessor;
+class Processor;
 
 
 // ====================================================
@@ -81,11 +81,11 @@ private:
 class IRAgent : public ChangeNotifier
 {
 public:
-  IRAgent(PluginAudioProcessor& manager, size_t inputChannel, size_t outputChannel);
+  IRAgent(Processor& manager, size_t inputChannel, size_t outputChannel);
   virtual ~IRAgent();
   
   // Processor
-  PluginAudioProcessor& getProcessor() const;
+  Processor& getProcessor() const;
   
   // Input/output
   size_t getInputChannel() const;
@@ -124,7 +124,7 @@ public:
 private:
   void propagateChange();
   
-  PluginAudioProcessor& _processor;
+  Processor& _processor;
   size_t _inputChannel;
   size_t _outputChannel;
   

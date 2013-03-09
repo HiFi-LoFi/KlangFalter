@@ -21,7 +21,24 @@
 #include <cstddef>
 
 
-void StereoWidth(float width, float* left, float* right, size_t len);
+class StereoWidth
+{
+public:
+  StereoWidth();
+  virtual ~StereoWidth();
 
+  void initializeWidth(float width);
+  void updateWidth(float width);
+  void process(float* left, float* right, size_t len);
+
+private:
+  float _widthCurrent;
+  float _widthDesired;
+  float _interpolationStep;
+
+  // Prevent uncontrolled usage
+  StereoWidth(const StereoWidth&);
+  StereoWidth& operator=(const StereoWidth&);
+};
 
 #endif // Header guard

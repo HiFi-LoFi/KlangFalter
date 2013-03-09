@@ -51,7 +51,7 @@ const FloatParameterDescriptor Parameters::DryDecibels(3,
 const BoolParameterDescriptor Parameters::AutoGainOn(4,
                                                      "Autogain On",
                                                      "",
-                                                     ParameterDescriptor::Automatable,
+                                                     ParameterDescriptor::NotAutomatable,
                                                      true);
  
 const FloatParameterDescriptor Parameters::AutoGainDecibels(5,
@@ -62,13 +62,7 @@ const FloatParameterDescriptor Parameters::AutoGainDecibels(5,
                                                             DecibelScaling::MinScaleDb(),
                                                             DecibelScaling::MaxScaleDb());
 
-const BoolParameterDescriptor Parameters::EqLowOn(6,
-                                                  "EQ Low On",
-                                                  "",
-                                                  ParameterDescriptor::Automatable,
-                                                  false);
-
-const FloatParameterDescriptor Parameters::EqLowFreq(7,
+const FloatParameterDescriptor Parameters::EqLowFreq(6,
                                                      "EQ Low Freq",
                                                      "Hz",
                                                      ParameterDescriptor::Automatable,
@@ -76,7 +70,7 @@ const FloatParameterDescriptor Parameters::EqLowFreq(7,
                                                      20.0f,
                                                      2000.0f);
 
-const FloatParameterDescriptor Parameters::EqLowDecibels(8,
+const FloatParameterDescriptor Parameters::EqLowDecibels(7,
                                                          "EQ Low Gain",
                                                          "dB",
                                                          ParameterDescriptor::Automatable,
@@ -84,13 +78,7 @@ const FloatParameterDescriptor Parameters::EqLowDecibels(8,
                                                          -30.0f,
                                                          +30.0f);
                                                   
-const BoolParameterDescriptor Parameters::EqHighOn(9,
-                                                   "EQ High On",
-                                                   "",
-                                                   ParameterDescriptor::Automatable,
-                                                   false);
-                                                   
-const FloatParameterDescriptor Parameters::EqHighFreq(10,
+const FloatParameterDescriptor Parameters::EqHighFreq(8,
                                                       "EQ High Freq",
                                                       "Hz",
                                                       ParameterDescriptor::Automatable,
@@ -98,7 +86,7 @@ const FloatParameterDescriptor Parameters::EqHighFreq(10,
                                                       2000.0f,
                                                       20000.0f);
                                                      
-const FloatParameterDescriptor Parameters::EqHighDecibels(11,
+const FloatParameterDescriptor Parameters::EqHighDecibels(9,
                                                           "EQ High Gain",
                                                           "dB",
                                                           ParameterDescriptor::Automatable,
@@ -106,10 +94,10 @@ const FloatParameterDescriptor Parameters::EqHighDecibels(11,
                                                           -30.0f,
                                                           +30.0f);
 
-const FloatParameterDescriptor Parameters::StereoWidth(12,
+const FloatParameterDescriptor Parameters::StereoWidth(10,
                                                        "Stereo Width",
                                                        "",
-                                                       ParameterDescriptor::NotAutomatable,
+                                                       ParameterDescriptor::Automatable,
                                                        1.0f,
                                                        0.0f,
                                                        10.0f);
