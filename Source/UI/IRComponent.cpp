@@ -210,10 +210,12 @@ void IRComponent::irChanged()
   String fileLabelText("No File Loaded");
 
   _channelComboBox->clear();
-  _waveformComponent->clear();
 
   juce::String toolTip("No Impulse Response");
 
+  double sampleRate = 0.0;
+  size_t samplesPerPx = 0;
+  
   if (_irAgent)
   {
     const File file = _irAgent->getFile();
@@ -232,11 +234,11 @@ void IRComponent::irChanged()
       }
       _channelComboBox->setSelectedId(static_cast<int>(_irAgent->getFileChannel()+1));
 
-      const double sampleRate = processor.getSampleRate();
-      const size_t samplesPerPx = (2 * processor.getMaxFileSampleCount()) / _waveformComponent->getWidth();
-      _waveformComponent->init(_irAgent, sampleRate, samplesPerPx);
+      sampleRate = processor.getSampleRate();
+      samplesPerPx = (2 * processor.getMaxFileSampleCount()) / _waveformComponent->getWidth();
     }
   }
+  _waveformComponent->init(_irAgent, sampleRate, samplesPerPx);
   _loadButton->setButtonText(fileLabelText);
 }
 

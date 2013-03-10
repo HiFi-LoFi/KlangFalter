@@ -58,11 +58,13 @@ protected:
   
 private:
   IRAgent* _irAgent;
-  std::vector<float> _maxima;
+  std::vector<float> _maximaDecibels;
+  size_t _irFingerprint;
   
   double _sampleRate;
   size_t _samplesPerPx;
   float _pxPerDecibel;
+  double _predelayMs;
   int _predelayOffsetX;
   Rectangle<int> _area;
   

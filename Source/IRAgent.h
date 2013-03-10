@@ -45,12 +45,6 @@ public:
   {
   }
 
-  FloatBuffer(const float* data, size_t size) :
-    juce::ReferenceCountedObject(),
-    _buffer(data, data+size)
-  {
-  }
-
   size_t getSize() const
   {
     return _buffer.size();

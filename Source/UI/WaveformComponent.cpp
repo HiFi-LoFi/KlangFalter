@@ -25,10 +25,12 @@
 WaveformComponent::WaveformComponent() :
   Component(),
   _irAgent(nullptr),
-  _maxima(),
+  _maximaDecibels(),
+  _irFingerprint(0),
   _sampleRate(0.0),
   _samplesPerPx(0),
   _pxPerDecibel(0),
+  _predelayMs(0.0),
   _predelayOffsetX(0),
   _area(),
   _envelope(1.0, 1.0),
@@ -63,7 +65,7 @@ void WaveformComponent::updateArea()
   
   _area.setX(widthDbScale);
   _area.setY(marginTop);
-  _area.setWidth(static_cast<int>(_maxima.size()));
+  _area.setWidth(static_cast<int>(_maximaDecibels.size()));
   _area.setHeight(getHeight() - (heightTimeLine + marginTop + 1));
   _pxPerDecibel = ::fabs(static_cast<float>(_area.getHeight()) / DecibelScaling::MinScaleDb());
   
@@ -81,7 +83,7 @@ void WaveformComponent::paint(Graphics& g)
   const juce::Colour scaleColour = customLookAndFeel.getScaleColour();
   
   // Something to paint?
-  if (_maxima.empty())
+  if (_maximaDecibels.empty())
   {
     g.setColour(scaleColour);
     g.drawText("No Impulse Response", 0, 0, width, height, Justification(Justification::centred), false);
@@ -176,14 +178,13 @@ void WaveformComponent::paint(Graphics& g)
   }
   
   // Waveform
-  const size_t xLen = std::min(static_cast<size_t>(w), _maxima.size());
+  const size_t xLen = std::min(static_cast<size_t>(w), _maximaDecibels.size());
   const float bottom = static_cast<float>(_area.getBottom());
   g.setColour(customLookAndFeel.getWaveformColour());
 
   for (size_t x=0; x<xLen; ++x)
   {
-    float db = std::min(0.0f, std::max(DecibelScaling::MinScaleDb(), Decibels::gainToDecibels(_maxima[x])));
-    const float top = bottom - (_pxPerDecibel * (db-DecibelScaling::MinScaleDb()));
+    const float top = bottom - (_pxPerDecibel * (_maximaDecibels[x]-DecibelScaling::MinScaleDb()));
     g.drawVerticalLine(static_cast<int>(x)+_area.getX()+1, top, bottom);
   }
   g.setColour(Colours::darkgrey);
@@ -234,55 +235,92 @@ void WaveformComponent::paint(Graphics& g)
 
 void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samplesPerPx)
 {
-  clear();
-  
-  if (irAgent != nullptr && sampleRate > 0.0 && samplesPerPx > 0)
+  FloatBuffer::Ptr ir;
+  Processor* processor = nullptr;
+  double predelayMs = 0.0;
+  if (irAgent)
   {
-    const Processor& processor = irAgent->getProcessor(); 
+    ir = irAgent->getImpulseResponse();
+    processor = &irAgent->getProcessor();
+    predelayMs = processor->getPredelayMs();
+  }
+  
+  // Let's rely here on the immutability of the IR buffer (i.e. there's always
+  // a new allocated buffer if the IR changes, so we can check for changes of the IR
+  // just by comparing a kind of "fingerprint for the poor" consisting of the pointer
+  // and its length in order to prevent unnecessary recalculations of the maxima for
+  // the waveform which is quite expensive)
+  size_t irFingerprint = 0;
+  if (ir && ir->getSize() > 0)
+  {
+    irFingerprint = reinterpret_cast<size_t>(ir.get()) ^ ir->getSize();
+  }
+                                                                            
+  if (_irAgent != irAgent ||
+      ::fabs(_sampleRate-sampleRate) < 0.00001 ||
+      ::fabs(_predelayMs-predelayMs) < 0.00001 ||
+      _samplesPerPx != samplesPerPx ||
+      _irFingerprint != irFingerprint)
+  { 
     _irAgent = irAgent;
     _sampleRate = sampleRate;
     _samplesPerPx = std::max(static_cast<size_t>(1), samplesPerPx);
-    _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * processor.getPredelayMs()) / _samplesPerPx;
-    _envelope = processor.getEnvelope();
+    _predelayMs = predelayMs;
+    _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * _predelayMs) / _samplesPerPx;
     
-    const FloatBuffer::Ptr ir = _irAgent->getImpulseResponse();
-    if (ir)
+    if (processor)
     {
-      const float* data = ir->data();
-      const size_t len = ir->getSize();
-      _maxima.reserve(len/samplesPerPx + 1);
-      size_t processed = 0;
-      while (processed < len)
+      _envelope = processor->getEnvelope();
+    }
+    else
+    {
+      _envelope.reset();
+    }
+
+    if (_irFingerprint != irFingerprint)
+    {
+      _irFingerprint = irFingerprint;
+      _maximaDecibels.clear();
+      if (ir)
       {
-        const size_t processing = std::min(_samplesPerPx, len-processed);
-        float maximum = 0.0;
-        const float* block = data + processed;
-        for (size_t i=0; i<processing; ++i)
+        const float* data = ir->data();
+        const size_t len = ir->getSize();
+        _maximaDecibels.reserve(len/samplesPerPx + 1);
+        size_t processed = 0;
+        while (processed < len)
         {
-          const float current = ::fabs(block[i]);
-          if (current > maximum)
+          const size_t processing = std::min(_samplesPerPx, len-processed);
+          float maximum = 0.0f;
+          const float* block = data + processed;
+          for (size_t i=0; i<processing; ++i)
           {
-            maximum = current;
+            const float current = ::fabs(block[i]);
+            if (current > maximum)
+            {
+              maximum = current;
+            }
           }
+          const float db = std::min(0.0f, std::max(DecibelScaling::MinScaleDb(), DecibelScaling::Gain2Db(maximum)));
+          _maximaDecibels.push_back(db);
+          processed += _samplesPerPx;
         }
-        _maxima.push_back(maximum);
-        processed += _samplesPerPx;
       }
     }
   }
-  
   updateArea();
 }
 
 
 void WaveformComponent::clear()
 {
-  if (_irAgent || !_maxima.empty() || _sampleRate > 0.0000001 || _samplesPerPx > 0)
+  if (_irAgent || !_maximaDecibels.empty() || _sampleRate > 0.0000001 || _samplesPerPx > 0)
   {
     _irAgent = nullptr;
-    _maxima.clear();
+    _maximaDecibels.clear();
+    _irFingerprint = 0;
     _sampleRate = 0.0;
     _samplesPerPx = 0;
+    _predelayMs = 0.0;
     _envelope.reset();
     updateArea();
   }
