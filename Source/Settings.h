@@ -43,6 +43,14 @@ public:
   };
   ResultLevelMeterDisplay getResultLevelMeterDisplay();
   void setResultLevelMeterDisplay(ResultLevelMeterDisplay resultDisplay);
+  
+  enum TimelineUnit
+  {
+    Seconds,
+    Beats
+  };
+  TimelineUnit getTimelineUnit();
+  void setTimelineUnit(TimelineUnit timelineUnit);
 
 private:
   juce::ApplicationProperties _properties;

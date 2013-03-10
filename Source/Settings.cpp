@@ -134,3 +134,27 @@ void Settings::setResultLevelMeterDisplay(ResultLevelMeterDisplay resultDisplay)
   }
 }
 
+
+Settings::TimelineUnit Settings::getTimelineUnit()
+{
+  TimelineUnit timelineUnit = Seconds;
+  juce::PropertiesFile* propertiesFile = _properties.getUserSettings();
+  if (propertiesFile)
+  {
+    const juce::String timelineUnitStr = propertiesFile->getValue("TimelineUnit");
+    timelineUnit = (timelineUnitStr == juce::String("Beats")) ? Beats : Seconds;
+  }
+  return timelineUnit;
+}
+
+
+void Settings::setTimelineUnit(TimelineUnit timelineUnit)
+{
+  juce::PropertiesFile* propertiesFile = _properties.getUserSettings();
+  if (propertiesFile)
+  {
+    propertiesFile->setValue("TimelineUnit", (timelineUnit == Beats) ? "Beats" : "Seconds");
+    propertiesFile->saveIfNeeded();
+  }
+}
+

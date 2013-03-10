@@ -38,7 +38,8 @@ WaveformComponent::WaveformComponent() :
   _indexHighlighted(std::numeric_limits<size_t>::max()),
   _indexDragged(std::numeric_limits<size_t>::max()),
   _dragStartX(-1.0),
-  _dragStartY(-1.0)
+  _dragStartY(-1.0),
+  _beatsPerMinute(0.0f)
 {
 }
 
@@ -83,7 +84,7 @@ void WaveformComponent::paint(Graphics& g)
   const juce::Colour scaleColour = customLookAndFeel.getScaleColour();
   
   // Something to paint?
-  if (_maximaDecibels.empty())
+  if (_maximaDecibels.empty() || !_irAgent)
   {
     g.setColour(scaleColour);
     g.drawText("No Impulse Response", 0, 0, width, height, Justification(Justification::centred), false);
@@ -97,53 +98,82 @@ void WaveformComponent::paint(Graphics& g)
   g.fillRect(_area);
   
   // Timeline
+  const double secondsPerPx = _samplesPerPx / _sampleRate;
   {
     const float yTime = static_cast<float>(_area.getBottom());
     const int hTick = static_cast<int>(yTime) - 2;
-    double secondsPerPx = _samplesPerPx / _sampleRate;
-    const int minTickWidth = 2 * scaleFont.getStringWidth("XX.XXs");
-    double secondsPerTick = minTickWidth * secondsPerPx;
-    double nextPowerOf10 = 0.1;
-    while (nextPowerOf10 < secondsPerTick)
-    {
-      nextPowerOf10 *= 10.0;
-    }
-    double nextPowerOf10_2 = nextPowerOf10 / 2.0;
-    double nextPowerOf10_4 = nextPowerOf10 / 4.0;
-    if (secondsPerTick <= nextPowerOf10_4)
-    {
-      secondsPerTick = nextPowerOf10_4;
-    }
-    else if (secondsPerTick <= nextPowerOf10_2)
-    {
-      secondsPerTick = nextPowerOf10_2;
-    }
-    else
-    {
-      secondsPerTick = nextPowerOf10;
-    }
-
-    const int tickWidth = static_cast<int>(secondsPerTick / secondsPerPx);
-    const Justification tickJustification(Justification::topLeft);
-    const float tickTop = yTime;
-    const float tickBottom = tickTop + 4.0f;
-
     g.setFont(scaleFont);
     g.setColour(scaleColour);
     g.drawHorizontalLine(static_cast<int>(yTime), static_cast<float>(_area.getX()), w);
-
-    double secTick = 0.0;
-    for (int xTick=0; xTick<width; xTick+=tickWidth)
+    
+    _beatsPerMinute = 120.0f;
+    if (_beatsPerMinute > 0.0001f && _irAgent->getProcessor().getSettings().getTimelineUnit() == Settings::Beats)
     {
-      g.drawVerticalLine(_area.getX() + xTick, tickTop, tickBottom);      
-      g.drawText(String(secTick, 2) + String("s"),
-                 _area.getX() + xTick + 1,
-                 static_cast<int>(yTime) + 1,
-                 minTickWidth,
-                 hTick,
-                 tickJustification,
-                 false);
-      secTick += secondsPerTick;
+      const int minPxPerTick = 2 * scaleFont.getStringWidth("X/X");
+      int beatPerTick = 16; // Start with 1/16 as finest
+      float pxPerTick = ((60.0f / 4.0f) / _beatsPerMinute) * static_cast<float>(1.0 / secondsPerPx);
+      while (pxPerTick < minPxPerTick && beatPerTick > 1)
+      {
+        beatPerTick /= 2;
+        pxPerTick *= 2.0f;
+      }
+      const juce::Justification tickJustification(Justification::topLeft);
+      const float tickTop = yTime;
+      const float tickBottom = tickTop + 4.0f;
+      const juce::String beatPerTickText = juce::String("1/") + juce::String(beatPerTick);
+      for (int xTick=0; xTick<width; xTick+=pxPerTick)
+      {
+        g.drawVerticalLine(_area.getX() + xTick, tickTop, tickBottom);      
+        g.drawText(beatPerTickText,
+                   _area.getX() + xTick + 1,
+                   static_cast<int>(yTime) + 1,
+                   minPxPerTick,
+                   hTick,
+                   tickJustification,
+                   false);
+      }
+    }
+    else
+    { 
+      // Seconds
+      const int minTickWidth = 2 * scaleFont.getStringWidth("XX.XXs");
+      double secondsPerTick = minTickWidth * secondsPerPx;
+      double nextPowerOf10 = 0.1;
+      while (nextPowerOf10 < secondsPerTick)
+      {
+        nextPowerOf10 *= 10.0;
+      }
+      double nextPowerOf10_2 = nextPowerOf10 / 2.0;
+      double nextPowerOf10_4 = nextPowerOf10 / 4.0;
+      if (secondsPerTick <= nextPowerOf10_4)
+      {
+        secondsPerTick = nextPowerOf10_4;
+      }
+      else if (secondsPerTick <= nextPowerOf10_2)
+      {
+        secondsPerTick = nextPowerOf10_2;
+      }
+      else
+      {
+        secondsPerTick = nextPowerOf10;
+      }
+      const int tickWidth = static_cast<int>(secondsPerTick / secondsPerPx);
+      const Justification tickJustification(Justification::topLeft);
+      const float tickTop = yTime;
+      const float tickBottom = tickTop + 4.0f;
+      double secTick = 0.0;
+      for (int xTick=0; xTick<width; xTick+=tickWidth)
+      {
+        g.drawVerticalLine(_area.getX() + xTick, tickTop, tickBottom);      
+        g.drawText(String(secTick, 2) + String("s"),
+                   _area.getX() + xTick + 1,
+                   static_cast<int>(yTime) + 1,
+                   minTickWidth,
+                   hTick,
+                   tickJustification,
+                   false);
+        secTick += secondsPerTick;
+      }
     }
   }
   
@@ -238,11 +268,13 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
   FloatBuffer::Ptr ir;
   Processor* processor = nullptr;
   double predelayMs = 0.0;
+  float beatsPerMinute = 0.0f;
   if (irAgent)
   {
     ir = irAgent->getImpulseResponse();
     processor = &irAgent->getProcessor();
     predelayMs = processor->getPredelayMs();
+    beatsPerMinute = processor->getBeatsPerMinute();
   }
   
   // Let's rely here on the immutability of the IR buffer (i.e. there's always
@@ -259,6 +291,7 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
   if (_irAgent != irAgent ||
       ::fabs(_sampleRate-sampleRate) < 0.00001 ||
       ::fabs(_predelayMs-predelayMs) < 0.00001 ||
+      ::fabs(_beatsPerMinute-beatsPerMinute) < 0.00001f ||
       _samplesPerPx != samplesPerPx ||
       _irFingerprint != irFingerprint)
   { 
@@ -267,6 +300,7 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
     _samplesPerPx = std::max(static_cast<size_t>(1), samplesPerPx);
     _predelayMs = predelayMs;
     _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * _predelayMs) / _samplesPerPx;
+    _beatsPerMinute = beatsPerMinute;
     
     if (processor)
     {
@@ -323,6 +357,20 @@ void WaveformComponent::clear()
     _predelayMs = 0.0;
     _envelope.reset();
     updateArea();
+  }
+}
+
+
+void WaveformComponent::mouseUp(const MouseEvent& mouseEvent)
+{
+  if (_irAgent)
+  {
+    if (mouseEvent.x > _area.getX() && mouseEvent.y > _area.getBottom())
+    {
+      Settings& settings = _irAgent->getProcessor().getSettings();
+      settings.setTimelineUnit((settings.getTimelineUnit() == Settings::Seconds) ? Settings::Beats : Settings::Seconds);
+      repaint();
+    }
   }
 }
 
@@ -451,4 +499,3 @@ void WaveformComponent::envelopeChanged()
     _irAgent->getProcessor().setEnvelope(_envelope);
   }
 }
-

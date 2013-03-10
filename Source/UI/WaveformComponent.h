@@ -39,6 +39,7 @@ public:
   void init(IRAgent* irAgent, double sampleRate, size_t samplesPerPx);
   void clear();
   
+  virtual void mouseUp(const juce::MouseEvent& mouseEvent);
   virtual void mouseDoubleClick(const juce::MouseEvent& mouseEvent);
   virtual void mouseDown(const juce::MouseEvent& mouseEvent);
   virtual void mouseDrag(const juce::MouseEvent& mouseEvent);
@@ -74,6 +75,8 @@ private:
   size_t _indexDragged;
   double _dragStartX;
   double _dragStartY;
+  
+  float _beatsPerMinute;
   
   WaveformComponent(const WaveformComponent&);
   WaveformComponent& operator=(const WaveformComponent&);
