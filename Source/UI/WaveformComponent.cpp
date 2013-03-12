@@ -62,7 +62,7 @@ void WaveformComponent::updateArea()
 
   const int marginTop = 4;
   const int widthDbScale = scaleFont.getStringWidth("-XXdB") + 4;
-  const int heightTimeLine = static_cast<int>(::ceil(scaleFont.getHeight())) + 3;
+  const int heightTimeLine = static_cast<int>(::ceil(scaleFont.getHeight())) + 5;
   
   _area.setX(widthDbScale);
   _area.setY(marginTop);
@@ -105,14 +105,17 @@ void WaveformComponent::paint(Graphics& g)
     g.setFont(scaleFont);
     g.setColour(scaleColour);
     g.drawHorizontalLine(static_cast<int>(yTime), static_cast<float>(_area.getX()), w);
-    
-    _beatsPerMinute = 120.0f;
     if (_beatsPerMinute > 0.0001f && _irAgent->getProcessor().getSettings().getTimelineUnit() == Settings::Beats)
     {
-      const int minPxPerTick = 2 * scaleFont.getStringWidth("X/X");
-      int beatPerTick = 16; // Start with 1/16 as finest
+      const int minPxPerTick = 10;
+      int beatPerTick = 16; // Start with 16th as finest
       float pxPerTick = ((60.0f / 4.0f) / _beatsPerMinute) * static_cast<float>(1.0 / secondsPerPx);
       while (pxPerTick < minPxPerTick && beatPerTick > 1)
+      {
+        beatPerTick /= 2;
+        pxPerTick *= 2.0f;
+      }
+      if (beatPerTick == 2) // Don't display half note beats...
       {
         beatPerTick /= 2;
         pxPerTick *= 2.0f;
@@ -120,18 +123,17 @@ void WaveformComponent::paint(Graphics& g)
       const juce::Justification tickJustification(Justification::topLeft);
       const float tickTop = yTime;
       const float tickBottom = tickTop + 4.0f;
-      const juce::String beatPerTickText = juce::String("1/") + juce::String(beatPerTick);
-      for (int xTick=0; xTick<width; xTick+=pxPerTick)
+      for (float xTick=0.0; xTick<static_cast<float>(width); xTick+=pxPerTick)
       {
-        g.drawVerticalLine(_area.getX() + xTick, tickTop, tickBottom);      
-        g.drawText(beatPerTickText,
-                   _area.getX() + xTick + 1,
-                   static_cast<int>(yTime) + 1,
-                   minPxPerTick,
-                   hTick,
-                   tickJustification,
-                   false);
+        g.drawVerticalLine(_area.getX() + static_cast<int>(xTick), tickTop, tickBottom);             
       }
+      g.drawText(juce::String(_beatsPerMinute, 1) + juce::String(" BPM (1/") + juce::String(beatPerTick) + juce::String(" notes)"),
+                 _area.getX(),
+                 static_cast<int>(tickBottom)-1,
+                 _area.getWidth(),
+                 hTick,
+                 tickJustification,
+                 false);
     }
     else
     { 
@@ -157,17 +159,18 @@ void WaveformComponent::paint(Graphics& g)
       {
         secondsPerTick = nextPowerOf10;
       }
-      const int tickWidth = static_cast<int>(secondsPerTick / secondsPerPx);
+      const double tickWidth = secondsPerTick / secondsPerPx;
       const Justification tickJustification(Justification::topLeft);
       const float tickTop = yTime;
       const float tickBottom = tickTop + 4.0f;
       double secTick = 0.0;
-      for (int xTick=0; xTick<width; xTick+=tickWidth)
+      for (double xTick=0.0; xTick<static_cast<double>(width); xTick+=tickWidth)
       {
-        g.drawVerticalLine(_area.getX() + xTick, tickTop, tickBottom);      
+        const int xTickPos = static_cast<int>(xTick);
+        g.drawVerticalLine(_area.getX() + xTickPos, tickTop, tickBottom);      
         g.drawText(String(secTick, 2) + String("s"),
-                   _area.getX() + xTick + 1,
-                   static_cast<int>(yTime) + 1,
+                   _area.getX() + xTickPos + 1,
+                   static_cast<int>(tickBottom)-1,
                    minTickWidth,
                    hTick,
                    tickJustification,

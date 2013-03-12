@@ -218,6 +218,12 @@ void Processor::prepareToPlay(double /*sampleRate*/, int samplesPerBlock)
   // Initialize parameters
   _stereoWidth.initializeWidth(getParameter(Parameters::StereoWidth));
 
+  // Initialize IR agents
+  for (size_t i=0; i<_agents.size(); ++i)
+  {
+    _agents[i]->initialize();
+  }
+
   notifyAboutChange();
   updateConvolvers();
 }
@@ -228,6 +234,13 @@ void Processor::releaseResources()
   _wetBuffer.setSize(1, 0, false, true, false);
   _convolutionBuffer.clear();
   _beatsPerMinute.set(0);
+
+  // De-initialize IR agents
+  for (size_t i=0; i<_agents.size(); ++i)
+  {
+    _agents[i]->clear();
+  }
+
   notifyAboutChange();
 }
 

@@ -32,7 +32,7 @@ public:
 
   LevelMeasurement& operator=(const LevelMeasurement& other);
   
-  void process(size_t len, const float* data0);
+  void process(size_t len, const float* data);
   float getLevel() const;  
   void reset();
   

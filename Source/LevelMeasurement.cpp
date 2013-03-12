@@ -50,16 +50,16 @@ LevelMeasurement& LevelMeasurement::operator=(const LevelMeasurement& other)
 }
 
 
-void LevelMeasurement::process(size_t len, const float* data0)
+void LevelMeasurement::process(size_t len, const float* data)
 {
   if (len > 0)
   {
     float level = _level.get();
-    if (data0)
+    if (data)
     {
       for (size_t i=0; i<len; ++i)
       {
-        const float val = data0[i];
+        const float val = data[i];
         if (level < val)
         {
           level = val;

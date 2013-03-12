@@ -53,10 +53,10 @@ CookbookEq::~CookbookEq()
 
 void CookbookEq::cleanup()
 {
-  _x.c1 = 0.0;
-  _x.c2 = 0.0;
-  _y.c1 = 0.0;
-  _y.c2 = 0.0;
+  _x.c1 = 0.0f;
+  _x.c2 = 0.0f;
+  _y.c1 = 0.0f;
+  _y.c2 = 0.0f;
   _oldx = _x;
   _oldy = _y;
   _needsInterpolation = false;
@@ -121,7 +121,7 @@ void CookbookEq::computeFilterCoefs()
     case LoPass1:
       if (!zeroCoefs)
       {
-        tmp = static_cast<float>(::exp(-2.0 * Pi() * freq / _sampleRate));
+        tmp = static_cast<float>(::exp(-2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate)));
       }
       _c[0] = 1.0f - tmp;
       _c[1] = 0.0f;
@@ -133,7 +133,7 @@ void CookbookEq::computeFilterCoefs()
     case HiPass1:
       if (!zeroCoefs)
       {
-        tmp = exp (-2.0 * Pi() * freq / _sampleRate);
+        tmp = static_cast<float>(::exp(-2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate)));
       }
       _c[0] = (1.0f + tmp) / 2.0f;
       _c[1] = -(1.0f + tmp) / 2.0f;
@@ -145,16 +145,16 @@ void CookbookEq::computeFilterCoefs()
     case LoPass2:
       if (!zeroCoefs)
       {
-        omega = 2.0 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin (omega);
         cs = cos (omega);
-        alpha = sn / (2 * q);
-        tmp = 1 + alpha;
-        _c[0] = (1.0f - cs) / 2.0 / tmp;
+        alpha = sn / (2.0f * q);
+        tmp = 1.0f + alpha;
+        _c[0] = (1.0f - cs) / 2.0f / tmp;
         _c[1] = (1.0f - cs) / tmp;
         _c[2] = (1.0f - cs) / 2.0f / tmp;
-        _d[1] = -2 * cs / tmp * (-1);
-        _d[2] = (1 - alpha) / tmp * (-1);
+        _d[1] = -2.0f * cs / tmp * (-1.0f);
+        _d[2] = (1.0f - alpha) / tmp * (-1.0f);
       }
       else
       {
@@ -169,149 +169,149 @@ void CookbookEq::computeFilterCoefs()
     case HiPass2:
       if (!zeroCoefs)
       {
-        omega = 2.0 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin (omega);
         cs = cos (omega);
-        alpha = sn / (2 * q);
-        tmp = 1 + alpha;
-        _c[0] = (1.0 + cs) / 2.0f / tmp;
-        _c[1] = -(1.0 + cs) / tmp;
-        _c[2] = (1.0 + cs) / 2.0f / tmp;
-        _d[1] = -2 * cs / tmp * (-1);
-        _d[2] = (1 - alpha) / tmp * (-1);
+        alpha = sn / (2.0f * q);
+        tmp = 1.0f + alpha;
+        _c[0] = (1.0f + cs) / 2.0f / tmp;
+        _c[1] = -(1.0f + cs) / tmp;
+        _c[2] = (1.0f + cs) / 2.0f / tmp;
+        _d[1] = -2.0f * cs / tmp * (-1.0f);
+        _d[2] = (1.0f - alpha) / tmp * (-1.0f);
       }
       else
       {
-        _c[0] = 0.0;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[0] = 0.0f;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
     case BandPass:
       if (!zeroCoefs)
       {
-        omega = 2 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin(omega);
         cs = cos(omega);
-        alpha = sn / (2 * q);
-        tmp = 1 + alpha;
-        _c[0] = alpha / tmp * sqrt (q + 1);
-        _c[1] = 0;
-        _c[2] = -alpha / tmp * sqrt (q + 1);
-        _d[1] = -2 * cs / tmp * (-1);
-        _d[2] = (1 - alpha) / tmp * (-1);
+        alpha = sn / (2.0f * q);
+        tmp = 1.0f + alpha;
+        _c[0] = alpha / tmp * sqrt (q + 1.0f);
+        _c[1] = 0.0f;
+        _c[2] = -alpha / tmp * sqrt (q + 1.0f);
+        _d[1] = -2.0f * cs / tmp * (-1.0f);
+        _d[2] = (1.0f - alpha) / tmp * (-1.0f);
       }
       else
       {
-        _c[0] = 0.0;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[0] = 0.0f;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
     case Notch:
       if (!zeroCoefs)
       {
-        omega = 2.0 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin(omega);
         cs = cos(omega);
         alpha = sn / (2 * sqrt (q));
-        tmp = 1 + alpha;
-        _c[0] = 1 / tmp;
-        _c[1] = -2 * cs / tmp;
-        _c[2] = 1 / tmp;
-        _d[1] = -2 * cs / tmp * (-1);
-        _d[2] = (1 - alpha) / tmp * (-1);
+        tmp = 1.0f + alpha;
+        _c[0] = 1.0f / tmp;
+        _c[1] = -2.0f * cs / tmp;
+        _c[2] = 1.0f / tmp;
+        _d[1] = -2.0f * cs / tmp * (-1.0f);
+        _d[2] = (1.0f - alpha) / tmp * (-1.0f);
       }
       else
       {
-        _c[0] = 1.0;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[0] = 1.0f;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
     case Peak:
       if (!zeroCoefs)
       {
-        omega = 2.0 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin(omega);
         cs = cos(omega);
         q *= 3.0;
         alpha = sn / (2 * q);
         tmp = 1 + alpha / gain;
-        _c[0] = (1.0 + alpha * gain) / tmp;
-        _c[1] = (-2.0 * cs) / tmp;
-        _c[2] = (1.0 - alpha * gain) / tmp;
-        _d[1] = -2 * cs / tmp * (-1);
-        _d[2] = (1 - alpha / gain) / tmp * (-1);
+        _c[0] = (1.0f + alpha * gain) / tmp;
+        _c[1] = (-2.0f * cs) / tmp;
+        _c[2] = (1.0f - alpha * gain) / tmp;
+        _d[1] = -2.0f * cs / tmp * (-1.0f);
+        _d[2] = (1.0f - alpha / gain) / tmp * (-1.0f);
       }
       else
       {
-        _c[0] = 1.0;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[0] = 1.0f;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
     case LoShelf:
       if (!zeroCoefs)
       {
-        omega = 2.0 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin (omega);
         cs = cos (omega);
         q = sqrt (q);
         alpha = sn / (2 * q);
         beta = sqrt (gain) / q;
-        tmp = (gain + 1.0) + (gain - 1.0) * cs + beta * sn;
-        _c[0] = gain * ((gain + 1.0) - (gain - 1.0) * cs + beta * sn) / tmp;
-        _c[1] = 2.0 * gain * ((gain - 1.0) - (gain + 1.0) * cs) / tmp;
-        _c[2] = gain * ((gain + 1.0) - (gain - 1.0) * cs - beta * sn) / tmp;
-        _d[1] = -2.0 * ((gain - 1.0) + (gain + 1.0) * cs) / tmp * (-1);
-        _d[2] = ((gain + 1.0) + (gain - 1.0) * cs - beta * sn) / tmp * (-1);
+        tmp = (gain + 1.0f) + (gain - 1.0f) * cs + beta * sn;
+        _c[0] = gain * ((gain + 1.0f) - (gain - 1.0f) * cs + beta * sn) / tmp;
+        _c[1] = 2.0f * gain * ((gain - 1.0f) - (gain + 1.0f) * cs) / tmp;
+        _c[2] = gain * ((gain + 1.0f) - (gain - 1.0f) * cs - beta * sn) / tmp;
+        _d[1] = -2.0f * ((gain - 1.0f) + (gain + 1.0f) * cs) / tmp * (-1.0f);
+        _d[2] = ((gain + 1.0f) + (gain - 1.0f) * cs - beta * sn) / tmp * (-1.0f);
       }
       else
       {
         _c[0] = gain;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
     case HiShelf:
       if (!zeroCoefs)
       {
-        omega = 2.0 * Pi() * freq / _sampleRate;
+        omega = static_cast<float>(2.0 * Pi() * static_cast<double>(freq) / static_cast<double>(_sampleRate));
         sn = sin(omega);
         cs = cos(omega);
         q = sqrt(q);
-        alpha = sn / (2 * q);
+        alpha = sn / (2.0f * q);
         beta = sqrt (gain) / q;
-        tmp = (gain + 1.0) - (gain - 1.0) * cs + beta * sn;
-        _c[0] = gain * ((gain + 1.0) + (gain - 1.0) * cs + beta * sn) / tmp;
-        _c[1] = -2.0 * gain * ((gain - 1.0) + (gain + 1.0) * cs) / tmp;
-        _c[2] = gain * ((gain + 1.0) + (gain - 1.0) * cs - beta * sn) / tmp;
-        _d[1] = 2.0 * ((gain - 1.0) - (gain + 1.0) * cs) / tmp * (-1);
-        _d[2] = ((gain + 1.0) - (gain - 1.0) * cs - beta * sn) / tmp * (-1);
+        tmp = (gain + 1.0f) - (gain - 1.0f) * cs + beta * sn;
+        _c[0] = gain * ((gain + 1.0f) + (gain - 1.0f) * cs + beta * sn) / tmp;
+        _c[1] = -2.0f * gain * ((gain - 1.0f) + (gain + 1.0f) * cs) / tmp;
+        _c[2] = gain * ((gain + 1.0f) + (gain - 1.0f) * cs - beta * sn) / tmp;
+        _d[1] = 2.0f * ((gain - 1.0f) - (gain + 1.0f) * cs) / tmp * (-1.0f);
+        _d[2] = ((gain + 1.0f) - (gain - 1.0f) * cs - beta * sn) / tmp * (-1.0f);
       }
       else
       {
-        _c[0] = 1.0;
-        _c[1] = 0.0;
-        _c[2] = 0.0;
-        _d[1] = 0.0;
-        _d[2] = 0.0;
+        _c[0] = 1.0f;
+        _c[1] = 0.0f;
+        _c[2] = 0.0f;
+        _d[1] = 0.0f;
+        _d[2] = 0.0f;
       }
       _order = 2;
       break;
@@ -341,7 +341,7 @@ void CookbookEq::setFreq (float freq)
     if (rap > 3.0f || nyquistThreshold)
     {
       // if the frequency is changed fast, it needs interpolation
-      // (now, filter and coeficients backup)
+      // (now, filter and coefficients backup)
       for (size_t i = 0; i < 3; ++i)
       {
         _oldc[i] = _c[i];

@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  8 Mar 2013 4:35:37pm
+  Creation date:  12 Mar 2013 10:54:42am
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -95,7 +95,7 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
 
     addAndMakeVisible (_irTabComponent = new TabbedComponent (TabbedButtonBar::TabsAtTop));
     _irTabComponent->setTabBarDepth (30);
-    _irTabComponent->addTab (L"Placeholder", Colour (0xffe5e5f0), new IRComponent(), true);
+    _irTabComponent->addTab (L"Placeholder", Colour (0xffb0b0b6), new IRComponent(), true);
     _irTabComponent->setCurrentTabIndex (0);
 
     addAndMakeVisible (_stretchHeaderLabel = new Label (String::empty,
@@ -251,7 +251,7 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
     _predelayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
     addAndMakeVisible (_predelaySlider = new Slider (String::empty));
-    _predelaySlider->setRange (0, 200, 0);
+    _predelaySlider->setRange (0, 1000, 0);
     _predelaySlider->setSliderStyle (Slider::RotaryVerticalDrag);
     _predelaySlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
     _predelaySlider->setColour (Slider::backgroundColourId, Colour (0x0));
@@ -822,7 +822,7 @@ void KlangFalterEditor::updateUI()
     const float gainDb = _processor.getParameter(Parameters::EqHighDecibels);
     _hiFreqSlider->setEnabled(hiEqEnabled);
     _hiFreqSlider->setValue(freq, juce::dontSendNotification);
-    _hiFreqLabel->setText(juce::String(freq/1000.0f, 2) + juce::String("kHz"), false);
+    _hiFreqLabel->setText(juce::String(freq/1000.0f, 1) + juce::String("kHz"), false);
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(gainDb, juce::dontSendNotification);
     _hiGainLabel->setText(DecibelScaling::DecibelString(gainDb), false);
@@ -863,7 +863,7 @@ void KlangFalterEditor::updateUI()
             IRComponent* irComponent = new IRComponent();
             irComponent->init(_processor.getAgent(input, output));
             _irTabComponent->addTab(juce::String(static_cast<int>(input)) + juce::String("-") + juce::String(static_cast<int>(output)),
-                                    juce::Colour(0xffe5e5f0),
+                                    juce::Colour(0xffb0b0b6),
                                     irComponent,
                                     true);
             _irComponents.insert(std::make_pair(std::make_pair(input, output), irComponent));
@@ -923,7 +923,7 @@ BEGIN_JUCER_METADATA
   <TABBEDCOMPONENT name="IRTabComponent" id="697fc3546f1ab7f1" memberName="_irTabComponent"
                    virtualName="" explicitFocusOrder="0" pos="16 12 542 204" orientation="top"
                    tabBarDepth="30" initialTab="0">
-    <TAB name="Placeholder" colour="ffe5e5f0" useJucerComp="1" contentClassName=""
+    <TAB name="Placeholder" colour="ffb0b0b6" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
   </TABBEDCOMPONENT>
   <LABEL name="" id="ff104b46d553eb03" memberName="_stretchHeaderLabel"
@@ -1014,7 +1014,7 @@ BEGIN_JUCER_METADATA
          fontsize="15" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="5263ccd8286f1f44" memberName="_predelaySlider" virtualName=""
           explicitFocusOrder="0" pos="92 244 84 40" bkgcol="0" thumbcol="ffafafff"
-          rotarysliderfill="ffafafff" min="0" max="200" int="0" style="RotaryVerticalDrag"
+          rotarysliderfill="ffafafff" min="0" max="1000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <LABEL name="" id="22992cd4f6d0f5c1" memberName="_predelayLabel" virtualName=""

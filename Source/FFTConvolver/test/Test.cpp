@@ -26,7 +26,7 @@
 
 #include "../FFTConvolver.h"
 #include "../TwoStageFFTConvolver.h"
-#include "../MultiplyAdd.h"
+#include "../Utilities.h"
 
 
 template<typename T>
@@ -93,7 +93,7 @@ static bool TestConvolver(size_t inputSize,
     SimpleConvolve(&in[0], in.size(), &ir[0], ir.size(), &outSimple[0]);
   }
   
-  // Orgami convolver
+  // FFT convolver
   std::vector<fftconvolver::Sample> out(in.size() + ir.size() - 1, fftconvolver::Sample(0.0));
   {
     fftconvolver::FFTConvolver convolver;
@@ -243,8 +243,8 @@ static bool TestTwoStageConvolver(size_t inputSize,
 }
 
 
-#define TEST_CORRECTNESS
-//#define TEST_PERFORMANCE
+//#define TEST_CORRECTNESS
+#define TEST_PERFORMANCE
 
 #define TEST_FFTCONVOLVER
 #define TEST_TWOSTAGEFFTCONVOLVER
