@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  8 Mar 2013 4:36:12pm
+  Creation date:  12 Mar 2013 7:46:40pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_BC283CCA__
-#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_BC283CCA__
+#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_884D08__
+#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_884D08__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -54,6 +54,9 @@ public:
     void resized();
     void buttonClicked (Button* buttonThatWasClicked);
 
+    // Binary resources:
+    static const char* hifilofi_jpg;
+    static const int hifilofi_jpgSize;
 
 
     //==============================================================================
@@ -85,6 +88,7 @@ private:
     Label* _headBlockSizeLabel;
     Label* _tailBlockSizePrefixLabel;
     Label* _tailBlockSizeLabel;
+    Image cachedImage_hifilofi_jpg;
 
 
     //==============================================================================
@@ -94,4 +98,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_BC283CCA__
+#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_884D08__

@@ -6,6 +6,9 @@
 
 namespace BinaryData
 {
+    extern const char*   hifilofi_jpg;
+    const int            hifilofi_jpgSize = 7971;
+
     extern const char*   brushed_aluminium_png;
     const int            brushed_aluminium_pngSize = 14724;
 
