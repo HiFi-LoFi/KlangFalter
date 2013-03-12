@@ -207,8 +207,13 @@ void Processor::prepareToPlay(double /*sampleRate*/, int samplesPerBlock)
   // Prepare convolvers
   {
     juce::ScopedLock convolverLock(_convolverMutex);
-    _convolverHeadBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 256));
-    _convolverTailBlockSize = static_cast<size_t>(std::max(samplesPerBlock, 4096));
+    _convolverHeadBlockSize = 1;
+    while (_convolverHeadBlockSize < static_cast<size_t>(samplesPerBlock))
+    {
+      _convolverHeadBlockSize *= 2;
+    }
+    _convolverTailBlockSize = static_cast<size_t>(std::min(samplesPerBlock, 8192));
+    _convolverTailBlockSize = std::max(_convolverTailBlockSize, 2 * _convolverTailBlockSize);
   }
 
   // Prepare convolution buffers
