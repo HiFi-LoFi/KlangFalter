@@ -242,10 +242,13 @@ void Envelope::render(float* envelope, size_t len) const
 
 void Envelope::apply(float* data, size_t len) const
 {
-  std::vector<float> envelope(len);
-  render(&envelope[0], len);
-  for (size_t i=0; i<len; ++i)
+  if (len > 0)
   {
-    data[i] *= envelope[i];
+    std::vector<float> envelope(len);
+    render(&envelope[0], len);
+    for (size_t i=0; i<len; ++i)
+    {
+      data[i] *= envelope[i];
+    }
   }
 }

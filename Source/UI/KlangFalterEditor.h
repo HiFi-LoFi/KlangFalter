@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  12 Mar 2013 10:54:42am
+  Creation date:  15 Mar 2013 4:27:04pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_3FAE2299__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_3FAE2299__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_DF1F6788__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_DF1F6788__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -125,8 +125,14 @@ private:
     Label* _widthHeaderLabel;
     Slider* _widthSlider;
     Label* _widthLabel;
-    Label* _hiEqLabel;
-    Label* _loEqLabel;
+    TextButton* _lowEqButton;
+    Label* _lowCutFreqLabel;
+    Label* _lowCutFreqHeaderLabel;
+    Slider* _lowCutFreqSlider;
+    Label* _highCutFreqLabel;
+    Label* _highCutFreqHeaderLabel;
+    Slider* _highCutFreqSlider;
+    TextButton* _highEqButton;
 
 
     //==============================================================================
@@ -136,4 +142,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_3FAE2299__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_DF1F6788__

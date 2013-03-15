@@ -25,6 +25,12 @@
 
 struct Parameters
 {
+  enum EqType
+  {
+    Cut = 0,
+    Shelf = 1
+  };
+
   static const BoolParameterDescriptor WetOn;
   static const FloatParameterDescriptor WetDecibels;
   
@@ -34,11 +40,15 @@ struct Parameters
   static const BoolParameterDescriptor AutoGainOn;
   static const FloatParameterDescriptor AutoGainDecibels;
 
-  static const FloatParameterDescriptor EqLowFreq;
-  static const FloatParameterDescriptor EqLowDecibels;
+  static const IntParameterDescriptor EqLowType;
+  static const FloatParameterDescriptor EqLowCutFreq;
+  static const FloatParameterDescriptor EqLowShelfFreq;
+  static const FloatParameterDescriptor EqLowShelfDecibels;
   
-  static const FloatParameterDescriptor EqHighFreq;
-  static const FloatParameterDescriptor EqHighDecibels;
+  static const IntParameterDescriptor EqHighType;
+  static const FloatParameterDescriptor EqHighCutFreq;
+  static const FloatParameterDescriptor EqHighShelfFreq;
+  static const FloatParameterDescriptor EqHighShelfDecibels;
 
   static const FloatParameterDescriptor StereoWidth;
 };

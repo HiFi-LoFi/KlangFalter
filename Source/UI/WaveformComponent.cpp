@@ -366,7 +366,11 @@ void WaveformComponent::clear()
 
 void WaveformComponent::mouseUp(const MouseEvent& mouseEvent)
 {
-  if (_irAgent)
+  if (_indexDragged < _envelope.getNodeCount())
+  {
+    _indexDragged = std::numeric_limits<size_t>::max();
+  }
+  else if (_irAgent)
   {
     if (mouseEvent.x > _area.getX() && mouseEvent.y > _area.getBottom())
     {

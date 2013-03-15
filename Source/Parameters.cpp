@@ -48,56 +48,88 @@ const FloatParameterDescriptor Parameters::DryDecibels(3,
                                                        DecibelScaling::MinScaleDb(),
                                                        DecibelScaling::MaxScaleDb());
 
-const BoolParameterDescriptor Parameters::AutoGainOn(4,
-                                                     "Autogain On",
-                                                     "",
-                                                     ParameterDescriptor::NotAutomatable,
-                                                     true);
- 
-const FloatParameterDescriptor Parameters::AutoGainDecibels(5,
-                                                            "Autogain",
-                                                            "dB",
-                                                            ParameterDescriptor::NotAutomatable,
-                                                            0.0f,
-                                                            DecibelScaling::MinScaleDb(),
-                                                            DecibelScaling::MaxScaleDb());
+const IntParameterDescriptor Parameters::EqLowType(4,
+                                                   "EQ Low Type",
+                                                   "",
+                                                   ParameterDescriptor::Automatable,
+                                                   Parameters::Cut,
+                                                   Parameters::Cut,
+                                                   Parameters::Shelf);
 
-const FloatParameterDescriptor Parameters::EqLowFreq(6,
-                                                     "EQ Low Freq",
-                                                     "Hz",
-                                                     ParameterDescriptor::Automatable,
-                                                     20.0f,
-                                                     20.0f,
-                                                     2000.0f);
+const FloatParameterDescriptor Parameters::EqLowCutFreq(5,
+                                                        "EQ Low Cut Freq",
+                                                        "Hz",
+                                                        ParameterDescriptor::Automatable,
+                                                        0.0f,
+                                                        0.0f,
+                                                        8000.0f);
 
-const FloatParameterDescriptor Parameters::EqLowDecibels(7,
-                                                         "EQ Low Gain",
-                                                         "dB",
-                                                         ParameterDescriptor::Automatable,
-                                                         0.0f,
-                                                         -30.0f,
-                                                         +30.0f);
-                                                  
-const FloatParameterDescriptor Parameters::EqHighFreq(8,
-                                                      "EQ High Freq",
-                                                      "Hz",
-                                                      ParameterDescriptor::Automatable,
-                                                      20000.0f,
-                                                      2000.0f,
-                                                      20000.0f);
-                                                     
-const FloatParameterDescriptor Parameters::EqHighDecibels(9,
-                                                          "EQ High Gain",
-                                                          "dB",
+const FloatParameterDescriptor Parameters::EqLowShelfFreq(6,
+                                                          "EQ Low Shelf Freq",
+                                                          "Hz",
                                                           ParameterDescriptor::Automatable,
-                                                          0.0f,
-                                                          -30.0f,
-                                                          +30.0f);
+                                                          20.0f,
+                                                          20.0f,
+                                                          8000.0f);
 
-const FloatParameterDescriptor Parameters::StereoWidth(10,
+const FloatParameterDescriptor Parameters::EqLowShelfDecibels(7,
+                                                              "EQ Low Shelf Gain",
+                                                              "dB",
+                                                              ParameterDescriptor::Automatable,
+                                                              0.0f,
+                                                              -30.0f,
+                                                              +30.0f);
+
+const IntParameterDescriptor Parameters::EqHighType(8,
+                                                    "EQ High Type",
+                                                    "",
+                                                    ParameterDescriptor::Automatable,
+                                                    Parameters::Cut,
+                                                    Parameters::Cut,
+                                                    Parameters::Shelf);
+                                                  
+const FloatParameterDescriptor Parameters::EqHighCutFreq(9,
+                                                         "EQ High Cut Freq",
+                                                         "Hz",
+                                                         ParameterDescriptor::Automatable,
+                                                         20000.0f,
+                                                         1000.0f,
+                                                         20000.0f);
+
+const FloatParameterDescriptor Parameters::EqHighShelfFreq(10,
+                                                           "EQ High Shelf Freq",
+                                                           "Hz",
+                                                           ParameterDescriptor::Automatable,
+                                                           20000.0f,
+                                                           1000.0f,
+                                                           20000.0f);
+                                                     
+const FloatParameterDescriptor Parameters::EqHighShelfDecibels(11,
+                                                               "EQ High Shelf Gain",
+                                                               "dB",
+                                                               ParameterDescriptor::Automatable,
+                                                               0.0f,
+                                                               -30.0f,
+                                                               +30.0f);
+
+const FloatParameterDescriptor Parameters::StereoWidth(12,
                                                        "Stereo Width",
                                                        "",
                                                        ParameterDescriptor::Automatable,
                                                        1.0f,
                                                        0.0f,
                                                        10.0f);
+
+const BoolParameterDescriptor Parameters::AutoGainOn(13,
+                                                     "Autogain On",
+                                                     "",
+                                                     ParameterDescriptor::NotAutomatable,
+                                                     true);
+ 
+const FloatParameterDescriptor Parameters::AutoGainDecibels(14,
+                                                            "Autogain",
+                                                            "dB",
+                                                            ParameterDescriptor::NotAutomatable,
+                                                            0.0f,
+                                                            DecibelScaling::MinScaleDb(),
+                                                            DecibelScaling::MaxScaleDb());

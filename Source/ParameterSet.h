@@ -195,12 +195,9 @@ public:
                            float maxValue) :
     TypedParameterDescriptor<float>(index, name, unit, automationStatus, defaultValue, minValue, maxValue)
   {
+    jassert(minValue <= maxValue);
   }
   
-  virtual ~FloatParameterDescriptor()
-  {
-  }
-
   virtual float convertToNormalized(float val) const
   {
     const float minValue = getMinValue();
@@ -217,6 +214,50 @@ public:
   }
   
   virtual float constraintValue(float val) const
+  {
+    return std::min(getMaxValue(), std::max(getMinValue(), val));
+  }
+};
+
+
+// =====
+
+
+/**
+* @class IntParameterDescriptor
+* @brief Parameter descriptor for integer parameters
+*/
+class IntParameterDescriptor : public TypedParameterDescriptor<int>
+{
+public:
+  IntParameterDescriptor(int index,
+                         const juce::String& name,
+                         const juce::String& unit,
+                         ParameterDescriptor::AutomationStatus automationStatus,
+                         int defaultValue,
+                         int minValue,
+                         int maxValue) :
+  TypedParameterDescriptor<int>(index, name, unit, automationStatus, defaultValue, minValue, maxValue)
+  {
+    jassert(minValue <= maxValue);
+  }
+  
+  virtual float convertToNormalized(int val) const
+  {
+    const int minValue = getMinValue();
+    const int maxValue = getMaxValue();
+    const int range = maxValue - minValue;
+    return (range > 0) ? ((static_cast<float>(val)-static_cast<float>(minValue))/static_cast<float>(range)) : 0.0f;
+  }
+
+  virtual int convertFromNormalized(float normalized) const
+  {
+    const int minValue = getMinValue();
+    const int maxValue = getMaxValue();
+    return minValue + static_cast<int>(normalized * static_cast<float>(maxValue-minValue));
+  }
+
+  virtual int constraintValue(int val) const
   {
     return std::min(getMaxValue(), std::max(getMinValue(), val));
   }

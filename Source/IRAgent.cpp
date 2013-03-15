@@ -102,14 +102,14 @@ IRAgent::IRAgent(Processor& processor, size_t inputChannel, size_t outputChannel
   _fileSampleCount(0),
   _fileChannelCount(0),
   _fileSampleRate(0.0),
-  _fileChannel(0),
-  _irBuffer(nullptr),
   _convolverMutex(),
   _convolver(nullptr),
+  _fileChannel(0),
+  _irBuffer(nullptr),
   _fadeFactor(0.0),
   _fadeIncrement(0.0),
-  _eqLo(CookbookEq::LoShelf, Parameters::EqLowFreq.getMinValue(), 1.0f),
-  _eqHi(CookbookEq::HiShelf, Parameters::EqLowFreq.getMaxValue(), 1.0f)
+  _eqLo(CookbookEq::HiPass2, Parameters::EqLowCutFreq.getMinValue(), 1.0f),
+  _eqHi(CookbookEq::LoPass2, Parameters::EqHighCutFreq.getMaxValue(), 1.0f)
 {
   initialize();
 }
@@ -144,8 +144,31 @@ void IRAgent::initialize()
   const float eqSampleRate = static_cast<float>(_processor.getSampleRate());
   const size_t eqBlockSize = _processor.getConvolverHeadBlockSize();
   
-  _eqLo.setFreq(_processor.getParameter(Parameters::EqLowFreq));
-  _eqHi.setFreq(_processor.getParameter(Parameters::EqHighFreq));
+  const int eqLowType = _processor.getParameter(Parameters::EqLowType);
+  if (eqLowType == Parameters::Cut)
+  {
+    _eqLo.setType(CookbookEq::HiPass2);
+    _eqLo.setFreq(_processor.getParameter(Parameters::EqLowCutFreq));
+  }
+  else if (eqLowType == Parameters::Shelf)
+  {
+    _eqLo.setType(CookbookEq::LoShelf);
+    _eqLo.setFreq(_processor.getParameter(Parameters::EqLowShelfFreq));
+    _eqLo.setGain(_processor.getParameter(Parameters::EqLowShelfDecibels));
+  }
+
+  const int eqHighType = _processor.getParameter(Parameters::EqHighType);
+  if (eqHighType == Parameters::Cut)
+  {
+    _eqHi.setType(CookbookEq::LoPass2);
+    _eqHi.setFreq(_processor.getParameter(Parameters::EqHighCutFreq));
+  }
+  else if (eqHighType == Parameters::Shelf)
+  {
+    _eqHi.setType(CookbookEq::HiShelf);
+    _eqHi.setFreq(_processor.getParameter(Parameters::EqHighShelfFreq));
+    _eqHi.setGain(_processor.getParameter(Parameters::EqHighShelfDecibels));
+  }
   
   _eqLo.prepareToPlay(eqSampleRate, eqBlockSize);
   _eqHi.prepareToPlay(eqSampleRate, eqBlockSize);
@@ -343,20 +366,52 @@ void IRAgent::process(const float* input, float* output, size_t len)
     _fadeIncrement = 0.0;
   }
   
-  const float eqLowDecibels = _processor.getParameter(Parameters::EqLowDecibels);
-  if (::fabs(eqLowDecibels-0.0f) > 0.0001f)
+  // EQ low
+  const int eqLowType = _processor.getParameter(Parameters::EqLowType);
+  if (eqLowType == Parameters::Cut)
+  {    
+    const float eqLowCutFreq = _processor.getParameter(Parameters::EqLowCutFreq);
+    if (::fabs(eqLowCutFreq-Parameters::EqLowCutFreq.getMinValue()) > 0.0001f)
+    {
+      _eqLo.setType(CookbookEq::HiPass2);
+      _eqLo.setFreq(eqLowCutFreq);
+      _eqLo.filterOut(output, len);
+    }
+  }
+  else if (eqLowType == Parameters::Shelf)
   {
-    _eqLo.setFreq(_processor.getParameter(Parameters::EqLowFreq));
-    _eqLo.setGain(eqLowDecibels);
-    _eqLo.filterOut(output, len);
+    const float eqLowShelfDecibels = _processor.getParameter(Parameters::EqLowShelfDecibels);
+    if (::fabs(eqLowShelfDecibels-0.0f) > 0.0001f)
+    {
+      _eqLo.setType(CookbookEq::LoShelf);
+      _eqLo.setFreq(_processor.getParameter(Parameters::EqLowShelfFreq));
+      _eqLo.setGain(eqLowShelfDecibels);
+      _eqLo.filterOut(output, len);
+    }
   }
   
-  const float eqHighDecibels = _processor.getParameter(Parameters::EqHighDecibels);
-  if (::fabs(eqHighDecibels-0.0f) > 0.0001f)
+  // EQ high
+  const int eqHighType = _processor.getParameter(Parameters::EqHighType);
+  if (eqHighType == Parameters::Cut)
   {
-    _eqHi.setFreq(_processor.getParameter(Parameters::EqHighFreq));
-    _eqHi.setGain(eqHighDecibels);
-    _eqHi.filterOut(output, len);
+    const float eqHighCutFreq = _processor.getParameter(Parameters::EqHighCutFreq);
+    if (::fabs(eqHighCutFreq-Parameters::EqHighCutFreq.getMaxValue()) > 0.0001f)
+    {
+      _eqHi.setType(CookbookEq::LoPass2);
+      _eqHi.setFreq(eqHighCutFreq);
+      _eqHi.filterOut(output, len);
+    }
+  }
+  else if (eqHighType == Parameters::Shelf)
+  {
+    const float eqHighShelfDecibels = _processor.getParameter(Parameters::EqHighShelfDecibels);
+    if (::fabs(eqHighShelfDecibels-0.0f) > 0.0001f)
+    {
+      _eqHi.setType(CookbookEq::HiShelf);
+      _eqHi.setFreq(_processor.getParameter(Parameters::EqHighShelfFreq));
+      _eqHi.setGain(eqHighShelfDecibels);
+      _eqHi.filterOut(output, len);
+    }
   }
 }
 

@@ -60,13 +60,17 @@ Processor::Processor() :
   _parameterSet.registerParameter(Parameters::WetDecibels);
   _parameterSet.registerParameter(Parameters::DryOn);
   _parameterSet.registerParameter(Parameters::DryDecibels);
+  _parameterSet.registerParameter(Parameters::EqLowType);
+  _parameterSet.registerParameter(Parameters::EqLowCutFreq);
+  _parameterSet.registerParameter(Parameters::EqLowShelfFreq);
+  _parameterSet.registerParameter(Parameters::EqLowShelfDecibels);
+  _parameterSet.registerParameter(Parameters::EqHighType);
+  _parameterSet.registerParameter(Parameters::EqHighCutFreq);
+  _parameterSet.registerParameter(Parameters::EqHighShelfFreq);
+  _parameterSet.registerParameter(Parameters::EqHighShelfDecibels);
+  _parameterSet.registerParameter(Parameters::StereoWidth);
   _parameterSet.registerParameter(Parameters::AutoGainOn);
   _parameterSet.registerParameter(Parameters::AutoGainDecibels);
-  _parameterSet.registerParameter(Parameters::EqLowFreq);
-  _parameterSet.registerParameter(Parameters::EqLowDecibels);
-  _parameterSet.registerParameter(Parameters::EqHighFreq);
-  _parameterSet.registerParameter(Parameters::EqHighDecibels);
-  _parameterSet.registerParameter(Parameters::StereoWidth);
 
   _agents.push_back(new IRAgent(*this, 0, 0));
   _agents.push_back(new IRAgent(*this, 0, 1));
@@ -503,15 +507,18 @@ void Processor::clearConvolvers()
   {
     juce::ScopedLock convolverLock(_convolverMutex);
     _reverse = false;
+    _predelayMs = 0.0;
     _stretch = 1.0;
     _fileBeginSeconds = 0.0;
     _envelope.reset();
   }
 
-  setParameterNotifyingHost(Parameters::EqLowFreq, Parameters::EqLowFreq.getDefaultValue());
-  setParameterNotifyingHost(Parameters::EqLowDecibels, Parameters::EqLowDecibels.getDefaultValue());
-  setParameterNotifyingHost(Parameters::EqHighFreq, Parameters::EqHighFreq.getDefaultValue());
-  setParameterNotifyingHost(Parameters::EqHighDecibels, Parameters::EqHighDecibels.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqLowCutFreq, Parameters::EqLowCutFreq.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqLowShelfFreq, Parameters::EqLowShelfFreq.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqLowShelfDecibels, Parameters::EqLowShelfDecibels.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqHighCutFreq, Parameters::EqHighCutFreq.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqHighShelfFreq, Parameters::EqHighShelfFreq.getDefaultValue());
+  setParameterNotifyingHost(Parameters::EqHighShelfDecibels, Parameters::EqHighShelfDecibels.getDefaultValue());
   setParameterNotifyingHost(Parameters::StereoWidth, Parameters::StereoWidth.getDefaultValue());
 
   for (size_t i=0; i<_agents.size(); ++i)
