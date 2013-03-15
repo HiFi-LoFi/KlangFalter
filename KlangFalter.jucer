@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.03.12beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.03.15beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"

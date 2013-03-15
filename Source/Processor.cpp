@@ -129,6 +129,11 @@ const String Processor::getParameterText(int index)
   return _parameterSet.getParameterDescriptor(index).getUnit();
 }
 
+bool Processor::isParameterAutomatable(int index) const
+{
+  return (_parameterSet.getParameterDescriptor(index).getAutomationStatus() == ParameterDescriptor::Automatable);
+}
+
 const String Processor::getInputChannelName(int channelIndex) const
 {
   return String (channelIndex + 1);

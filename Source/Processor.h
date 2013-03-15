@@ -57,8 +57,9 @@ public:
   const juce::String getName() const;
 
   int getNumParameters();
-  virtual float getParameter (int index);
-  virtual void setParameter (int index, float newValue);
+  virtual float getParameter(int index);
+  virtual void setParameter(int index, float newValue);
+  virtual bool isParameterAutomatable(int index) const;
 
   template<typename T>
   T getParameter(const TypedParameterDescriptor<T>& parameter) const
