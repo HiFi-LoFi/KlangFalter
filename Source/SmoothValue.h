@@ -80,7 +80,7 @@ public:
   
   void getSmoothValues(size_t len, T& val0, T& val1)
   {
-    const T diff = ::fabs(_valueDesired - _valueCurrent);
+    const T diff = ::fabs(_valueCurrent - _valueDesired);
     if (diff < _interpolation1)
     {
       val0 = _valueDesired;
@@ -90,7 +90,22 @@ public:
     else
     {
       val0 = _valueCurrent;
-      val1 = (static_cast<size_t>(diff / _interpolation1) < len) ? _valueDesired : (static_cast<T>(len) * _interpolation1);
+      if (static_cast<size_t>(diff / _interpolation1) < len)
+      {
+        val1 = _valueDesired; 
+      }
+      else
+      {
+        const T increment = (static_cast<T>(len) * _interpolation1);
+        if (_valueCurrent < _valueDesired)
+        {
+          val1 = _valueCurrent + increment;
+        }
+        else
+        {
+          val1 = _valueCurrent - increment;
+        }
+      }
       _valueCurrent = val1;
     }
   }
