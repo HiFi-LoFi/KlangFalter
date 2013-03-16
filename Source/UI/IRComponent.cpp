@@ -235,7 +235,7 @@ void IRComponent::irChanged()
       _channelComboBox->setSelectedId(static_cast<int>(_irAgent->getFileChannel()+1));
 
       sampleRate = processor.getSampleRate();
-      samplesPerPx = (2 * processor.getMaxFileSampleCount()) / _waveformComponent->getWidth();
+      samplesPerPx = static_cast<size_t>(1.6 * (processor.getMaxFileDuration()+1.0) * sampleRate) / _waveformComponent->getWidth();
     }
   }
   _waveformComponent->init(_irAgent, sampleRate, samplesPerPx);

@@ -247,13 +247,6 @@ void Processor::releaseResources()
   _wetBuffer.setSize(1, 0, false, true, false);
   _convolutionBuffer.clear();
   _beatsPerMinute.set(0);
-
-  // De-initialize IR agents
-  for (size_t i=0; i<_agents.size(); ++i)
-  {
-    _agents[i]->clear();
-  }
-
   notifyAboutChange();
 }
 
@@ -654,8 +647,11 @@ void Processor::setFileBeginSeconds(double fileBeginSeconds)
 
 double Processor::getFileBeginSeconds() const
 {
-  juce::ScopedLock convolverLock(_convolverMutex);
-  return std::max(0.0, std::min(getMaxFileDuration(), _fileBeginSeconds));
+  const double irDuration = getIRDuration();
+  {
+    juce::ScopedLock convolverLock(_convolverMutex);
+    return std::max(0.0, std::min(irDuration, _fileBeginSeconds));
+  }
 }
 
 
@@ -673,7 +669,7 @@ size_t Processor::getConvolverTailBlockSize() const
 }
 
 
-size_t Processor::getMaxIRSampleCount() const
+size_t Processor::getIRSampleCount() const
 {
   size_t maxSampleCount = 0;
   for (auto it=_agents.begin(); it!=_agents.end(); ++it)
@@ -688,19 +684,10 @@ size_t Processor::getMaxIRSampleCount() const
 }
 
 
-size_t Processor::getMaxFileSampleCount() const
+double Processor::getIRDuration() const
 {
-  juce::ScopedLock convolverLock(_convolverMutex);
-  size_t maxSampleCount = 0;
-  for (auto it=_agents.begin(); it!=_agents.end(); ++it)
-  {
-    const size_t sampleCount = (*it)->getFileSampleCount();
-    if (sampleCount > maxSampleCount)
-    {
-      maxSampleCount = sampleCount;
-    }
-  }
-  return maxSampleCount;
+  const double sampleRate = getSampleRate();
+  return (sampleRate > 0.0001) ? (static_cast<double>(getIRSampleCount()) / sampleRate) : 0.0;
 }
 
 

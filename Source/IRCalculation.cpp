@@ -137,7 +137,7 @@ void IRCalculation::run()
   // Sample rate
   const double convolverSampleRate = _processor.getSampleRate();
   const double stretch = _processor.getStretch();
-  const double stretchSampleRate = convolverSampleRate / stretch;
+  const double stretchSampleRate = convolverSampleRate * stretch;
   for (size_t i=0; i<agents.size(); ++i)
   { 
     if (buffers[i] != nullptr && fileSampleRates[i] > 0.00001)
@@ -321,10 +321,10 @@ FloatBuffer::Ptr IRCalculation::changeSampleRate(const FloatBuffer::Ptr& inputBu
     return inputBuffer;
   }
 
-  assert(inputSampleRate >= 1.0);
-  assert(outputSampleRate >= 1.0);
+  jassert(inputSampleRate >= 1.0);
+  jassert(outputSampleRate >= 1.0);
 
-  const double samplesInPerOutputSample = outputSampleRate / inputSampleRate;
+  const double samplesInPerOutputSample = inputSampleRate / outputSampleRate;
   const int inputSampleCount = inputBuffer->getSize();
   const int outputSampleCount = static_cast<int>(::ceil(static_cast<double>(inputSampleCount) / samplesInPerOutputSample));
   const int blockSize = 8192;

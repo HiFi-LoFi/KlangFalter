@@ -128,8 +128,8 @@ public:
   void setEnvelope(const Envelope& envelope);
   Envelope getEnvelope() const; 
 
-  size_t getMaxIRSampleCount() const;
-  size_t getMaxFileSampleCount() const;
+  size_t getIRSampleCount() const;
+  double getIRDuration() const;
   double getMaxFileDuration() const;
 
   void setFileBeginSeconds(double fileBeginSeconds);

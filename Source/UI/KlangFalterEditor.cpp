@@ -863,8 +863,8 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
 
 void KlangFalterEditor::updateUI()
 {
-  const double maxFileDuration = _processor.getMaxFileDuration();
-  const bool irAvailable = (maxFileDuration > 0.0);
+  const double irDuration = _processor.getIRDuration();
+  const bool irAvailable = (irDuration > 0.0);
   const size_t numInputChannels = static_cast<size_t>(std::min(_processor.getNumInputChannels(), 2));
   const size_t numOutputChannels = static_cast<size_t>(std::min(_processor.getNumOutputChannels(), 2));
   {
@@ -897,11 +897,11 @@ void KlangFalterEditor::updateUI()
     _reverseButton->setToggleState(_processor.getReverse(), false);
   }
   {
-    const double fileBeginSeconds = std::min(_processor.getFileBeginSeconds(), maxFileDuration);
+    const double fileBeginSeconds = std::min(_processor.getFileBeginSeconds(), irDuration);
     _beginSlider->setEnabled(irAvailable);
-    if (maxFileDuration > 0.0)
+    if (irDuration > 0.0)
     {
-      _beginSlider->setRange(0.0, maxFileDuration);
+      _beginSlider->setRange(0.0, irDuration);
     }
     _beginSlider->setValue(fileBeginSeconds, juce::dontSendNotification);
     _beginLabel->setText(juce::String(static_cast<int>(fileBeginSeconds*1000.0 + 0.5)) + juce::String("ms"), true);
