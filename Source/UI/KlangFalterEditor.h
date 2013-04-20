@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  15 Mar 2013 4:27:04pm
+  Creation date:  19 Apr 2013 4:40:05pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_DF1F6788__
-#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_DF1F6788__
+#ifndef __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_F5E4498E__
+#define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_F5E4498E__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -85,8 +85,6 @@ private:
     //==============================================================================
     DecibelScale* _decibelScaleDry;
     TabbedComponent* _irTabComponent;
-    Label* _stretchHeaderLabel;
-    Slider* _stretchSlider;
     LevelMeter* _levelMeterDry;
     Label* _dryLevelLabel;
     Label* _wetLevelLabel;
@@ -96,17 +94,10 @@ private:
     TextButton* _browseButton;
     IRBrowserComponent* _irBrowserComponent;
     TextButton* _settingsButton;
-    Label* _stretchLabel;
-    Label* _beginHeaderLabel;
-    Slider* _beginSlider;
-    Label* _beginLabel;
     TextButton* _wetButton;
     TextButton* _dryButton;
     TextButton* _autogainButton;
     TextButton* _reverseButton;
-    Label* _predelayHeaderLabel;
-    Slider* _predelaySlider;
-    Label* _predelayLabel;
     Label* _hiFreqLabel;
     Label* _hiGainLabel;
     Label* _hiGainHeaderLabel;
@@ -122,9 +113,6 @@ private:
     LevelMeter* _levelMeterOut;
     TextButton* _levelMeterOutLabelButton;
     Label* _levelMeterDryLabel;
-    Label* _widthHeaderLabel;
-    Slider* _widthSlider;
-    Label* _widthLabel;
     TextButton* _lowEqButton;
     Label* _lowCutFreqLabel;
     Label* _lowCutFreqHeaderLabel;
@@ -133,6 +121,34 @@ private:
     Label* _highCutFreqHeaderLabel;
     Slider* _highCutFreqSlider;
     TextButton* _highEqButton;
+    Label* _attackShapeLabel;
+    Label* _endLabel;
+    Slider* _endSlider;
+    Slider* _attackShapeSlider;
+    Label* _decayShapeLabel;
+    Label* _decayShapeHeaderLabel;
+    Slider* _decayShapeSlider;
+    Label* _attackShapeHeaderLabel;
+    Label* _endHeaderLabel;
+    Label* _beginLabel;
+    Slider* _beginSlider;
+    Label* _beginHeaderLabel;
+    Label* _widthLabel;
+    Label* _widthHeaderLabel;
+    Slider* _widthSlider;
+    Label* _predelayLabel;
+    Label* _predelayHeaderLabel;
+    Slider* _predelaySlider;
+    Label* _stretchLabel;
+    Label* _stretchHeaderLabel;
+    Slider* _stretchSlider;
+    Label* _attackHeaderLabel;
+    Label* _attackLengthLabel;
+    Slider* _attackLengthSlider;
+    Label* _attackLengthHeaderLabel;
+    Label* _decayHeaderLabel;
+    Label* _impulseResponseHeaderLabel;
+    Label* _stereoHeaderLabel;
 
 
     //==============================================================================
@@ -142,4 +158,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_DF1F6788__
+#endif   // __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_F5E4498E__

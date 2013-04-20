@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  15 Mar 2013 4:27:04pm
+  Creation date:  19 Apr 2013 4:40:05pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -50,6 +50,16 @@ static juce::String FormatFrequency(float freq)
 }
 
 
+static juce::String FormatSeconds(double seconds)
+{
+  if (seconds < 1.0)
+  {
+    return juce::String(static_cast<int>(seconds * 1000.0)) + juce::String("ms");
+  }
+  return juce::String(seconds, 2) + juce::String("s");
+}
+
+
 //[/MiscUserDefs]
 
 //==============================================================================
@@ -58,8 +68,6 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
       _processor(processor),
       _decibelScaleDry (0),
       _irTabComponent (0),
-      _stretchHeaderLabel (0),
-      _stretchSlider (0),
       _levelMeterDry (0),
       _dryLevelLabel (0),
       _wetLevelLabel (0),
@@ -69,17 +77,10 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
       _browseButton (0),
       _irBrowserComponent (0),
       _settingsButton (0),
-      _stretchLabel (0),
-      _beginHeaderLabel (0),
-      _beginSlider (0),
-      _beginLabel (0),
       _wetButton (0),
       _dryButton (0),
       _autogainButton (0),
       _reverseButton (0),
-      _predelayHeaderLabel (0),
-      _predelaySlider (0),
-      _predelayLabel (0),
       _hiFreqLabel (0),
       _hiGainLabel (0),
       _hiGainHeaderLabel (0),
@@ -95,9 +96,6 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
       _levelMeterOut (0),
       _levelMeterOutLabelButton (0),
       _levelMeterDryLabel (0),
-      _widthHeaderLabel (0),
-      _widthSlider (0),
-      _widthLabel (0),
       _lowEqButton (0),
       _lowCutFreqLabel (0),
       _lowCutFreqHeaderLabel (0),
@@ -105,7 +103,35 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
       _highCutFreqLabel (0),
       _highCutFreqHeaderLabel (0),
       _highCutFreqSlider (0),
-      _highEqButton (0)
+      _highEqButton (0),
+      _attackShapeLabel (0),
+      _endLabel (0),
+      _endSlider (0),
+      _attackShapeSlider (0),
+      _decayShapeLabel (0),
+      _decayShapeHeaderLabel (0),
+      _decayShapeSlider (0),
+      _attackShapeHeaderLabel (0),
+      _endHeaderLabel (0),
+      _beginLabel (0),
+      _beginSlider (0),
+      _beginHeaderLabel (0),
+      _widthLabel (0),
+      _widthHeaderLabel (0),
+      _widthSlider (0),
+      _predelayLabel (0),
+      _predelayHeaderLabel (0),
+      _predelaySlider (0),
+      _stretchLabel (0),
+      _stretchHeaderLabel (0),
+      _stretchSlider (0),
+      _attackHeaderLabel (0),
+      _attackLengthLabel (0),
+      _attackLengthSlider (0),
+      _attackLengthHeaderLabel (0),
+      _decayHeaderLabel (0),
+      _impulseResponseHeaderLabel (0),
+      _stereoHeaderLabel (0)
 {
     addAndMakeVisible (_decibelScaleDry = new DecibelScale());
 
@@ -113,23 +139,6 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
     _irTabComponent->setTabBarDepth (30);
     _irTabComponent->addTab (L"Placeholder", Colour (0xffb0b0b6), new IRComponent(), true);
     _irTabComponent->setCurrentTabIndex (0);
-
-    addAndMakeVisible (_stretchHeaderLabel = new Label (String::empty,
-                                                        L"Stretch"));
-    _stretchHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _stretchHeaderLabel->setJustificationType (Justification::centred);
-    _stretchHeaderLabel->setEditable (false, false, false);
-    _stretchHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _stretchHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _stretchHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_stretchSlider = new Slider (String::empty));
-    _stretchSlider->setRange (0, 2, 0);
-    _stretchSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _stretchSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _stretchSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _stretchSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffafafff));
-    _stretchSlider->addListener (this);
 
     addAndMakeVisible (_levelMeterDry = new LevelMeter());
 
@@ -181,42 +190,6 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
     _settingsButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
     _settingsButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
 
-    addAndMakeVisible (_stretchLabel = new Label (String::empty,
-                                                  L"100%"));
-    _stretchLabel->setFont (Font (15.0000f, Font::plain));
-    _stretchLabel->setJustificationType (Justification::centred);
-    _stretchLabel->setEditable (false, false, false);
-    _stretchLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _stretchLabel->setColour (TextEditor::textColourId, Colours::black);
-    _stretchLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_beginHeaderLabel = new Label (String::empty,
-                                                      L"Begin"));
-    _beginHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _beginHeaderLabel->setJustificationType (Justification::centred);
-    _beginHeaderLabel->setEditable (false, false, false);
-    _beginHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _beginHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _beginHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_beginSlider = new Slider (String::empty));
-    _beginSlider->setRange (0, 2, 0);
-    _beginSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _beginSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _beginSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _beginSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffafafff));
-    _beginSlider->addListener (this);
-    _beginSlider->setSkewFactor (0.5);
-
-    addAndMakeVisible (_beginLabel = new Label (String::empty,
-                                                L"0ms"));
-    _beginLabel->setFont (Font (15.0000f, Font::plain));
-    _beginLabel->setJustificationType (Justification::centred);
-    _beginLabel->setEditable (false, false, false);
-    _beginLabel->setColour (Label::textColourId, Colours::black);
-    _beginLabel->setColour (TextEditor::textColourId, Colours::black);
-    _beginLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
     addAndMakeVisible (_wetButton = new TextButton (String::empty));
     _wetButton->setTooltip (L"Wet Signal On/Off");
     _wetButton->setButtonText (L"Wet");
@@ -256,33 +229,6 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
     _reverseButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
     _reverseButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
     _reverseButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_predelayHeaderLabel = new Label (String::empty,
-                                                         L"Predelay"));
-    _predelayHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _predelayHeaderLabel->setJustificationType (Justification::centred);
-    _predelayHeaderLabel->setEditable (false, false, false);
-    _predelayHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _predelayHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _predelayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_predelaySlider = new Slider (String::empty));
-    _predelaySlider->setRange (0, 1000, 0);
-    _predelaySlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _predelaySlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _predelaySlider->setColour (Slider::backgroundColourId, Colour (0x0));
-    _predelaySlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _predelaySlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffafafff));
-    _predelaySlider->addListener (this);
-
-    addAndMakeVisible (_predelayLabel = new Label (String::empty,
-                                                   L"0ms"));
-    _predelayLabel->setFont (Font (15.0000f, Font::plain));
-    _predelayLabel->setJustificationType (Justification::centred);
-    _predelayLabel->setEditable (false, false, false);
-    _predelayLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _predelayLabel->setColour (TextEditor::textColourId, Colours::black);
-    _predelayLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
     addAndMakeVisible (_hiFreqLabel = new Label (String::empty,
                                                  L"15.2kHz"));
@@ -409,34 +355,6 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
     _levelMeterDryLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
     _levelMeterDryLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
-    addAndMakeVisible (_widthHeaderLabel = new Label (String::empty,
-                                                      L"Stereo Width"));
-    _widthHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _widthHeaderLabel->setJustificationType (Justification::centred);
-    _widthHeaderLabel->setEditable (false, false, false);
-    _widthHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _widthHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _widthHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_widthSlider = new Slider (String::empty));
-    _widthSlider->setRange (0, 10, 0);
-    _widthSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _widthSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _widthSlider->setColour (Slider::backgroundColourId, Colour (0x0));
-    _widthSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _widthSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xffafafff));
-    _widthSlider->addListener (this);
-    _widthSlider->setSkewFactor (0.30102);
-
-    addAndMakeVisible (_widthLabel = new Label (String::empty,
-                                                L"1.0"));
-    _widthLabel->setFont (Font (15.0000f, Font::plain));
-    _widthLabel->setJustificationType (Justification::centred);
-    _widthLabel->setEditable (false, false, false);
-    _widthLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _widthLabel->setColour (TextEditor::textColourId, Colours::black);
-    _widthLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
     addAndMakeVisible (_lowEqButton = new TextButton (String::empty));
     _lowEqButton->setButtonText (L"Low Cut");
     _lowEqButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
@@ -507,6 +425,254 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
     _highEqButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
     _highEqButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
 
+    addAndMakeVisible (_attackShapeLabel = new Label (String::empty,
+                                                      L"1.0"));
+    _attackShapeLabel->setFont (Font (11.0000f, Font::plain));
+    _attackShapeLabel->setJustificationType (Justification::centred);
+    _attackShapeLabel->setEditable (false, false, false);
+    _attackShapeLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _attackShapeLabel->setColour (TextEditor::textColourId, Colours::black);
+    _attackShapeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_endLabel = new Label (String::empty,
+                                              L"100%"));
+    _endLabel->setFont (Font (11.0000f, Font::plain));
+    _endLabel->setJustificationType (Justification::centred);
+    _endLabel->setEditable (false, false, false);
+    _endLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _endLabel->setColour (TextEditor::textColourId, Colours::black);
+    _endLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_endSlider = new Slider (String::empty));
+    _endSlider->setRange (0, 1, 0);
+    _endSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _endSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _endSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _endSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _endSlider->addListener (this);
+
+    addAndMakeVisible (_attackShapeSlider = new Slider (String::empty));
+    _attackShapeSlider->setRange (0, 10, 0);
+    _attackShapeSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _attackShapeSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _attackShapeSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _attackShapeSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _attackShapeSlider->addListener (this);
+    _attackShapeSlider->setSkewFactor (0.5);
+
+    addAndMakeVisible (_decayShapeLabel = new Label (String::empty,
+                                                     L"1.0"));
+    _decayShapeLabel->setFont (Font (11.0000f, Font::plain));
+    _decayShapeLabel->setJustificationType (Justification::centred);
+    _decayShapeLabel->setEditable (false, false, false);
+    _decayShapeLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _decayShapeLabel->setColour (TextEditor::textColourId, Colours::black);
+    _decayShapeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_decayShapeHeaderLabel = new Label (String::empty,
+                                                           L"Shape"));
+    _decayShapeHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _decayShapeHeaderLabel->setJustificationType (Justification::centred);
+    _decayShapeHeaderLabel->setEditable (false, false, false);
+    _decayShapeHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _decayShapeHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _decayShapeHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_decayShapeSlider = new Slider (String::empty));
+    _decayShapeSlider->setRange (0, 10, 0);
+    _decayShapeSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _decayShapeSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _decayShapeSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _decayShapeSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _decayShapeSlider->addListener (this);
+    _decayShapeSlider->setSkewFactor (0.5);
+
+    addAndMakeVisible (_attackShapeHeaderLabel = new Label (String::empty,
+                                                            L"Shape"));
+    _attackShapeHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _attackShapeHeaderLabel->setJustificationType (Justification::centred);
+    _attackShapeHeaderLabel->setEditable (false, false, false);
+    _attackShapeHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _attackShapeHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _attackShapeHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_endHeaderLabel = new Label (String::empty,
+                                                    L"End"));
+    _endHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _endHeaderLabel->setJustificationType (Justification::centred);
+    _endHeaderLabel->setEditable (false, false, false);
+    _endHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _endHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _endHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_beginLabel = new Label (String::empty,
+                                                L"100%"));
+    _beginLabel->setFont (Font (11.0000f, Font::plain));
+    _beginLabel->setJustificationType (Justification::centred);
+    _beginLabel->setEditable (false, false, false);
+    _beginLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _beginLabel->setColour (TextEditor::textColourId, Colours::black);
+    _beginLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_beginSlider = new Slider (String::empty));
+    _beginSlider->setRange (0, 1, 0);
+    _beginSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _beginSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _beginSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _beginSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _beginSlider->addListener (this);
+
+    addAndMakeVisible (_beginHeaderLabel = new Label (String::empty,
+                                                      L"Begin"));
+    _beginHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _beginHeaderLabel->setJustificationType (Justification::centred);
+    _beginHeaderLabel->setEditable (false, false, false);
+    _beginHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _beginHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _beginHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_widthLabel = new Label (String::empty,
+                                                L"1.0"));
+    _widthLabel->setFont (Font (11.0000f, Font::plain));
+    _widthLabel->setJustificationType (Justification::centred);
+    _widthLabel->setEditable (false, false, false);
+    _widthLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _widthLabel->setColour (TextEditor::textColourId, Colours::black);
+    _widthLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_widthHeaderLabel = new Label (String::empty,
+                                                      L"Width"));
+    _widthHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _widthHeaderLabel->setJustificationType (Justification::centred);
+    _widthHeaderLabel->setEditable (false, false, false);
+    _widthHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _widthHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _widthHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_widthSlider = new Slider (String::empty));
+    _widthSlider->setRange (0, 10, 0);
+    _widthSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _widthSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _widthSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _widthSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _widthSlider->addListener (this);
+    _widthSlider->setSkewFactor (0.30102);
+
+    addAndMakeVisible (_predelayLabel = new Label (String::empty,
+                                                   L"0ms"));
+    _predelayLabel->setFont (Font (11.0000f, Font::plain));
+    _predelayLabel->setJustificationType (Justification::centred);
+    _predelayLabel->setEditable (false, false, false);
+    _predelayLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _predelayLabel->setColour (TextEditor::textColourId, Colours::black);
+    _predelayLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_predelayHeaderLabel = new Label (String::empty,
+                                                         L"Gap"));
+    _predelayHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _predelayHeaderLabel->setJustificationType (Justification::centred);
+    _predelayHeaderLabel->setEditable (false, false, false);
+    _predelayHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _predelayHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _predelayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_predelaySlider = new Slider (String::empty));
+    _predelaySlider->setRange (0, 1000, 0);
+    _predelaySlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _predelaySlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _predelaySlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _predelaySlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _predelaySlider->addListener (this);
+
+    addAndMakeVisible (_stretchLabel = new Label (String::empty,
+                                                  L"100%"));
+    _stretchLabel->setFont (Font (11.0000f, Font::plain));
+    _stretchLabel->setJustificationType (Justification::centred);
+    _stretchLabel->setEditable (false, false, false);
+    _stretchLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _stretchLabel->setColour (TextEditor::textColourId, Colours::black);
+    _stretchLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_stretchHeaderLabel = new Label (String::empty,
+                                                        L"Stretch"));
+    _stretchHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _stretchHeaderLabel->setJustificationType (Justification::centred);
+    _stretchHeaderLabel->setEditable (false, false, false);
+    _stretchHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _stretchHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _stretchHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_stretchSlider = new Slider (String::empty));
+    _stretchSlider->setRange (0, 2, 0);
+    _stretchSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _stretchSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _stretchSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _stretchSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _stretchSlider->addListener (this);
+
+    addAndMakeVisible (_attackHeaderLabel = new Label (String::empty,
+                                                       L"Attack"));
+    _attackHeaderLabel->setFont (Font (15.0000f, Font::plain));
+    _attackHeaderLabel->setJustificationType (Justification::centred);
+    _attackHeaderLabel->setEditable (false, false, false);
+    _attackHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _attackHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _attackHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_attackLengthLabel = new Label (String::empty,
+                                                       L"0ms"));
+    _attackLengthLabel->setFont (Font (11.0000f, Font::plain));
+    _attackLengthLabel->setJustificationType (Justification::centred);
+    _attackLengthLabel->setEditable (false, false, false);
+    _attackLengthLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _attackLengthLabel->setColour (TextEditor::textColourId, Colours::black);
+    _attackLengthLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_attackLengthSlider = new Slider (String::empty));
+    _attackLengthSlider->setRange (0, 1, 0);
+    _attackLengthSlider->setSliderStyle (Slider::RotaryVerticalDrag);
+    _attackLengthSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    _attackLengthSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
+    _attackLengthSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
+    _attackLengthSlider->addListener (this);
+    _attackLengthSlider->setSkewFactor (0.5);
+
+    addAndMakeVisible (_attackLengthHeaderLabel = new Label (String::empty,
+                                                             L"Length"));
+    _attackLengthHeaderLabel->setFont (Font (11.0000f, Font::plain));
+    _attackLengthHeaderLabel->setJustificationType (Justification::centred);
+    _attackLengthHeaderLabel->setEditable (false, false, false);
+    _attackLengthHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _attackLengthHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
+    _attackLengthHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_decayHeaderLabel = new Label (String::empty,
+                                                      L"Decay"));
+    _decayHeaderLabel->setFont (Font (15.0000f, Font::plain));
+    _decayHeaderLabel->setJustificationType (Justification::centred);
+    _decayHeaderLabel->setEditable (false, false, false);
+    _decayHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _decayHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _decayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_impulseResponseHeaderLabel = new Label (String::empty,
+                                                                L"Impulse Response"));
+    _impulseResponseHeaderLabel->setFont (Font (15.0000f, Font::plain));
+    _impulseResponseHeaderLabel->setJustificationType (Justification::centred);
+    _impulseResponseHeaderLabel->setEditable (false, false, false);
+    _impulseResponseHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _impulseResponseHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _impulseResponseHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
+    addAndMakeVisible (_stereoHeaderLabel = new Label (String::empty,
+                                                       L"Stereo"));
+    _stereoHeaderLabel->setFont (Font (15.0000f, Font::plain));
+    _stereoHeaderLabel->setJustificationType (Justification::centred);
+    _stereoHeaderLabel->setEditable (false, false, false);
+    _stereoHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
+    _stereoHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
+    _stereoHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+
 
     //[UserPreSize]
 
@@ -551,8 +717,6 @@ KlangFalterEditor::~KlangFalterEditor()
 
     deleteAndZero (_decibelScaleDry);
     deleteAndZero (_irTabComponent);
-    deleteAndZero (_stretchHeaderLabel);
-    deleteAndZero (_stretchSlider);
     deleteAndZero (_levelMeterDry);
     deleteAndZero (_dryLevelLabel);
     deleteAndZero (_wetLevelLabel);
@@ -562,17 +726,10 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_browseButton);
     deleteAndZero (_irBrowserComponent);
     deleteAndZero (_settingsButton);
-    deleteAndZero (_stretchLabel);
-    deleteAndZero (_beginHeaderLabel);
-    deleteAndZero (_beginSlider);
-    deleteAndZero (_beginLabel);
     deleteAndZero (_wetButton);
     deleteAndZero (_dryButton);
     deleteAndZero (_autogainButton);
     deleteAndZero (_reverseButton);
-    deleteAndZero (_predelayHeaderLabel);
-    deleteAndZero (_predelaySlider);
-    deleteAndZero (_predelayLabel);
     deleteAndZero (_hiFreqLabel);
     deleteAndZero (_hiGainLabel);
     deleteAndZero (_hiGainHeaderLabel);
@@ -588,9 +745,6 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_levelMeterOut);
     deleteAndZero (_levelMeterOutLabelButton);
     deleteAndZero (_levelMeterDryLabel);
-    deleteAndZero (_widthHeaderLabel);
-    deleteAndZero (_widthSlider);
-    deleteAndZero (_widthLabel);
     deleteAndZero (_lowEqButton);
     deleteAndZero (_lowCutFreqLabel);
     deleteAndZero (_lowCutFreqHeaderLabel);
@@ -599,6 +753,34 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_highCutFreqHeaderLabel);
     deleteAndZero (_highCutFreqSlider);
     deleteAndZero (_highEqButton);
+    deleteAndZero (_attackShapeLabel);
+    deleteAndZero (_endLabel);
+    deleteAndZero (_endSlider);
+    deleteAndZero (_attackShapeSlider);
+    deleteAndZero (_decayShapeLabel);
+    deleteAndZero (_decayShapeHeaderLabel);
+    deleteAndZero (_decayShapeSlider);
+    deleteAndZero (_attackShapeHeaderLabel);
+    deleteAndZero (_endHeaderLabel);
+    deleteAndZero (_beginLabel);
+    deleteAndZero (_beginSlider);
+    deleteAndZero (_beginHeaderLabel);
+    deleteAndZero (_widthLabel);
+    deleteAndZero (_widthHeaderLabel);
+    deleteAndZero (_widthSlider);
+    deleteAndZero (_predelayLabel);
+    deleteAndZero (_predelayHeaderLabel);
+    deleteAndZero (_predelaySlider);
+    deleteAndZero (_stretchLabel);
+    deleteAndZero (_stretchHeaderLabel);
+    deleteAndZero (_stretchSlider);
+    deleteAndZero (_attackHeaderLabel);
+    deleteAndZero (_attackLengthLabel);
+    deleteAndZero (_attackLengthSlider);
+    deleteAndZero (_attackLengthHeaderLabel);
+    deleteAndZero (_decayHeaderLabel);
+    deleteAndZero (_impulseResponseHeaderLabel);
+    deleteAndZero (_stereoHeaderLabel);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -625,8 +807,6 @@ void KlangFalterEditor::resized()
 {
     _decibelScaleDry->setBounds (584, 40, 32, 176);
     _irTabComponent->setBounds (16, 12, 542, 204);
-    _stretchHeaderLabel->setBounds (148, 220, 84, 24);
-    _stretchSlider->setBounds (148, 244, 84, 40);
     _levelMeterDry->setBounds (632, 40, 12, 176);
     _dryLevelLabel->setBounds (572, 220, 60, 24);
     _wetLevelLabel->setBounds (656, 220, 64, 24);
@@ -636,43 +816,61 @@ void KlangFalterEditor::resized()
     _browseButton->setBounds (12, 308, 736, 24);
     _irBrowserComponent->setBounds (12, 332, 736, 288);
     _settingsButton->setBounds (708, 0, 52, 16);
-    _stretchLabel->setBounds (148, 280, 84, 24);
-    _beginHeaderLabel->setBounds (-4, 220, 84, 24);
-    _beginSlider->setBounds (-4, 244, 84, 40);
-    _beginLabel->setBounds (-4, 280, 84, 24);
     _wetButton->setBounds (684, 244, 44, 24);
     _dryButton->setBounds (596, 244, 44, 24);
     _autogainButton->setBounds (596, 276, 132, 24);
     _reverseButton->setBounds (486, 8, 72, 24);
-    _predelayHeaderLabel->setBounds (72, 220, 84, 24);
-    _predelaySlider->setBounds (72, 244, 84, 40);
-    _predelayLabel->setBounds (72, 280, 84, 24);
-    _hiFreqLabel->setBounds (476, 280, 52, 24);
+    _hiFreqLabel->setBounds (480, 280, 52, 24);
     _hiGainLabel->setBounds (516, 280, 52, 24);
     _hiGainHeaderLabel->setBounds (516, 236, 52, 24);
-    _hiFreqHeaderLabel->setBounds (476, 236, 52, 24);
+    _hiFreqHeaderLabel->setBounds (480, 236, 52, 24);
     _hiGainSlider->setBounds (524, 256, 36, 28);
-    _hiFreqSlider->setBounds (484, 256, 36, 28);
-    _loFreqLabel->setBounds (388, 280, 52, 24);
-    _loGainLabel->setBounds (428, 280, 52, 24);
-    _loGainHeaderLabel->setBounds (428, 236, 52, 24);
-    _loFreqHeaderLabel->setBounds (388, 236, 52, 24);
-    _loGainSlider->setBounds (436, 256, 36, 28);
-    _loFreqSlider->setBounds (396, 256, 36, 28);
+    _hiFreqSlider->setBounds (488, 256, 36, 28);
+    _loFreqLabel->setBounds (396, 280, 52, 24);
+    _loGainLabel->setBounds (432, 280, 52, 24);
+    _loGainHeaderLabel->setBounds (432, 236, 52, 24);
+    _loFreqHeaderLabel->setBounds (396, 236, 52, 24);
+    _loGainSlider->setBounds (440, 256, 36, 28);
+    _loFreqSlider->setBounds (404, 256, 36, 28);
     _levelMeterOut->setBounds (720, 40, 12, 176);
     _levelMeterOutLabelButton->setBounds (712, 20, 28, 18);
     _levelMeterDryLabel->setBounds (620, 16, 36, 24);
-    _widthHeaderLabel->setBounds (220, 220, 92, 24);
-    _widthSlider->setBounds (224, 244, 84, 40);
-    _widthLabel->setBounds (224, 280, 84, 24);
-    _lowEqButton->setBounds (396, 220, 76, 24);
-    _lowCutFreqLabel->setBounds (408, 280, 52, 24);
-    _lowCutFreqHeaderLabel->setBounds (408, 236, 52, 24);
-    _lowCutFreqSlider->setBounds (416, 256, 36, 28);
-    _highCutFreqLabel->setBounds (496, 280, 52, 24);
-    _highCutFreqHeaderLabel->setBounds (496, 236, 52, 24);
-    _highCutFreqSlider->setBounds (504, 256, 36, 28);
-    _highEqButton->setBounds (484, 220, 76, 24);
+    _lowEqButton->setBounds (404, 220, 72, 24);
+    _lowCutFreqLabel->setBounds (414, 280, 52, 24);
+    _lowCutFreqHeaderLabel->setBounds (414, 236, 52, 24);
+    _lowCutFreqSlider->setBounds (422, 256, 36, 28);
+    _highCutFreqLabel->setBounds (498, 280, 52, 24);
+    _highCutFreqHeaderLabel->setBounds (498, 236, 52, 24);
+    _highCutFreqSlider->setBounds (506, 256, 36, 28);
+    _highEqButton->setBounds (488, 220, 72, 24);
+    _attackShapeLabel->setBounds (212, 280, 52, 24);
+    _endLabel->setBounds (76, 280, 52, 24);
+    _endSlider->setBounds (84, 256, 36, 28);
+    _attackShapeSlider->setBounds (220, 256, 36, 28);
+    _decayShapeLabel->setBounds (276, 280, 52, 24);
+    _decayShapeHeaderLabel->setBounds (276, 236, 52, 24);
+    _decayShapeSlider->setBounds (284, 256, 36, 28);
+    _attackShapeHeaderLabel->setBounds (212, 236, 52, 24);
+    _endHeaderLabel->setBounds (76, 236, 52, 24);
+    _beginLabel->setBounds (40, 280, 52, 24);
+    _beginSlider->setBounds (48, 256, 36, 28);
+    _beginHeaderLabel->setBounds (40, 236, 52, 24);
+    _widthLabel->setBounds (340, 280, 52, 24);
+    _widthHeaderLabel->setBounds (340, 236, 52, 24);
+    _widthSlider->setBounds (348, 256, 36, 28);
+    _predelayLabel->setBounds (4, 280, 52, 24);
+    _predelayHeaderLabel->setBounds (4, 236, 52, 24);
+    _predelaySlider->setBounds (12, 256, 36, 28);
+    _stretchLabel->setBounds (112, 280, 52, 24);
+    _stretchHeaderLabel->setBounds (112, 236, 52, 24);
+    _stretchSlider->setBounds (120, 256, 36, 28);
+    _attackHeaderLabel->setBounds (176, 220, 88, 24);
+    _attackLengthLabel->setBounds (176, 280, 52, 24);
+    _attackLengthSlider->setBounds (184, 256, 36, 28);
+    _attackLengthHeaderLabel->setBounds (176, 236, 52, 24);
+    _decayHeaderLabel->setBounds (256, 220, 88, 24);
+    _impulseResponseHeaderLabel->setBounds (12, 220, 144, 24);
+    _stereoHeaderLabel->setBounds (340, 220, 52, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -682,19 +880,7 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
     //[UsersliderValueChanged_Pre]
     //[/UsersliderValueChanged_Pre]
 
-    if (sliderThatWasMoved == _stretchSlider)
-    {
-        //[UserSliderCode__stretchSlider] -- add your slider handling code here..
-        double sliderVal = _stretchSlider->getValue();
-        if (::fabs(sliderVal-1.0) < 0.025)
-        {
-          sliderVal = 1.0;
-          _stretchSlider->setValue(1.0, juce::dontSendNotification);
-        }
-        _processor.setStretch(sliderVal);
-        //[/UserSliderCode__stretchSlider]
-    }
-    else if (sliderThatWasMoved == _drySlider)
+    if (sliderThatWasMoved == _drySlider)
     {
         //[UserSliderCode__drySlider] -- add your slider handling code here..
         const float scale = static_cast<float>(_drySlider->getValue());
@@ -709,18 +895,6 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         const float decibels = SnapValue(DecibelScaling::Scale2Db(scale), 0.0f, 0.5f);
         _processor.setParameterNotifyingHost(Parameters::WetDecibels, decibels);
         //[/UserSliderCode__wetSlider]
-    }
-    else if (sliderThatWasMoved == _beginSlider)
-    {
-        //[UserSliderCode__beginSlider] -- add your slider handling code here..
-        _processor.setFileBeginSeconds(_beginSlider->getValue());
-        //[/UserSliderCode__beginSlider]
-    }
-    else if (sliderThatWasMoved == _predelaySlider)
-    {
-        //[UserSliderCode__predelaySlider] -- add your slider handling code here..
-        _processor.setPredelayMs(_predelaySlider->getValue());
-        //[/UserSliderCode__predelaySlider]
     }
     else if (sliderThatWasMoved == _hiGainSlider)
     {
@@ -746,12 +920,6 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         _processor.setParameterNotifyingHost(Parameters::EqLowShelfFreq, static_cast<float>(_loFreqSlider->getValue()));
         //[/UserSliderCode__loFreqSlider]
     }
-    else if (sliderThatWasMoved == _widthSlider)
-    {
-        //[UserSliderCode__widthSlider] -- add your slider handling code here..
-        _processor.setParameterNotifyingHost(Parameters::StereoWidth, SnapValue(static_cast<float>(_widthSlider->getValue()), 1.0f, 0.05f));
-        //[/UserSliderCode__widthSlider]
-    }
     else if (sliderThatWasMoved == _lowCutFreqSlider)
     {
         //[UserSliderCode__lowCutFreqSlider] -- add your slider handling code here..
@@ -763,6 +931,60 @@ void KlangFalterEditor::sliderValueChanged (Slider* sliderThatWasMoved)
         //[UserSliderCode__highCutFreqSlider] -- add your slider handling code here..
         _processor.setParameterNotifyingHost(Parameters::EqHighCutFreq, static_cast<float>(_highCutFreqSlider->getValue()));
         //[/UserSliderCode__highCutFreqSlider]
+    }
+    else if (sliderThatWasMoved == _endSlider)
+    {
+        //[UserSliderCode__endSlider] -- add your slider handling code here..
+        _processor.setIREnd(_endSlider->getValue());
+        //[/UserSliderCode__endSlider]
+    }
+    else if (sliderThatWasMoved == _attackShapeSlider)
+    {
+        //[UserSliderCode__attackShapeSlider] -- add your slider handling code here..
+        _processor.setAttackShape(_attackShapeSlider->getValue());
+        //[/UserSliderCode__attackShapeSlider]
+    }
+    else if (sliderThatWasMoved == _decayShapeSlider)
+    {
+        //[UserSliderCode__decayShapeSlider] -- add your slider handling code here..
+        _processor.setDecayShape(_decayShapeSlider->getValue());
+        //[/UserSliderCode__decayShapeSlider]
+    }
+    else if (sliderThatWasMoved == _beginSlider)
+    {
+        //[UserSliderCode__beginSlider] -- add your slider handling code here..
+        _processor.setIRBegin(_beginSlider->getValue());
+        //[/UserSliderCode__beginSlider]
+    }
+    else if (sliderThatWasMoved == _widthSlider)
+    {
+        //[UserSliderCode__widthSlider] -- add your slider handling code here..
+        _processor.setParameterNotifyingHost(Parameters::StereoWidth, SnapValue(static_cast<float>(_widthSlider->getValue()), 1.0f, 0.05f));
+        //[/UserSliderCode__widthSlider]
+    }
+    else if (sliderThatWasMoved == _predelaySlider)
+    {
+        //[UserSliderCode__predelaySlider] -- add your slider handling code here..
+        _processor.setPredelayMs(_predelaySlider->getValue());
+        //[/UserSliderCode__predelaySlider]
+    }
+    else if (sliderThatWasMoved == _stretchSlider)
+    {
+        //[UserSliderCode__stretchSlider] -- add your slider handling code here..
+        double sliderVal = _stretchSlider->getValue();
+        if (::fabs(sliderVal-1.0) < 0.025)
+        {
+          sliderVal = 1.0;
+          _stretchSlider->setValue(1.0, juce::dontSendNotification);
+        }
+        _processor.setStretch(sliderVal);
+        //[/UserSliderCode__stretchSlider]
+    }
+    else if (sliderThatWasMoved == _attackLengthSlider)
+    {
+        //[UserSliderCode__attackLengthSlider] -- add your slider handling code here..
+        _processor.setAttackLength(_attackLengthSlider->getValue());
+        //[/UserSliderCode__attackLengthSlider]
     }
 
     //[UsersliderValueChanged_Post]
@@ -863,10 +1085,10 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
 
 void KlangFalterEditor::updateUI()
 {
-  const double irDuration = _processor.getIRDuration();
-  const bool irAvailable = (irDuration > 0.0);
+  const bool irAvailable = _processor.irAvailable();
   const size_t numInputChannels = static_cast<size_t>(std::min(_processor.getNumInputChannels(), 2));
   const size_t numOutputChannels = static_cast<size_t>(std::min(_processor.getNumOutputChannels(), 2));
+  const double irLengthSeconds = _processor.getIRDuration();
   {
     const double stretch = _processor.getStretch();
     _stretchSlider->setEnabled(irAvailable);
@@ -897,20 +1119,40 @@ void KlangFalterEditor::updateUI()
     _reverseButton->setToggleState(_processor.getReverse(), false);
   }
   {
-    const double fileBeginSeconds = std::min(_processor.getFileBeginSeconds(), irDuration);
+    const double irBegin = _processor.getIRBegin();
     _beginSlider->setEnabled(irAvailable);
-    if (irDuration > 0.0)
-    {
-      _beginSlider->setRange(0.0, irDuration);
-    }
-    _beginSlider->setValue(fileBeginSeconds, juce::dontSendNotification);
-    _beginLabel->setText(juce::String(static_cast<int>(fileBeginSeconds*1000.0 + 0.5)) + juce::String("ms"), true);
+    _beginSlider->setValue(irBegin, juce::dontSendNotification);
+    _beginLabel->setText(juce::String(static_cast<int>(100.0 * irBegin)) + juce::String("%"), true);
+  }
+  {
+    const double irEnd = _processor.getIREnd();
+    _endSlider->setEnabled(irAvailable);
+    _endSlider->setValue(irEnd, juce::dontSendNotification);
+    _endLabel->setText(juce::String(static_cast<int>(100.0 * irEnd)) + juce::String("%"), true);
   }
   {
     const double predelayMs = _processor.getPredelayMs();
     _predelaySlider->setValue(predelayMs);
     _predelaySlider->setEnabled(irAvailable);
-    _predelayLabel->setText(juce::String(static_cast<int>(predelayMs+0.5)) + juce::String("ms"), true);
+    _predelayLabel->setText(FormatSeconds(predelayMs / 1000.0), true);
+  }
+  {
+    const double attackLength = _processor.getAttackLength();
+    _attackLengthSlider->setValue(attackLength);
+    _attackLengthSlider->setEnabled(irAvailable);
+    _attackLengthLabel->setText(FormatSeconds(attackLength * irLengthSeconds), true);
+  }
+  {
+    const double attackShape = _processor.getAttackShape();
+    _attackShapeSlider->setValue(attackShape);
+    _attackShapeSlider->setEnabled(irAvailable);
+    _attackShapeLabel->setText((attackShape < 0.0001) ? juce::String("Neutral") : juce::String(attackShape, 2), true);
+  }
+  {
+    const double decayShape = _processor.getDecayShape();
+    _decayShapeSlider->setValue(decayShape);
+    _decayShapeSlider->setEnabled(irAvailable);
+    _decayShapeLabel->setText((decayShape < 0.0001) ? juce::String("Neutral") : juce::String(decayShape, 2), true);
   }
   {
     const float autoGainDecibels = _processor.getParameter(Parameters::AutoGainDecibels);
@@ -978,7 +1220,7 @@ void KlangFalterEditor::updateUI()
     _widthLabel->setVisible(numOutputChannels >= 2);
     const float stereoWidth = _processor.getParameter(Parameters::StereoWidth);
     _widthSlider->setValue(stereoWidth, juce::dontSendNotification);
-    _widthLabel->setText(juce::String(stereoWidth, 2), false);
+    _widthLabel->setText((::fabs(1.0f-stereoWidth) < 0.001) ? juce::String("Neutral") : juce::String(stereoWidth, 2), false);
   }
   {
     _levelMeterDry->setChannelCount(numInputChannels);
@@ -1070,16 +1312,6 @@ BEGIN_JUCER_METADATA
     <TAB name="Placeholder" colour="ffb0b0b6" useJucerComp="1" contentClassName=""
          constructorParams="" jucerComponentFile="IRComponent.cpp"/>
   </TABBEDCOMPONENT>
-  <LABEL name="" id="ff104b46d553eb03" memberName="_stretchHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="148 220 84 24" textCol="ff202020"
-         edTextCol="ff202020" edBkgCol="0" labelText="Stretch" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
-  <SLIDER name="" id="e6fe992b37e74eba" memberName="_stretchSlider" virtualName=""
-          explicitFocusOrder="0" pos="148 244 84 40" thumbcol="ffafafff"
-          rotarysliderfill="ffafafff" min="0" max="2" int="0" style="RotaryVerticalDrag"
-          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
-          textBoxHeight="20" skewFactor="1"/>
   <GENERICCOMPONENT name="" id="93270230a2db62e0" memberName="_levelMeterDry" virtualName=""
                     explicitFocusOrder="0" pos="632 40 12 176" class="LevelMeter"
                     params=""/>
@@ -1114,26 +1346,6 @@ BEGIN_JUCER_METADATA
   <TEXTBUTTON name="" id="53a50811080a676c" memberName="_settingsButton" virtualName=""
               explicitFocusOrder="0" pos="708 0 52 16" textCol="ff202020" textColOn="ff202020"
               buttonText="Settings" connectedEdges="6" needsCallback="1" radioGroupId="0"/>
-  <LABEL name="" id="51bcb70beb24f3cf" memberName="_stretchLabel" virtualName=""
-         explicitFocusOrder="0" pos="148 280 84 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="100%" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
-  <LABEL name="" id="59911bc6fa006837" memberName="_beginHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="-4 220 84 24" textCol="ff202020"
-         edTextCol="ff202020" edBkgCol="0" labelText="Begin" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
-  <SLIDER name="" id="5e1bc6ab0a48dea8" memberName="_beginSlider" virtualName=""
-          explicitFocusOrder="0" pos="-4 244 84 40" thumbcol="ffafafff"
-          rotarysliderfill="ffafafff" min="0" max="2" int="0" style="RotaryVerticalDrag"
-          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
-          textBoxHeight="20" skewFactor="0.5"/>
-  <LABEL name="" id="b32110895dcec8f5" memberName="_beginLabel" virtualName=""
-         explicitFocusOrder="0" pos="-4 280 84 24" textCol="ff000000"
-         edTextCol="ff000000" edBkgCol="0" labelText="0ms" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
   <TEXTBUTTON name="" id="c0b279e2bae7030e" memberName="_wetButton" virtualName=""
               explicitFocusOrder="0" pos="684 244 44 24" tooltip="Wet Signal On/Off"
               bgColOff="80bcbcbc" bgColOn="ffbcbcff" textCol="ff202020" textColOn="ff202020"
@@ -1151,23 +1363,8 @@ BEGIN_JUCER_METADATA
               explicitFocusOrder="0" pos="486 8 72 24" tooltip="Reverse Impulse Response"
               bgColOff="80bcbcbc" bgColOn="ffbcbcff" textCol="ff202020" textColOn="ff202020"
               buttonText="Reverse" connectedEdges="3" needsCallback="1" radioGroupId="0"/>
-  <LABEL name="" id="33afc8fa0b56ce55" memberName="_predelayHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="72 220 84 24" textCol="ff202020"
-         edTextCol="ff202020" edBkgCol="0" labelText="Predelay" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
-  <SLIDER name="" id="5263ccd8286f1f44" memberName="_predelaySlider" virtualName=""
-          explicitFocusOrder="0" pos="72 244 84 40" bkgcol="0" thumbcol="ffafafff"
-          rotarysliderfill="ffafafff" min="0" max="1000" int="0" style="RotaryVerticalDrag"
-          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
-          textBoxHeight="20" skewFactor="1"/>
-  <LABEL name="" id="22992cd4f6d0f5c1" memberName="_predelayLabel" virtualName=""
-         explicitFocusOrder="0" pos="72 280 84 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="0ms" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="841738a894cf241a" memberName="_hiFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="476 280 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="480 280 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="15.2kHz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
@@ -1182,7 +1379,7 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="71caf1a3b5a498dd" memberName="_hiFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="476 236 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="480 236 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
@@ -1192,37 +1389,37 @@ BEGIN_JUCER_METADATA
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="702db07b37c24f93" memberName="_hiFreqSlider" virtualName=""
-          explicitFocusOrder="0" pos="484 256 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="488 256 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="2000" max="20000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <LABEL name="" id="8b28430d938b39ca" memberName="_loFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="388 280 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="396 280 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="1234Hz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="390bab67dc140d90" memberName="_loGainLabel" virtualName=""
-         explicitFocusOrder="0" pos="428 280 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="432 280 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="0.0dB" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="8d9e4adc7538b7dc" memberName="_loGainHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="428 236 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="432 236 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Gain" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="f3b3523aee42340f" memberName="_loFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="388 236 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="396 236 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="a3dc7342caaa661f" memberName="_loGainSlider" virtualName=""
-          explicitFocusOrder="0" pos="436 256 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="440 256 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="-30" max="30" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <SLIDER name="" id="313e885756edaea8" memberName="_loFreqSlider" virtualName=""
-          explicitFocusOrder="0" pos="396 256 36 28" thumbcol="ffafafff"
+          explicitFocusOrder="0" pos="404 256 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="20" max="2000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
@@ -1238,59 +1435,184 @@ BEGIN_JUCER_METADATA
          edTextCol="ff202020" edBkgCol="0" labelText="Dry" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
-  <LABEL name="" id="d56b184ced7d1910" memberName="_widthHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="220 220 92 24" textCol="ff202020"
-         edTextCol="ff202020" edBkgCol="0" labelText="Stereo Width" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
-  <SLIDER name="" id="731dc43e41eff903" memberName="_widthSlider" virtualName=""
-          explicitFocusOrder="0" pos="224 244 84 40" bkgcol="0" thumbcol="ffafafff"
-          rotarysliderfill="ffafafff" min="0" max="10" int="0" style="RotaryVerticalDrag"
-          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
-          textBoxHeight="20" skewFactor="0.30102"/>
-  <LABEL name="" id="fff91dc356552479" memberName="_widthLabel" virtualName=""
-         explicitFocusOrder="0" pos="224 280 84 24" textCol="ff202020"
-         edTextCol="ff000000" edBkgCol="0" labelText="1.0" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="36"/>
   <TEXTBUTTON name="" id="91aebb1e5cd3b857" memberName="_lowEqButton" virtualName=""
-              explicitFocusOrder="0" pos="396 220 76 24" bgColOff="bbbbff"
+              explicitFocusOrder="0" pos="404 220 72 24" bgColOff="bbbbff"
               bgColOn="2c2cff" textCol="ff202020" textColOn="ff202020" buttonText="Low Cut"
               connectedEdges="3" needsCallback="1" radioGroupId="0"/>
   <LABEL name="" id="3c3de25483a2083a" memberName="_lowCutFreqLabel" virtualName=""
-         explicitFocusOrder="0" pos="408 280 52 24" textCol="ff202020"
+         explicitFocusOrder="0" pos="414 280 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="1234Hz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="e7ff4fcd0be82eec" memberName="_lowCutFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="408 236 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="414 236 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="939a6b5201207a68" memberName="_lowCutFreqSlider"
-          virtualName="" explicitFocusOrder="0" pos="416 256 36 28" thumbcol="ffafafff"
+          virtualName="" explicitFocusOrder="0" pos="422 256 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="20" max="2000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <LABEL name="" id="54b3891e3f360022" memberName="_highCutFreqLabel"
-         virtualName="" explicitFocusOrder="0" pos="496 280 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="498 280 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="15.2kHz" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <LABEL name="" id="e765fe8c17a454cf" memberName="_highCutFreqHeaderLabel"
-         virtualName="" explicitFocusOrder="0" pos="496 236 52 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="498 236 52 24" textCol="ff202020"
          edTextCol="ff000000" edBkgCol="0" labelText="Freq" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="11" bold="0" italic="0" justification="36"/>
   <SLIDER name="" id="b5ba6600a0fbff4e" memberName="_highCutFreqSlider"
-          virtualName="" explicitFocusOrder="0" pos="504 256 36 28" thumbcol="ffafafff"
+          virtualName="" explicitFocusOrder="0" pos="506 256 36 28" thumbcol="ffafafff"
           rotarysliderfill="b1606060" min="2000" max="20000" int="0" style="RotaryVerticalDrag"
           textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
           textBoxHeight="20" skewFactor="1"/>
   <TEXTBUTTON name="" id="e0f66dc6348e3991" memberName="_highEqButton" virtualName=""
-              explicitFocusOrder="0" pos="484 220 76 24" bgColOff="bbbbff"
+              explicitFocusOrder="0" pos="488 220 72 24" bgColOff="bbbbff"
               bgColOn="2c2cff" textCol="ff202020" textColOn="ff202020" buttonText="High Cut"
               connectedEdges="3" needsCallback="1" radioGroupId="0"/>
+  <LABEL name="" id="bd223d64f25070f1" memberName="_attackShapeLabel"
+         virtualName="" explicitFocusOrder="0" pos="212 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="1.0" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="ee8d936af3b4da1e" memberName="_endLabel" virtualName=""
+         explicitFocusOrder="0" pos="76 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="100%" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="69b1c81fb4f7c601" memberName="_endSlider" virtualName=""
+          explicitFocusOrder="0" pos="84 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="1" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="1"/>
+  <SLIDER name="" id="4212ad3906b4822c" memberName="_attackShapeSlider"
+          virtualName="" explicitFocusOrder="0" pos="220 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="10" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="0.5"/>
+  <LABEL name="" id="31ae76799c1691c8" memberName="_decayShapeLabel" virtualName=""
+         explicitFocusOrder="0" pos="276 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="1.0" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="23dd6aa127e1d22c" memberName="_decayShapeHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="276 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Shape" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="ec6cfdb461a4ddf" memberName="_decayShapeSlider" virtualName=""
+          explicitFocusOrder="0" pos="284 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="10" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="0.5"/>
+  <LABEL name="" id="77a4289ec7918eef" memberName="_attackShapeHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="212 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Shape" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="f09d4e48c9272494" memberName="_endHeaderLabel" virtualName=""
+         explicitFocusOrder="0" pos="76 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="End" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="83e84ce51a3ad2f0" memberName="_beginLabel" virtualName=""
+         explicitFocusOrder="0" pos="40 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="100%" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="abd56bd3093af749" memberName="_beginSlider" virtualName=""
+          explicitFocusOrder="0" pos="48 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="1" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="1"/>
+  <LABEL name="" id="8a8a2c2daac6a39b" memberName="_beginHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="40 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Begin" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="90fac88de886d96b" memberName="_widthLabel" virtualName=""
+         explicitFocusOrder="0" pos="340 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="1.0" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="3476a26a68685b9e" memberName="_widthHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="340 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Width" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="31fdb25b044eaf7f" memberName="_widthSlider" virtualName=""
+          explicitFocusOrder="0" pos="348 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="10" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="0.30102"/>
+  <LABEL name="" id="d8fd174283fc5f04" memberName="_predelayLabel" virtualName=""
+         explicitFocusOrder="0" pos="4 280 52 24" textCol="ff202020" edTextCol="ff000000"
+         edBkgCol="0" labelText="0ms" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="11"
+         bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="c0f7ab9477e45174" memberName="_predelayHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="4 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Gap" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="b8aaa21b836b98e0" memberName="_predelaySlider" virtualName=""
+          explicitFocusOrder="0" pos="12 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="1000" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="1"/>
+  <LABEL name="" id="52624fc555056069" memberName="_stretchLabel" virtualName=""
+         explicitFocusOrder="0" pos="112 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="100%" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="5a11a2fc858b9666" memberName="_stretchHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="112 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Stretch" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="6c84a40c942d5b18" memberName="_stretchSlider" virtualName=""
+          explicitFocusOrder="0" pos="120 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="2" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="1"/>
+  <LABEL name="" id="4dd28ec5626fb754" memberName="_attackHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="176 220 88 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Attack" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="a08f22558873cfa8" memberName="_attackLengthLabel"
+         virtualName="" explicitFocusOrder="0" pos="176 280 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="0ms" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <SLIDER name="" id="cfcacb5123869692" memberName="_attackLengthSlider"
+          virtualName="" explicitFocusOrder="0" pos="184 256 36 28" thumbcol="ffafafff"
+          rotarysliderfill="b1606060" min="0" max="1" int="0" style="RotaryVerticalDrag"
+          textBoxPos="NoTextBox" textBoxEditable="1" textBoxWidth="80"
+          textBoxHeight="20" skewFactor="0.5"/>
+  <LABEL name="" id="c1b73cae5819a5a1" memberName="_attackLengthHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="176 236 52 24" textCol="ff202020"
+         edTextCol="ff000000" edBkgCol="0" labelText="Length" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="11" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="9ac1cf0b8251e7f3" memberName="_decayHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="256 220 88 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Decay" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="1932084a508f975f" memberName="_impulseResponseHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="12 220 144 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Impulse Response"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="3deee43dc79846d0" memberName="_stereoHeaderLabel"
+         virtualName="" explicitFocusOrder="0" pos="340 220 52 24" textCol="ff202020"
+         edTextCol="ff202020" edBkgCol="0" labelText="Stereo" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15" bold="0" italic="0" justification="36"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

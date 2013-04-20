@@ -40,21 +40,10 @@ public:
   void clear();
   
   virtual void mouseUp(const juce::MouseEvent& mouseEvent);
-  virtual void mouseDoubleClick(const juce::MouseEvent& mouseEvent);
-  virtual void mouseDown(const juce::MouseEvent& mouseEvent);
-  virtual void mouseDrag(const juce::MouseEvent& mouseEvent);
-  virtual void mouseMove(const juce::MouseEvent& mouseEvent);
-  virtual void mouseExit(const juce::MouseEvent& mouseEvent);
   
   void envelopeChanged();
   
-protected:
-  int calcEnvelopePosX(double x) const;
-  int calcEnvelopePosY(double y) const;
-  double calcEnvelopeValueX(int posX) const;
-  double calcEnvelopeValueY(int posY) const;
-  size_t getEnvelopeNode(int posX, int posY) const;
-  
+protected:  
   void updateArea();
   
 private:
@@ -66,16 +55,12 @@ private:
   size_t _samplesPerPx;
   float _pxPerDecibel;
   double _predelayMs;
+  double _attackLength;
+  double _attackShape;
+  double _decayShape;
   int _predelayOffsetX;
   Rectangle<int> _area;
-  
-  Envelope _envelope;
-  double _dragDistance;
-  size_t _indexHighlighted;
-  size_t _indexDragged;
-  double _dragStartX;
-  double _dragStartY;
-  
+    
   float _beatsPerMinute;
   
   WaveformComponent(const WaveformComponent&);

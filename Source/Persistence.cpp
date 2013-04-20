@@ -84,54 +84,40 @@ XmlElement* SaveState(const File& irDirectory, Processor& processor)
   convolutionElement->setAttribute("eqHighCutFreq", processor.getParameter(Parameters::EqHighCutFreq));
   convolutionElement->setAttribute("eqHighShelfFreq", processor.getParameter(Parameters::EqHighShelfFreq));
   convolutionElement->setAttribute("eqHighShelfDecibels", processor.getParameter(Parameters::EqHighShelfDecibels));
-  convolutionElement->setAttribute("fileBeginSeconds", processor.getFileBeginSeconds());
+  convolutionElement->setAttribute("irBegin", processor.getIRBegin());
+  convolutionElement->setAttribute("irEnd", processor.getIREnd());
   convolutionElement->setAttribute("stretch", processor.getStretch());
   convolutionElement->setAttribute("predelayMs", processor.getPredelayMs());
+  convolutionElement->setAttribute("attackLength", processor.getAttackLength());
+  convolutionElement->setAttribute("attackShape", processor.getAttackShape());
+  convolutionElement->setAttribute("decayShape", processor.getDecayShape());
   convolutionElement->setAttribute("stereoWidth", processor.getParameter(Parameters::StereoWidth));
   convolutionElement->setAttribute("reverse", processor.getReverse());
-        
-  // Envelope
+             
+  // IRs
+  auto irAgents = processor.getAgents();
+  for (auto it=irAgents.begin(); it!=irAgents.end(); ++it)
   {
-    Envelope envelope = processor.getEnvelope();
-    if (!envelope.isNeutral())
+    IRAgent* irAgent = (*it);
+    if (!irAgent)
     {
-      envelope.setReverse(false);
-      XmlElement* envelopeElement = new XmlElement("Envelope");
-      envelopeElement->setAttribute("mode", "LinearDb"); // Currently, that's the only supported value, but maybe there's also e.g. spline interpolation at some point in future
-      for (size_t i=0; i<envelope.getNodeCount(); ++i)
-      {
-        XmlElement* envelopeNodeElement = new XmlElement("Node");
-        envelopeNodeElement->setAttribute("x", envelope.getX(i));
-        envelopeNodeElement->setAttribute("gain", envelope.getY(i));
-        envelopeElement->addChildElement(envelopeNodeElement);
-      }
-      convolutionElement->addChildElement(envelopeElement);
+      continue;
     }
-          
-    // IRs
-    auto irAgents = processor.getAgents();
-    for (auto it=irAgents.begin(); it!=irAgents.end(); ++it)
+      
+    const File irFile = irAgent->getFile();
+    if (irFile == File::nonexistent)
     {
-      IRAgent* irAgent = (*it);
-      if (!irAgent)
-      {
-        continue;
-      }
-      
-      const File irFile = irAgent->getFile();
-      if (irFile == File::nonexistent)
-      {
-        continue;
-      }
-      
-      XmlElement* irElement = new XmlElement("ImpulseResponse");
-      irElement->setAttribute("input", static_cast<int>(irAgent->getInputChannel()));
-      irElement->setAttribute("output", static_cast<int>(irAgent->getOutputChannel()));
-      irElement->setAttribute("file", irFile.getRelativePathFrom(irDirectory));
-      irElement->setAttribute("fileChannel", static_cast<int>(irAgent->getFileChannel()));
-      convolutionElement->addChildElement(irElement);
+      continue;
     }
+      
+    XmlElement* irElement = new XmlElement("ImpulseResponse");
+    irElement->setAttribute("input", static_cast<int>(irAgent->getInputChannel()));
+    irElement->setAttribute("output", static_cast<int>(irAgent->getOutputChannel()));
+    irElement->setAttribute("file", irFile.getRelativePathFrom(irDirectory));
+    irElement->setAttribute("fileChannel", static_cast<int>(irAgent->getFileChannel()));
+    convolutionElement->addChildElement(irElement);
   }
+
   return convolutionElement.release();
 }
 
@@ -151,9 +137,13 @@ bool LoadState(const File& irDirectory, XmlElement& element, Processor& processo
   bool dryOn = element.getBoolAttribute("dryOn", Parameters::DryOn.getDefaultValue());
   double dryDecibels = element.getDoubleAttribute("dryDecibels", Parameters::DryDecibels.getDefaultValue());
   bool autoGainOn = element.getBoolAttribute("autoGainOn", Parameters::AutoGainOn.getDefaultValue());
-  double fileBeginSeconds = element.getDoubleAttribute("fileBeginSeconds", 0.0);
+  double irBegin = element.getDoubleAttribute("irBegin", 0.0);
+  double irEnd = element.getDoubleAttribute("irEnd", 1.0);
   double stretch = element.getDoubleAttribute("stretch", 1.0);
   double predelayMs = element.getDoubleAttribute("predelayMs", 0.0);
+  double attackLength = element.getDoubleAttribute("attackLength", 0.0);
+  double attackShape = element.getDoubleAttribute("attackShape", 0.0);
+  double decayShape = element.getDoubleAttribute("decayShape", 0.0);
   double stereoWidth = element.getDoubleAttribute("stereoWidth", Parameters::StereoWidth.getDefaultValue());
   bool reverse = element.getBoolAttribute("reverse", false);
   
@@ -166,35 +156,6 @@ bool LoadState(const File& irDirectory, XmlElement& element, Processor& processo
   double eqHiCutFreq = element.getDoubleAttribute("eqHighCutFreq", Parameters::EqHighCutFreq.getDefaultValue());
   double eqHiShelfFreq = element.getDoubleAttribute("eqHighShelfFreq", Parameters::EqHighShelfFreq.getDefaultValue());
   double eqHiShelfDecibels = element.getDoubleAttribute("eqHighShelfDecibels", Parameters::EqHighShelfDecibels.getDefaultValue());
-  
-  Envelope envelope;
-  XmlElement* envelopeElement = element.getChildByName("Envelope");
-  if (envelopeElement)
-  {
-    std::vector<std::pair<double, double>> envelopeValues;
-    forEachXmlChildElementWithTagName (*envelopeElement, envelopeNodeElement, "Node")
-    {
-      const double x = envelopeNodeElement->getDoubleAttribute("x", -1.0);
-      const double y = envelopeNodeElement->getDoubleAttribute("gain", -1.0);
-      if (x < -0.00001 || y < -0.00001)
-      {
-        return false;
-      }
-      envelopeValues.push_back(std::make_pair(std::min(1.0, std::max(0.0, x)), std::min(1.0, std::max(0.0, y))));
-    }
-    if (envelopeValues.size() < 2)
-    {
-      return false;
-    }
-    std::sort(envelopeValues.begin(), envelopeValues.end());
-    Envelope loaded(envelopeValues.front().second, envelopeValues.back().second);
-    for (size_t i=1; i<envelopeValues.size()-1; ++i)
-    {
-      loaded.insertNode(envelopeValues[i].first, envelopeValues[i].second);
-    }
-    loaded.setReverse(reverse);
-    envelope = loaded;
-  }
   
   // IRs
   std::vector<internal::IRAgentConfiguration> irConfigurations;
@@ -235,11 +196,14 @@ bool LoadState(const File& irDirectory, XmlElement& element, Processor& processo
   processor.setParameterNotifyingHost(Parameters::EqHighShelfFreq, static_cast<float>(eqHiShelfFreq));
   processor.setParameterNotifyingHost(Parameters::EqHighShelfDecibels, static_cast<float>(eqHiShelfDecibels));  
   processor.setParameterNotifyingHost(Parameters::StereoWidth, static_cast<float>(stereoWidth));
-  processor.setFileBeginSeconds(fileBeginSeconds);
+  processor.setIRBegin(irBegin);
+  processor.setIREnd(irEnd);
   processor.setPredelayMs(predelayMs);  
+  processor.setAttackLength(attackLength);
+  processor.setAttackShape(attackShape);
+  processor.setDecayShape(decayShape);
   processor.setStretch(stretch);
   processor.setReverse(reverse);
-  processor.setEnvelope(envelope);  
   for (auto it=irConfigurations.begin(); it!=irConfigurations.end(); ++it)
   {
     IRAgent* irAgent = it->_irAgent;

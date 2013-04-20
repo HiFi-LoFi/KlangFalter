@@ -31,14 +31,11 @@ WaveformComponent::WaveformComponent() :
   _samplesPerPx(0),
   _pxPerDecibel(0),
   _predelayMs(0.0),
+  _attackLength(0.0),
+  _attackShape(0.0),
+  _decayShape(0.0),
   _predelayOffsetX(0),
   _area(),
-  _envelope(1.0, 1.0),
-  _dragDistance(5.0),
-  _indexHighlighted(std::numeric_limits<size_t>::max()),
-  _indexDragged(std::numeric_limits<size_t>::max()),
-  _dragStartX(-1.0),
-  _dragStartY(-1.0),
   _beatsPerMinute(0.0f)
 {
 }
@@ -60,7 +57,7 @@ void WaveformComponent::updateArea()
   const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
   const juce::Font scaleFont = customLookAndFeel.getScaleFont();
 
-  const int marginTop = 4;
+  const int marginTop = 0;
   const int widthDbScale = scaleFont.getStringWidth("-XXdB") + 4;
   const int heightTimeLine = static_cast<int>(::ceil(scaleFont.getHeight())) + 5;
   
@@ -84,7 +81,7 @@ void WaveformComponent::paint(Graphics& g)
   const juce::Colour scaleColour = customLookAndFeel.getScaleColour();
   
   // Something to paint?
-  if (_maximaDecibels.empty() || !_irAgent)
+  if (!_irAgent || _irAgent->getFile() == juce::File::nonexistent)
   {
     g.setColour(scaleColour);
     g.drawText("No Impulse Response", 0, 0, width, height, Justification(Justification::centred), false);
@@ -214,54 +211,38 @@ void WaveformComponent::paint(Graphics& g)
   const size_t xLen = std::min(static_cast<size_t>(w), _maximaDecibels.size());
   const float bottom = static_cast<float>(_area.getBottom());
   g.setColour(customLookAndFeel.getWaveformColour());
-
   for (size_t x=0; x<xLen; ++x)
   {
     const float top = bottom - (_pxPerDecibel * (_maximaDecibels[x]-DecibelScaling::MinScaleDb()));
     g.drawVerticalLine(static_cast<int>(x)+_area.getX()+1, top, bottom);
   }
-  g.setColour(Colours::darkgrey);
-  g.drawVerticalLine(_area.getRight(),
-                     static_cast<float>(_area.getY()),
-                     static_cast<float>(_area.getBottom()));
-  
-  // Predelay
-  if (_predelayOffsetX > 0)
-  {
-    g.setColour(Colours::grey);
-    g.drawVerticalLine(_area.getX()+_predelayOffsetX,
-                       static_cast<float>(_area.getY()),
-                       static_cast<float>(_area.getBottom()));
-  }
-  
+
   // Envelope
-  const size_t nodeCount = _envelope.getNodeCount();
-  if (nodeCount > 0)
+  if (!_maximaDecibels.empty())
   {
-    Path path;
-    path.startNewSubPath(static_cast<float>(_area.getX()+_predelayOffsetX), static_cast<float>(_area.getY()));
-    for (size_t i=0; i<nodeCount; ++i)
+    const size_t predelayPx = static_cast<size_t>((_predelayMs / 1000.0) / secondsPerPx);    
+    std::vector<float> envelope(_maximaDecibels.size()-predelayPx, 1.0f);
+    ApplyEnvelope(&envelope[0], envelope.size(), _attackLength, _attackShape, _decayShape);
+    if (_irAgent->getProcessor().getReverse())
     {
-      const float x = static_cast<float>(calcEnvelopePosX(_envelope.getX(i)));
-      const float y = static_cast<float>(calcEnvelopePosY(_envelope.getY(i)));
-      path.lineTo(x, y);
+      std::reverse(envelope.begin(), envelope.end());
     }
-    path.lineTo(static_cast<float>(_area.getRight()), static_cast<float>(_area.getBottom()));
-    path.lineTo(static_cast<float>(_area.getRight()), static_cast<float>(_area.getY()));
-    path.closeSubPath();
-    DrawablePath drawable;
-    drawable.setPath(path);
-    drawable.setFill(FillType(customLookAndFeel.getEnvelopeRestrictionColour()));
-    drawable.draw(g, 1.0f);
+    const float envelopeTop = static_cast<float>(_area.getY());
+    const int envelopeX = static_cast<int>(predelayPx) + _area.getX() + 1;
+    g.setColour(customLookAndFeel.getEnvelopeRestrictionColour());    
+    g.fillRect(static_cast<float>(_area.getX()+1), envelopeTop, static_cast<float>(predelayPx), static_cast<float>(_area.getHeight()-1));
+    for (size_t x=0; x<envelope.size(); ++x)
+    {    
+      const float envelopeBottom = -1.0f * _pxPerDecibel * DecibelScaling::Gain2Db(envelope[x]);
+      g.drawVerticalLine(envelopeX+static_cast<int>(x), envelopeTop, envelopeBottom);
+    }
+    float envelopeEndX = static_cast<float>(envelopeX + envelope.size());
+    g.fillRect(envelopeEndX, envelopeTop, w-static_cast<float>(envelopeEndX), static_cast<float>(_area.getHeight()-1.0f));
   }
-  for (size_t i=0; i<nodeCount; ++i)
+  else
   {
-    const float nodeSize = 8.0f;
-    const float nodeSize2 = 0.5f * nodeSize;
-    const float posX = static_cast<float>(calcEnvelopePosX(_envelope.getX(i)));
-    const float posY = static_cast<float>(calcEnvelopePosY(_envelope.getY(i)));
-    g.setColour(customLookAndFeel.getEnvelopeNodeColour(i == _indexHighlighted));
-    g.fillEllipse(posX-nodeSize2, posY-nodeSize2, nodeSize, nodeSize);
+    g.setColour(customLookAndFeel.getEnvelopeRestrictionColour());    
+    g.fillRect(static_cast<float>(_area.getX()+1), static_cast<float>(_area.getY()), w, static_cast<float>(_area.getHeight()-1));
   }
 }
 
@@ -271,12 +252,18 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
   FloatBuffer::Ptr ir;
   Processor* processor = nullptr;
   double predelayMs = 0.0;
-  float beatsPerMinute = 0.0f;
+  double attackLength = 0.0;
+  double attackShape = 0.0;
+  double decayShape = 0.0;
+  float beatsPerMinute = 0.0f;  
   if (irAgent)
   {
     ir = irAgent->getImpulseResponse();
     processor = &irAgent->getProcessor();
     predelayMs = processor->getPredelayMs();
+    attackLength = processor->getAttackLength();
+    attackShape = processor->getAttackShape();
+    decayShape = processor->getDecayShape();
     beatsPerMinute = processor->getBeatsPerMinute();
   }
   
@@ -295,6 +282,9 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
       ::fabs(_sampleRate-sampleRate) < 0.00001 ||
       ::fabs(_predelayMs-predelayMs) < 0.00001 ||
       ::fabs(_beatsPerMinute-beatsPerMinute) < 0.00001f ||
+      ::fabs(_attackLength-attackLength) < 0.00001f ||
+      ::fabs(_attackShape-attackShape) < 0.00001f ||
+      ::fabs(_decayShape-decayShape) < 0.00001f ||
       _samplesPerPx != samplesPerPx ||
       _irFingerprint != irFingerprint)
   { 
@@ -302,18 +292,11 @@ void WaveformComponent::init(IRAgent* irAgent, double sampleRate, size_t samples
     _sampleRate = sampleRate;
     _samplesPerPx = std::max(static_cast<size_t>(1), samplesPerPx);
     _predelayMs = predelayMs;
+    _attackLength = attackLength;
+    _attackShape = attackShape;
+    _decayShape = decayShape;
     _predelayOffsetX = static_cast<int>((sampleRate / 1000.0) * _predelayMs) / _samplesPerPx;
-    _beatsPerMinute = beatsPerMinute;
-    
-    if (processor)
-    {
-      _envelope = processor->getEnvelope();
-    }
-    else
-    {
-      _envelope.reset();
-    }
-
+    _beatsPerMinute = beatsPerMinute;    
     if (_irFingerprint != irFingerprint)
     {
       _irFingerprint = irFingerprint;
@@ -358,7 +341,9 @@ void WaveformComponent::clear()
     _sampleRate = 0.0;
     _samplesPerPx = 0;
     _predelayMs = 0.0;
-    _envelope.reset();
+    _attackLength = 0.0;
+    _attackShape = 0.0;
+    _decayShape = 0.0;
     updateArea();
   }
 }
@@ -366,11 +351,7 @@ void WaveformComponent::clear()
 
 void WaveformComponent::mouseUp(const MouseEvent& mouseEvent)
 {
-  if (_indexDragged < _envelope.getNodeCount())
-  {
-    _indexDragged = std::numeric_limits<size_t>::max();
-  }
-  else if (_irAgent)
+  if (_irAgent)
   {
     if (mouseEvent.x > _area.getX() && mouseEvent.y > _area.getBottom())
     {
@@ -378,131 +359,5 @@ void WaveformComponent::mouseUp(const MouseEvent& mouseEvent)
       settings.setTimelineUnit((settings.getTimelineUnit() == Settings::Seconds) ? Settings::Beats : Settings::Seconds);
       repaint();
     }
-  }
-}
-
-
-void WaveformComponent::mouseDoubleClick(const MouseEvent& mouseEvent)
-{
-  if (_area.contains(mouseEvent.x, mouseEvent.y))
-  {
-    size_t index = getEnvelopeNode(mouseEvent.x, mouseEvent.y);
-    if (index < _envelope.getNodeCount())
-    {
-      _envelope.removeNode(index);
-      _indexHighlighted = std::numeric_limits<size_t>::max();
-    }
-    else
-    {
-      const double x = calcEnvelopeValueX(mouseEvent.x);
-      const double y = calcEnvelopeValueY(mouseEvent.y);
-      _indexHighlighted = _envelope.insertNode(x, y);
-    }
-    repaint();
-    envelopeChanged();
-  }
-}
-
-
-void WaveformComponent::mouseDown(const MouseEvent& mouseEvent)
-{
-  const size_t index = getEnvelopeNode(mouseEvent.x, mouseEvent.y);
-  if (index < _envelope.getNodeCount())
-  {
-    _indexDragged = index;
-    _dragStartX = _envelope.getX(index);
-    _dragStartY = _envelope.getY(index);
-  }
-}
-
-
-void WaveformComponent::mouseDrag(const MouseEvent& mouseEvent)
-{
-  if (_indexDragged < _envelope.getNodeCount())
-  {
-    const double x = _dragStartX + (calcEnvelopeValueX(mouseEvent.x) - _dragStartX);
-    const double y = _dragStartY + (calcEnvelopeValueY(mouseEvent.y) - _dragStartY);
-    _envelope.setX(_indexDragged, x);
-    _envelope.setY(_indexDragged, y);
-    repaint();
-    envelopeChanged();
-  }
-}
-
-
-void WaveformComponent::mouseMove(const MouseEvent& mouseEvent)
-{
-  const size_t highlightedBefore = _indexHighlighted;
-  _indexHighlighted = getEnvelopeNode(mouseEvent.x, mouseEvent.y);
-  if (highlightedBefore != _indexHighlighted)
-  {
-    repaint();
-  }
-}
-
-
-void WaveformComponent::mouseExit(const MouseEvent&)
-{
-  _indexDragged = std::numeric_limits<size_t>::max();
-  if (_indexHighlighted < _envelope.getNodeCount())
-  {
-    _indexHighlighted = std::numeric_limits<size_t>::max();
-    repaint();
-  }
-}
-
-
-size_t WaveformComponent::getEnvelopeNode(int posX, int posY) const
-{
-  size_t nearest = std::numeric_limits<size_t>::max();
-  double nearestDist = std::numeric_limits<double>::max();
-  for (size_t i=0; i<_envelope.getNodeCount(); ++i)
-  {
-    const double distX = posX - calcEnvelopePosX(_envelope.getX(i));
-    const double distY = posY - calcEnvelopePosY(_envelope.getY(i));
-    const double dist = ::sqrt(distX*distX + distY*distY);
-    if (dist <= _dragDistance && dist < nearestDist)
-    {
-      nearest = i;
-      nearestDist = dist;
-    }
-  }
-  return nearest;
-}
-
-
-int WaveformComponent::calcEnvelopePosX(double x) const
-{
-  return _area.getX() + static_cast<int>(x * static_cast<double>(_area.getWidth()-_predelayOffsetX)) + _predelayOffsetX;
-}
-
-
-int WaveformComponent::calcEnvelopePosY(double y) const
-{
-  const double db = Decibels::gainToDecibels(y);
-  return _area.getBottom() - static_cast<int>(_pxPerDecibel * (db-DecibelScaling::MinScaleDb()));
-}
-
-
-double WaveformComponent::calcEnvelopeValueX(int posX) const
-{
-  const double x = static_cast<double>((posX-_area.getX())-_predelayOffsetX) / static_cast<double>(_area.getWidth()-_predelayOffsetX);
-  return std::min(1.0, std::max(0.0, x));
-}
-
-
-double WaveformComponent::calcEnvelopeValueY(int posY) const
-{
-  const double db = DecibelScaling::MinScaleDb() + (static_cast<double>(_area.getBottom()-posY) / _pxPerDecibel);
-  const double y = static_cast<double>(DecibelScaling::Db2Gain(static_cast<float>(db)));
-  return std::min(1.0, std::max(0.0, y));
-}
-
-
-void WaveformComponent::envelopeChanged()
-{
-  if (_irAgent)
-  {
-    _irAgent->getProcessor().setEnvelope(_envelope);
   }
 }

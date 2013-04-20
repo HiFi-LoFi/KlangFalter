@@ -19,6 +19,7 @@
 
 #include "Convolver.h"
 #include "DecibelScaling.h"
+#include "Envelope.h"
 #include "IRCalculation.h"
 #include "IRAgent.h"
 #include "Parameters.h"
@@ -117,14 +118,13 @@ void IRCalculation::run()
   // Import the files
   std::vector<FloatBuffer::Ptr> buffers(agents.size(), nullptr);
   std::vector<double> fileSampleRates(agents.size(), 0.0);
-  const double fileBeginSeconds = _processor.getFileBeginSeconds();
   for (size_t i=0; i<agents.size(); ++i)
   {
     const juce::File file = agents[i]->getFile();
     if (file != juce::File::nonexistent)
     {
       double sampleRate;
-      FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), fileBeginSeconds, sampleRate);
+      FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), sampleRate);
       if (!buffer || sampleRate < 0.0001 || threadShouldExit())
       {
         return;
@@ -158,6 +158,13 @@ void IRCalculation::run()
     return;
   }
 
+  // Crop begin/end
+  buffers = cropBuffers(buffers, _processor.getIRBegin(), _processor.getIREnd());
+  if (threadShouldExit())
+  {
+    return;
+  }
+
   // Calculate auto gain (should be done before applying the envelope!)
   const float autoGain = calculateAutoGain(buffers);
   if (threadShouldExit())
@@ -165,29 +172,38 @@ void IRCalculation::run()
     return;
   }
 
-  // Reverse and envelope
-  const Envelope envelope = _processor.getEnvelope();
-  const bool reverse = _processor.getReverse();
+  // Envelope
+  const double attackLength = _processor.getAttackLength();
+  const double attackShape = _processor.getAttackShape();
+  const double decayShape = _processor.getDecayShape();
   for (size_t i=0; i<buffers.size(); ++i)
   {
     if (buffers[i] != nullptr)
     {
-      if (reverse)
+      ApplyEnvelope(buffers[i]->data(), buffers[i]->getSize(), attackLength, attackShape, decayShape);
+    }
+    if (threadShouldExit())
+    {
+      return;
+    }
+  }  
+
+  // Reverse
+  if (_processor.getReverse())
+  {
+    for (size_t i=0; i<buffers.size(); ++i)
+    {
+      if (buffers[i] != nullptr)
       {
         reverseBuffer(buffers[i]);
-        if (threadShouldExit())
-        {
-          return;
-        }
       }
-      envelope.apply(buffers[i]->data(), buffers[i]->getSize());
       if (threadShouldExit())
       {
         return;
       }
     }
   }
-  
+
   // Predelay
   const double predelayMs = _processor.getPredelayMs();
   const size_t predelaySamples = static_cast<size_t>((convolverSampleRate / 1000.0) * predelayMs);
@@ -236,7 +252,7 @@ void IRCalculation::run()
 
 
 
-FloatBuffer::Ptr IRCalculation::importAudioFile(const File& file, size_t fileChannel, double fileBeginSeconds, double& fileSampleRate) const
+FloatBuffer::Ptr IRCalculation::importAudioFile(const File& file, size_t fileChannel, double& fileSampleRate) const
 {
   fileSampleRate = 0.0;
 
@@ -254,36 +270,30 @@ FloatBuffer::Ptr IRCalculation::importAudioFile(const File& file, size_t fileCha
   }
 
   const int fileChannels = audioFormatReader->numChannels;
-  const int fileLen = static_cast<int>(audioFormatReader->lengthInSamples);
+  const size_t fileLen = static_cast<size_t>(audioFormatReader->lengthInSamples);
   if (static_cast<int>(fileChannel) >= fileChannels)
   {
     return FloatBuffer::Ptr();
   }
-
-  const size_t startSample = static_cast<size_t>(std::max(0.0, fileBeginSeconds) * audioFormatReader->sampleRate);
-  const size_t bufferSize = (startSample < static_cast<size_t>(fileLen)) ? (fileLen - startSample) : 0;
-  FloatBuffer::Ptr buffer(new FloatBuffer(bufferSize));
+  FloatBuffer::Ptr buffer(new FloatBuffer(fileLen));
 
   juce::AudioFormatReaderSource audioFormatReaderSource(audioFormatReader, false);
-  audioFormatReaderSource.setNextReadPosition(static_cast<juce::int64>(startSample));
-  size_t bufferPos = 0;
-  int filePos = static_cast<int>(startSample);
+  size_t pos = 0;
   juce::AudioSampleBuffer importBuffer(fileChannels, 8192);
-  while (filePos < fileLen)
+  while (pos < fileLen)
   {
     if (threadShouldExit())
     {
       return FloatBuffer::Ptr();
     }
-    int loading = std::min(importBuffer.getNumSamples(), fileLen-filePos);
+    const int loading = std::min(importBuffer.getNumSamples(), static_cast<int>(fileLen-pos));
     juce::AudioSourceChannelInfo info;
     info.buffer = &importBuffer;
     info.startSample = 0;
     info.numSamples = loading;
     audioFormatReaderSource.getNextAudioBlock(info);
-    ::memcpy(buffer->data()+bufferPos, importBuffer.getSampleData(fileChannel), loading * sizeof(float));
-    bufferPos += static_cast<size_t>(loading);
-    filePos += loading;
+    ::memcpy(buffer->data()+pos, importBuffer.getSampleData(fileChannel), static_cast<size_t>(loading) * sizeof(float));
+    pos += static_cast<size_t>(loading);
   }
 
   fileSampleRate = audioFormatReader->sampleRate;
@@ -308,6 +318,44 @@ void IRCalculation::reverseBuffer(FloatBuffer::Ptr& buffer) const
     }
   }
 }
+
+
+std::vector<FloatBuffer::Ptr> IRCalculation::cropBuffers(const std::vector<FloatBuffer::Ptr>& buffers, double irBegin, double irEnd) const
+{
+  const double Epsilon = 0.00001;
+  irBegin = std::min(1.0, std::max(0.0, irBegin));
+  irEnd = std::min(1.0, std::max(0.0, irEnd));
+  if (irBegin < Epsilon && irEnd > 1.0-Epsilon)
+  {
+    return buffers;
+  }
+  std::vector<FloatBuffer::Ptr> croppedBuffers;
+  for (size_t i=0; i<buffers.size(); ++i)
+  {
+    if (threadShouldExit())
+    {
+      croppedBuffers.clear();
+      return croppedBuffers;
+    }
+    FloatBuffer::Ptr cropped;
+    FloatBuffer::Ptr buffer = buffers[i];
+    if (buffer)
+    {
+      const size_t bufferSize = buffer->getSize();
+      const size_t begin = static_cast<size_t>(irBegin * static_cast<double>(bufferSize));
+      const size_t end = static_cast<size_t>(irEnd * static_cast<double>(bufferSize));      
+      if (begin < end)
+      {
+        const size_t croppedSize = end - begin;
+        cropped = new FloatBuffer(croppedSize);
+        ::memcpy(cropped->data(), buffer->data()+begin, croppedSize * sizeof(float));
+      }
+    }
+    croppedBuffers.push_back(cropped);
+  }
+  return croppedBuffers;
+}
+
 
 FloatBuffer::Ptr IRCalculation::changeSampleRate(const FloatBuffer::Ptr& inputBuffer, double inputSampleRate, double outputSampleRate) const
 {
@@ -416,4 +464,3 @@ float IRCalculation::calculateAutoGain(const std::vector<FloatBuffer::Ptr>& buff
   }
   return static_cast<float>(autoGain);
 }
-

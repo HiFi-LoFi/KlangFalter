@@ -18,49 +18,10 @@
 #ifndef _ENVELOPE_H
 #define _ENVELOPE_H
 
-#include <vector>
+#include <cstddef>
 
 
-class Envelope
-{
-public:
-  Envelope();
-  Envelope(double yLeft, double yRight);
-  Envelope(const Envelope& other);
-  virtual ~Envelope();
-  Envelope& operator=(const Envelope& other);
-  
-  size_t insertNode(double x, double y);
-  void removeNode(size_t index);
-  void reset();
-  
-  bool isNeutral() const;
-  
-  void setReverse(bool reverse);
-  bool getReverse() const;
-  
-  size_t getNodeCount() const;
-  double getX(size_t index) const;
-  double getY(size_t index) const;
-  void setX(size_t index, double x);
-  void setY(size_t index, double y);
-  
-  void render(float* envelope, size_t len) const;
-  void apply(float* data, size_t len) const;
-  
-private:
-  struct Node
-  {
-    Node(double x, double y) : _x(x), _y(y)
-    {
-    }
-    double _x;
-    double _y;
-  };
-  
-  std::vector<Node> _nodes;
-  bool _reverse;
-};
+void ApplyEnvelope(float* data, size_t len, double attackLength, double attackShape, double decayShape);
 
 
 #endif // Header guard
