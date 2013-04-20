@@ -220,8 +220,9 @@ void WaveformComponent::paint(Graphics& g)
   // Envelope
   if (!_maximaDecibels.empty())
   {
-    const size_t predelayPx = static_cast<size_t>((_predelayMs / 1000.0) / secondsPerPx);    
-    std::vector<float> envelope(_maximaDecibels.size()-predelayPx, 1.0f);
+    const size_t predelayPx = static_cast<size_t>((_predelayMs / 1000.0) / secondsPerPx);
+    const size_t envelopeLen = (_maximaDecibels.size() > predelayPx) ? (_maximaDecibels.size() - predelayPx) : 0;
+    std::vector<float> envelope(envelopeLen, 1.0f);
     ApplyEnvelope(&envelope[0], envelope.size(), _attackLength, _attackShape, _decayShape);
     if (_irAgent->getProcessor().getReverse())
     {

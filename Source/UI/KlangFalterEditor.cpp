@@ -1140,7 +1140,7 @@ void KlangFalterEditor::updateUI()
     const double attackLength = _processor.getAttackLength();
     _attackLengthSlider->setValue(attackLength);
     _attackLengthSlider->setEnabled(irAvailable);
-    _attackLengthLabel->setText(FormatSeconds(attackLength * irLengthSeconds), true);
+    _attackLengthLabel->setText(juce::String(100.0 * attackLength, 1)+juce::String("%"), true);
   }
   {
     const double attackShape = _processor.getAttackShape();
