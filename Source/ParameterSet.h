@@ -59,6 +59,8 @@ public:
     return _automationStatus;
   }
   
+  virtual juce::String formatFromNormalized(float normalized) const = 0;
+  
 protected:
   ParameterDescriptor(int index,
                       const juce::String& name,
@@ -174,6 +176,11 @@ public:
   {
     return val;
   }
+  
+  virtual juce::String formatFromNormalized(float normalized) const
+  {
+    return (convertFromNormalized(normalized) ? juce::String("True") : juce::String("False"));
+  }
 };
 
 // =====
@@ -216,6 +223,11 @@ public:
   virtual float constraintValue(float val) const
   {
     return std::min(getMaxValue(), std::max(getMinValue(), val));
+  }
+  
+  virtual juce::String formatFromNormalized(float normalized) const
+  {
+    return juce::String(convertFromNormalized(normalized), 2);
   }
 };
 
@@ -260,6 +272,11 @@ public:
   virtual int constraintValue(int val) const
   {
     return std::min(getMaxValue(), std::max(getMinValue(), val));
+  }
+  
+  virtual juce::String formatFromNormalized(float normalized) const
+  {
+    return juce::String(convertFromNormalized(normalized));
   }
 };
 
@@ -309,6 +326,12 @@ public:
     return (::fabs(normalizedVal - normalizedValOld) > 0.00001f);
   }
   
+  juce::String getFormattedParameterValue(int index) const
+  {
+    ParameterMap::const_iterator it = _parameters.find(index);
+    return it->second.first->formatFromNormalized(it->second.second.get());
+  }
+  
   const ParameterDescriptor& getParameterDescriptor(int index) const
   {
     return *(_parameters.find(index)->second.first);
@@ -319,7 +342,7 @@ public:
     return _parameters.size();
   }
   
-private:
+private:  
   typedef std::map<int, std::pair<const ParameterDescriptor*, juce::Atomic<float> > > ParameterMap;
   ParameterMap _parameters;
   

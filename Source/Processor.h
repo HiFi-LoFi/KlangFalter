@@ -83,6 +83,7 @@ public:
 
   const juce::String getParameterName (int index);
   const juce::String getParameterText (int index);
+  juce::String getParameterLabel (int index);
 
   const juce::String getInputChannelName (int channelIndex) const;
   const juce::String getOutputChannelName (int channelIndex) const;

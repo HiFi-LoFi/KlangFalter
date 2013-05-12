@@ -24,7 +24,11 @@ Settings::Settings() :
   juce::PropertiesFile::Options fileOptions;
   fileOptions.applicationName = "KlangFalter";
   fileOptions.filenameSuffix = "settings";
+#ifdef JUCE_LINUX 
+  fileOptions.folderName = ".config/KlangFalter";
+#else
   fileOptions.folderName = "KlangFalter";
+#endif
   fileOptions.osxLibrarySubFolder = "Application Support"; // Recommended by Apple resp. the Juce documentation
   fileOptions.commonToAllUsers = false;
   fileOptions.ignoreCaseOfKeyNames = false;

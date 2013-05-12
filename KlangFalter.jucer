@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.03.16beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.05.12beta"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -17,7 +17,7 @@
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="KlangFalter"
                        osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
                        defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
-        <CONFIGURATION name="Release" isDebug="1" optimisation="2" targetName="KlangFalter"
+        <CONFIGURATION name="Release" isDebug="1" optimisation="3" targetName="KlangFalter"
                        osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
                        defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
       </CONFIGURATIONS>

@@ -37,8 +37,8 @@
 namespace ProjectInfo
 {
     const char* const  projectName    = "KlangFalter";
-    const char* const  versionString  = "2013.03.16beta";
-    const int          versionNumber  = 0x7dd0310;
+    const char* const  versionString  = "2013.05.12beta";
+    const int          versionNumber  = 0x7dd050c;
 }
 
 #endif   // __APPHEADERFILE_IRCJCT__
