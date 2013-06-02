@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.05.12beta"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.06.02"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.0.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -9,7 +9,7 @@
               pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="KlangFalterAU" pluginAUViewClass="KlangFalterAU_V1"
               pluginRTASCategory="" companyName="HiFi-LoFi" aaxIdentifier="com.yourcompany.KlangFalter"
-              pluginAAXCategory="AAX_ePlugInCategory_Dynamics">
+              pluginAAXCategory="AAX_ePlugInCategory_Dynamics" buildAAX="0">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" juceFolder="../Juce/modules"
                extraCompilerFlags="" extraFrameworks="Accelerate">

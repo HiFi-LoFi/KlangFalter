@@ -711,6 +711,7 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
 KlangFalterEditor::~KlangFalterEditor()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
+    _settingsDialogWindow.deleteAndZero();
     _processor.removeNotificationListener(this);
     _processor.getSettings().removeChangeListener(this);
     //[/Destructor_pre]
@@ -1022,12 +1023,18 @@ void KlangFalterEditor::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == _settingsButton)
     {
         //[UserButtonCode__settingsButton] -- add your button handler code here..
-        _settingsDialog = new SettingsDialogComponent(_processor);
-        juce::DialogWindow::showDialog("Settings",
-                                       _settingsDialog,
-                                       this,
-                                       juce::Colours::white,
-                                       true);
+        if (!_settingsDialogWindow)            
+        {
+        juce::DialogWindow::LaunchOptions launchOptions;
+        launchOptions.dialogTitle = juce::String("Settings");
+        launchOptions.content.setOwned(new SettingsDialogComponent(_processor));
+        launchOptions.componentToCentreAround = this;
+        launchOptions.escapeKeyTriggersCloseButton = true;
+        launchOptions.useNativeTitleBar = false;
+        launchOptions.resizable = false;
+        launchOptions.useBottomRightCornerResizer = false;
+        _settingsDialogWindow = launchOptions.launchAsync();
+        }
         //[/UserButtonCode__settingsButton]
     }
     else if (buttonThatWasClicked == _wetButton)

@@ -78,7 +78,7 @@ private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     CustomLookAndFeel _customLookAndFeel;
     Processor& _processor;
-    juce::ScopedPointer<SettingsDialogComponent> _settingsDialog;
+    juce::Component::SafePointer<juce::DialogWindow> _settingsDialogWindow;
     std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents;
     //[/UserVariables]
 
