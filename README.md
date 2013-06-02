@@ -1,17 +1,17 @@
 KlangFalter
 ===========
 
-KlangFalter is a convolution audio plugin.
+KlangFalter is a convolution audio plugin, e.g. for usage as convolution reverb.
 
-I started its development a couple of time ago because I couldn't find a free convolution plugin which suited my needs - and because I was curious about audio DSP programming. ;-)
+I started its development a couple of time ago because I couldn't find a convolution reverb plugin which suited my needs - and because I was curious about audio DSP programming. ;-)
 
 ## Features: ##
 
-- Low/no latency convolution plugin
+- Zero-latency
 - Easy user interface
 - Support for true stereo impulse responses
-- Simple high and low shelf EQ
-- Freely modifiable envelope for the impulse response
+- Simple 2-band EQ (low cut/shelf and high cut/shelf)
+- Easy modifiable envelope for the impulse response
 - Basically no limit on impulse response length - as long as your computer can handle it...
 - Intuitive and flexible loading of impulse response files
 
@@ -21,13 +21,15 @@ I started its development a couple of time ago because I couldn't find a free co
 ## Getting KlangFalter: ##
 
 Please check the [Binary](https://github.com/HiFi-LoFi/KlangFalter/tree/master/Binary) folder.
+For installation, just download the according .zip file and extract it in your plug-in folder.
 
-At the moment, I only build Audio Unit plugins. However, it should be easy to build the plugin for any format supported by the [JUCE](http://www.rawmaterialsoftware.com) framework.
+At the moment, I only build Audio Unit plugins for Mac. However, an LV2 version for Linux can be found
+in the really great [distrho](http://distrho.sourceforge.net) distrho project.
+
 
 ## Very Short Tutorial: ##
 
 #### Loading impulse responses ####
-
 - Click on the "Settings" button to adjust the folder which contains your impulse respone files.
 - Click on "Show Browser" and select some impulse response file.
 - KlangFalter tries to find matching impulse response files automatically by searching for matching file names (e.g. left/right and true stereo).
@@ -36,19 +38,27 @@ At the moment, I only build Audio Unit plugins. However, it should be easy to bu
 
 KlangFalter doesn't come with any impulse respones, but you can find many free and good impulse response collections on the web. Any file format supported by JUCE should work (currently at least .wav, .mp3, .aiff, .ogg and a couple more).
 
-#### Controls ####
+#### Mixing dry and wet signal ####
 - *Wet/Dry*: Adjustment of the wet and dry signal.
 - *Autogain*: "Normalizes" the loaded impulse responses in order to achieve a consistent level.
-- *Begin*: Begin of the impulse response.
-- *Stretch*: Stretches the impulse response.
-- *Predelay*: Delay before the impulse response kicks in.
-- *Lo Shelf & Hi Shelf*: EQ
-- *Reverse*: Reverts the impulse response for spacy effects.
+- *Stereo Width*: Adjusts the - guess what - stereo width.
+- Click on the label on top of the right level display to switch the according level measurement between "out" and "wet" mode.
 
-#### Impulse Response Envelope: ####
-- Drag one of the dotted envelope nodes in the wave form display to modify the envelope of the impulse response.
-- Double-click somewhere in the wave form display to add a new envelope node.
-- Double-click on a envelope node to remove it again.
+#### Modifying the impulse response ####
+- *Gap*: Additional gap at the begin of the impulse response ("pre-delay").
+- *Begin*: Begin of the impulse response.
+- *End*: End of the impulse response
+- *Stretch*: Stretches the impulse response.
+- *Attack Length & Shape*: Modifies the front (attack) of the impulse response.
+- *Decay Shape*: Modifies the decay of the impulse response
+- *Reverse*: Reverts the impulse response for spacy effects.
+- Click on the timeline at the bottom of the waveform display to switch time measurement between time and beats-per-minute (useful e.g. for timing reverbs to the music).
+
+#### EQ ####
+- Click on the header of the low resp. high EQ to switch between cut and shelf filter.
+- *Freq*: Adjusts the frequency of the according EQ.
+- *Gain*: EQ gain (only available if working as shelf filter).
+
 
 ## Technical Stuff: ##
 
@@ -57,7 +67,3 @@ KlangFalter doesn't come with any impulse respones, but you can find many free a
 - Multithreaded convolution engine
 - Written in C++
 - Based on the great [JUCE](http://www.rawmaterialsoftware.com) framework
-
-## Important: ##
-
-At the moment, KlangFalter is neither really "feature complete" nor absolutely free of software bugs, and there's still much room for improvement. Nevertheless, it runs sufficiently stable at least in Ableton Live 8, which I use myself for making music.
