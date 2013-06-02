@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  12 Mar 2013 7:46:40pm
+  Creation date:  15 May 2013 4:41:55pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -35,8 +35,6 @@
 SettingsDialogComponent::SettingsDialogComponent (Processor& processor)
     : _processor(processor),
       _irDirectoryGroupComponent (0),
-      _irDirectoryBrowseButton (0),
-      _irDirectoryLabel (0),
       _aboutGroupComponent (0),
       _nameVersionLabel (0),
       _copyrightLabel (0),
@@ -54,25 +52,12 @@ SettingsDialogComponent::SettingsDialogComponent (Processor& processor)
       _headBlockSizeLabel (0),
       _tailBlockSizePrefixLabel (0),
       _tailBlockSizeLabel (0),
+      _selectIRDirectoryButton (0),
       cachedImage_hifilofi_jpg (0)
 {
     addAndMakeVisible (_irDirectoryGroupComponent = new GroupComponent (String::empty,
                                                                         L"Impulse Response Directory"));
     _irDirectoryGroupComponent->setColour (GroupComponent::textColourId, Colour (0xff202020));
-
-    addAndMakeVisible (_irDirectoryBrowseButton = new TextButton (String::empty));
-    _irDirectoryBrowseButton->setButtonText (L"Browse ...");
-    _irDirectoryBrowseButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _irDirectoryBrowseButton->addListener (this);
-
-    addAndMakeVisible (_irDirectoryLabel = new Label (L"new label",
-                                                      L"<None>"));
-    _irDirectoryLabel->setFont (Font (15.0000f, Font::plain));
-    _irDirectoryLabel->setJustificationType (Justification::centredLeft);
-    _irDirectoryLabel->setEditable (false, false, false);
-    _irDirectoryLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _irDirectoryLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _irDirectoryLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
     addAndMakeVisible (_aboutGroupComponent = new GroupComponent (String::empty,
                                                                   L"About"));
@@ -213,17 +198,29 @@ SettingsDialogComponent::SettingsDialogComponent (Processor& processor)
     _tailBlockSizeLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
     _tailBlockSizeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
 
+    addAndMakeVisible (_selectIRDirectoryButton = new TextButton (String::empty));
+    _selectIRDirectoryButton->setButtonText (L"Select Directory");
+    _selectIRDirectoryButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _selectIRDirectoryButton->addListener (this);
+
     cachedImage_hifilofi_jpg = ImageCache::getFromMemory (hifilofi_jpg, hifilofi_jpgSize);
 
     //[UserPreSize]
+    const juce::File irDirectory = _processor.getSettings().getImpulseResponseDirectory();
+    _irDirectoryBrowserComponent = new juce::FileBrowserComponent(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories | juce::FileBrowserComponent::filenameBoxIsReadOnly,
+                                                                  irDirectory,
+                                                                  nullptr,
+                                                                  nullptr);
+    _irDirectoryBrowserComponent->setFilenameBoxLabel(juce::String("Folder:"));
+    _irDirectoryBrowserComponent->setFileName(irDirectory.getFullPathName());
+    _irDirectoryGroupComponent->addAndMakeVisible(_irDirectoryBrowserComponent);
     //[/UserPreSize]
 
-    setSize (504, 400);
+    setSize (504, 580);
 
 
     //[Constructor] You can add your own custom stuff here..
     _nameVersionLabel->setText(ProjectInfo::projectName + juce::String(" - Version ") + ProjectInfo::versionString, false);
-    _irDirectoryLabel->setText(_processor.getSettings().getImpulseResponseDirectory().getFullPathName(), false);
     _juceVersionLabel->setText(juce::SystemStats::getJUCEVersion(), false);
     _numberInputsLabel->setText(juce::String(_processor.getNumInputChannels()), false);
     _numberOutputsLabel->setText(juce::String(_processor.getNumOutputChannels()), false);
@@ -239,8 +236,6 @@ SettingsDialogComponent::~SettingsDialogComponent()
     //[/Destructor_pre]
 
     deleteAndZero (_irDirectoryGroupComponent);
-    deleteAndZero (_irDirectoryBrowseButton);
-    deleteAndZero (_irDirectoryLabel);
     deleteAndZero (_aboutGroupComponent);
     deleteAndZero (_nameVersionLabel);
     deleteAndZero (_copyrightLabel);
@@ -258,6 +253,7 @@ SettingsDialogComponent::~SettingsDialogComponent()
     deleteAndZero (_headBlockSizeLabel);
     deleteAndZero (_tailBlockSizePrefixLabel);
     deleteAndZero (_tailBlockSizeLabel);
+    deleteAndZero (_selectIRDirectoryButton);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -284,27 +280,27 @@ void SettingsDialogComponent::paint (Graphics& g)
 
 void SettingsDialogComponent::resized()
 {
-    _irDirectoryGroupComponent->setBounds (16, 128, 472, 88);
-    _irDirectoryBrowseButton->setBounds (356, 176, 114, 24);
-    _irDirectoryLabel->setBounds (24, 144, 456, 24);
+    _irDirectoryGroupComponent->setBounds (16, 120, 472, 288);
     _aboutGroupComponent->setBounds (16, 11, 472, 101);
     _nameVersionLabel->setBounds (24, 28, 344, 24);
     _copyrightLabel->setBounds (24, 52, 344, 24);
     _licenseHyperlink->setBounds (160, 76, 184, 24);
-    _infoGroupComponent->setBounds (16, 232, 472, 152);
-    _juceVersionPrefixLabel->setBounds (24, 252, 140, 24);
-    _juceVersionLabel->setBounds (156, 252, 316, 24);
-    _numberInputsPrefixLabel->setBounds (24, 272, 140, 24);
-    _numberInputsLabel->setBounds (156, 272, 316, 24);
-    _numberOutputsPrefixLabel->setBounds (24, 292, 140, 24);
-    _numberOutputsLabel->setBounds (156, 292, 316, 24);
-    _sseOptimizationPrefixLabel->setBounds (24, 312, 140, 24);
-    _sseOptimizationLabel->setBounds (156, 312, 316, 24);
-    _headBlockSizePrefixLabel->setBounds (24, 332, 140, 24);
-    _headBlockSizeLabel->setBounds (156, 332, 316, 24);
-    _tailBlockSizePrefixLabel->setBounds (24, 352, 140, 24);
-    _tailBlockSizeLabel->setBounds (156, 352, 316, 24);
+    _infoGroupComponent->setBounds (16, 416, 472, 152);
+    _juceVersionPrefixLabel->setBounds (24, 436, 140, 24);
+    _juceVersionLabel->setBounds (156, 436, 316, 24);
+    _numberInputsPrefixLabel->setBounds (24, 456, 140, 24);
+    _numberInputsLabel->setBounds (156, 456, 316, 24);
+    _numberOutputsPrefixLabel->setBounds (24, 476, 140, 24);
+    _numberOutputsLabel->setBounds (156, 476, 316, 24);
+    _sseOptimizationPrefixLabel->setBounds (24, 496, 140, 24);
+    _sseOptimizationLabel->setBounds (156, 496, 316, 24);
+    _headBlockSizePrefixLabel->setBounds (24, 516, 140, 24);
+    _headBlockSizeLabel->setBounds (156, 516, 316, 24);
+    _tailBlockSizePrefixLabel->setBounds (24, 536, 140, 24);
+    _tailBlockSizeLabel->setBounds (156, 536, 316, 24);
+    _selectIRDirectoryButton->setBounds (352, 372, 124, 24);
     //[UserResized] Add your own custom resize handling here..
+    _irDirectoryBrowserComponent->setBounds(4, 12, _irDirectoryGroupComponent->getWidth()-8, _irDirectoryGroupComponent->getHeight()-(_selectIRDirectoryButton->getHeight()+26));
     //[/UserResized]
 }
 
@@ -313,23 +309,19 @@ void SettingsDialogComponent::buttonClicked (Button* buttonThatWasClicked)
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == _irDirectoryBrowseButton)
+    if (buttonThatWasClicked == _selectIRDirectoryButton)
     {
-        //[UserButtonCode__irDirectoryBrowseButton] -- add your button handler code here..
-        juce::FileChooser fileChooser("Impulse Response Directory",
-                                      _processor.getSettings().getImpulseResponseDirectory(),
-                                      "*",
-                                      true);
-        if (fileChooser.browseForDirectory() && fileChooser.getResults().size() == 1)
+        //[UserButtonCode__selectIRDirectoryButton] -- add your button handler code here..
+        if (_irDirectoryBrowserComponent && _irDirectoryBrowserComponent->getNumSelectedFiles() == 1)
         {
-          const juce::File directory = fileChooser.getResults().getReference(0);
+          const juce::File directory = _irDirectoryBrowserComponent->getSelectedFile(0);
           if (directory.exists() && directory.isDirectory())
           {
             _processor.getSettings().setImpulseResponseDirectory(directory);
-            _irDirectoryLabel->setText(directory.getFullPathName(), true);
+            _irDirectoryBrowserComponent->setFileName(directory.getFullPathName());
           }
         }
-        //[/UserButtonCode__irDirectoryBrowseButton]
+        //[/UserButtonCode__selectIRDirectoryButton]
     }
 
     //[UserbuttonClicked_Post]
@@ -354,21 +346,13 @@ BEGIN_JUCER_METADATA
                  componentName="" parentClasses="public Component" constructorParams="Processor&amp; processor"
                  variableInitialisers="_processor(processor)" snapPixels="4" snapActive="1"
                  snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="504"
-                 initialHeight="400">
+                 initialHeight="580">
   <BACKGROUND backgroundColour="ffb1b1b6">
     <IMAGE pos="400 31 74 69" resource="hifilofi_jpg" opacity="1" mode="2"/>
   </BACKGROUND>
   <GROUPCOMPONENT name="" id="54a84aa39bb27f4b" memberName="_irDirectoryGroupComponent"
-                  virtualName="" explicitFocusOrder="0" pos="16 128 472 88" textcol="ff202020"
+                  virtualName="" explicitFocusOrder="0" pos="16 120 472 288" textcol="ff202020"
                   title="Impulse Response Directory"/>
-  <TEXTBUTTON name="" id="b1f2dd9a0266865f" memberName="_irDirectoryBrowseButton"
-              virtualName="" explicitFocusOrder="0" pos="356 176 114 24" buttonText="Browse ..."
-              connectedEdges="3" needsCallback="1" radioGroupId="0"/>
-  <LABEL name="new label" id="3415b13950fc6ae1" memberName="_irDirectoryLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 144 456 24" textCol="ff202020"
-         edTextCol="ff202020" edBkgCol="0" labelText="&lt;None&gt;" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15" bold="0" italic="0" justification="33"/>
   <GROUPCOMPONENT name="" id="81749f34274f2c9a" memberName="_aboutGroupComponent"
                   virtualName="" explicitFocusOrder="0" pos="16 11 472 101" textcol="ff202020"
                   title="About"/>
@@ -387,68 +371,71 @@ BEGIN_JUCER_METADATA
                    buttonText="Licensed under GPL3" connectedEdges="0" needsCallback="0"
                    radioGroupId="0" url="http://www.gnu.org/licenses"/>
   <GROUPCOMPONENT name="" id="25ac040a541cb0e7" memberName="_infoGroupComponent"
-                  virtualName="" explicitFocusOrder="0" pos="16 232 472 152" textcol="ff202020"
+                  virtualName="" explicitFocusOrder="0" pos="16 416 472 152" textcol="ff202020"
                   title="Plugin Information"/>
   <LABEL name="" id="c4a4ccf3c53f694f" memberName="_juceVersionPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 252 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 436 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="JUCE Version:" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="e47fab678f6315f0" memberName="_juceVersionLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 252 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 436 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="b930280e91f83049" memberName="_numberInputsPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 272 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 456 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Input Channels:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="26b792a855f83bf7" memberName="_numberInputsLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 272 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 456 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="7ecaf5ecb63407f4" memberName="_numberOutputsPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 292 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 476 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Output Channels:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="69f8c3850d35c1bd" memberName="_numberOutputsLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 292 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 476 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="ad7d4e6a39bb8ab5" memberName="_sseOptimizationPrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 312 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 496 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="SSE Optimization:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="7a6359296851c399" memberName="_sseOptimizationLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 312 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 496 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="b9baa71c9fe56254" memberName="_headBlockSizePrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 332 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 516 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Head Block Size:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="4156f958d766b1d1" memberName="_headBlockSizeLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 332 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 516 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="a82e3cf23273bc55" memberName="_tailBlockSizePrefixLabel"
-         virtualName="" explicitFocusOrder="0" pos="24 352 140 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="24 536 140 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="Tail Block Size:"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
   <LABEL name="" id="9fa7e63d5dcac636" memberName="_tailBlockSizeLabel"
-         virtualName="" explicitFocusOrder="0" pos="156 352 316 24" textCol="ff202020"
+         virtualName="" explicitFocusOrder="0" pos="156 536 316 24" textCol="ff202020"
          edTextCol="ff202020" edBkgCol="0" labelText="&lt;Unknown&gt;"
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15" bold="0" italic="0" justification="33"/>
+  <TEXTBUTTON name="" id="12129938a2f63765" memberName="_selectIRDirectoryButton"
+              virtualName="" explicitFocusOrder="0" pos="352 372 124 24" buttonText="Select Directory"
+              connectedEdges="3" needsCallback="1" radioGroupId="0"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

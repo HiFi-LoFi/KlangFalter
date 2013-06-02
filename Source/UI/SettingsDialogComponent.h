@@ -3,7 +3,7 @@
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  12 Mar 2013 7:46:40pm
+  Creation date:  15 May 2013 4:41:55pm
 
   Be careful when adding custom code to these files, as only the code within
   the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
@@ -19,8 +19,8 @@
   ==============================================================================
 */
 
-#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_884D08__
-#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_884D08__
+#ifndef __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_9545D2EA__
+#define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_9545D2EA__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "../JuceLibraryCode/JuceHeader.h"
@@ -65,12 +65,11 @@ public:
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     Processor& _processor;
+    juce::ScopedPointer<juce::FileBrowserComponent> _irDirectoryBrowserComponent;
     //[/UserVariables]
 
     //==============================================================================
     GroupComponent* _irDirectoryGroupComponent;
-    TextButton* _irDirectoryBrowseButton;
-    Label* _irDirectoryLabel;
     GroupComponent* _aboutGroupComponent;
     Label* _nameVersionLabel;
     Label* _copyrightLabel;
@@ -88,6 +87,7 @@ private:
     Label* _headBlockSizeLabel;
     Label* _tailBlockSizePrefixLabel;
     Label* _tailBlockSizeLabel;
+    TextButton* _selectIRDirectoryButton;
     Image cachedImage_hifilofi_jpg;
 
 
@@ -98,4 +98,4 @@ private:
 };
 
 
-#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_884D08__
+#endif   // __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_9545D2EA__
