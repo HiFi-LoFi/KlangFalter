@@ -243,8 +243,8 @@ static bool TestTwoStageConvolver(size_t inputSize,
 }
 
 
-//#define TEST_CORRECTNESS
-#define TEST_PERFORMANCE
+#define TEST_CORRECTNESS
+//#define TEST_PERFORMANCE
 
 #define TEST_FFTCONVOLVER
 #define TEST_TWOSTAGEFFTCONVOLVER
