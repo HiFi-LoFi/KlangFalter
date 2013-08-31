@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.06.02"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.08.31"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.1.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -8,18 +8,18 @@
               pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
               pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="KlangFalterAU" pluginAUViewClass="KlangFalterAU_V1"
-              pluginRTASCategory="" companyName="HiFi-LoFi" aaxIdentifier="com.yourcompany.KlangFalter"
+              pluginRTASCategory="" companyName="HiFi-LoFi" aaxIdentifier="com.hifi-lofi.KlangFalter"
               pluginAAXCategory="AAX_ePlugInCategory_Dynamics" buildAAX="0">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" juceFolder="../Juce/modules"
-               extraCompilerFlags="" extraFrameworks="Accelerate">
+               extraCompilerFlags="" extraFrameworks="Accelerate" extraDefs="AUDIOFFT_APPLE_ACCELERATE=1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="KlangFalter"
                        osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
-                       defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
+                       defines=""/>
         <CONFIGURATION name="Release" isDebug="1" optimisation="3" targetName="KlangFalter"
                        osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
-                       defines="AUDIOFFT_APPLE_ACCELERATE=1"/>
+                       defines=""/>
       </CONFIGURATIONS>
     </XCODE_MAC>
     <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="..\Juce\modules">
@@ -27,7 +27,7 @@
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
                        isDebug="1" optimisation="1" targetName="KlangFalter"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
-                       isDebug="1" optimisation="2" targetName="KlangFalter"/>
+                       isDebug="1" optimisation="3" targetName="KlangFalter"/>
       </CONFIGURATIONS>
     </VS2010>
   </EXPORTFORMATS>
@@ -112,8 +112,6 @@
     <FILE id="dxea9X" name="Settings.cpp" compile="1" resource="0" file="Source/Settings.cpp"/>
     <FILE id="OsElLF" name="Settings.h" compile="0" resource="0" file="Source/Settings.h"/>
     <FILE id="pWwoGQ" name="SmoothValue.h" compile="0" resource="0" file="Source/SmoothValue.h"/>
-    <FILE id="wRwMmM" name="SpinningScopedLock.h" compile="0" resource="0"
-          file="Source/SpinningScopedLock.h"/>
     <FILE id="e4ayW0" name="StereoWidth.cpp" compile="1" resource="0" file="Source/StereoWidth.cpp"/>
     <FILE id="snyExm" name="StereoWidth.h" compile="0" resource="0" file="Source/StereoWidth.h"/>
   </MAINGROUP>
