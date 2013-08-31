@@ -19,7 +19,6 @@
 
 #include "Parameters.h"
 #include "Processor.h"
-#include "SpinningScopedLock.h"
 
 #include <algorithm>
 
@@ -339,9 +338,13 @@ void IRAgent::process(const float* input, float* output, size_t len)
 {
   const float Epsilon = 0.0001f;
   
-  // Lock the convolver mutex by spinning because this method
-  // is called in the realtime audio thread...
-  SpinningScopedLock<juce::CriticalSection> convolverLock(_convolverMutex);
+  // This is the hopefully one and only rare exception where we need to
+  // lock a mutex in the realtime audio thread :-/ (however, the according
+  // convolver mutex is locked somewhere else only once for a very short and
+  // rare swapping operation, so this shouldn't be a problem, and most operating
+  // systems internally try spinning before performing an expensive context switch,
+  // so we will never give up the context here probably).
+  juce::ScopedLock convolverLock(_convolverMutex);
   
   if (_convolver && (_fadeFactor > Epsilon || ::fabs(_fadeIncrement) > Epsilon))
   {
