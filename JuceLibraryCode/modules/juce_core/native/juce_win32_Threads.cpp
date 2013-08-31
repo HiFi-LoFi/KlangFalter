@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -147,7 +150,7 @@ void Thread::killThread()
     }
 }
 
-void Thread::setCurrentThreadName (const String& name)
+void JUCE_CALLTYPE Thread::setCurrentThreadName (const String& name)
 {
    #if JUCE_DEBUG && JUCE_MSVC
     struct
@@ -174,7 +177,7 @@ void Thread::setCurrentThreadName (const String& name)
    #endif
 }
 
-Thread::ThreadID Thread::getCurrentThreadId()
+Thread::ThreadID JUCE_CALLTYPE Thread::getCurrentThreadId()
 {
     return (ThreadID) (pointer_sized_int) GetCurrentThreadId();
 }
@@ -196,7 +199,7 @@ bool Thread::setThreadPriority (void* handle, int priority)
     return SetThreadPriority (handle, pri) != FALSE;
 }
 
-void Thread::setCurrentThreadAffinityMask (const uint32 affinityMask)
+void JUCE_CALLTYPE Thread::setCurrentThreadAffinityMask (const uint32 affinityMask)
 {
     SetThreadAffinityMask (GetCurrentThread(), affinityMask);
 }
@@ -247,7 +250,7 @@ void Thread::yield()
 //==============================================================================
 static int lastProcessPriority = -1;
 
-// called by WindowDriver because Windows does wierd things to process priority
+// called by WindowDriver because Windows does weird things to process priority
 // when you swap apps, and this forces an update when the app is brought to the front.
 void juce_repeatLastProcessPriority()
 {
@@ -268,7 +271,7 @@ void juce_repeatLastProcessPriority()
     }
 }
 
-void Process::setPriority (ProcessPriority prior)
+void JUCE_CALLTYPE Process::setPriority (ProcessPriority prior)
 {
     if (lastProcessPriority != (int) prior)
     {
@@ -289,7 +292,7 @@ bool JUCE_CALLTYPE Process::isRunningUnderDebugger()
 
 static void* currentModuleHandle = nullptr;
 
-void* Process::getCurrentModuleInstanceHandle() noexcept
+void* JUCE_CALLTYPE Process::getCurrentModuleInstanceHandle() noexcept
 {
     if (currentModuleHandle == nullptr)
         currentModuleHandle = GetModuleHandleA (nullptr);
@@ -297,29 +300,29 @@ void* Process::getCurrentModuleInstanceHandle() noexcept
     return currentModuleHandle;
 }
 
-void Process::setCurrentModuleInstanceHandle (void* const newHandle) noexcept
+void JUCE_CALLTYPE Process::setCurrentModuleInstanceHandle (void* const newHandle) noexcept
 {
     currentModuleHandle = newHandle;
 }
 
-void Process::raisePrivilege()
+void JUCE_CALLTYPE Process::raisePrivilege()
 {
     jassertfalse; // xxx not implemented
 }
 
-void Process::lowerPrivilege()
+void JUCE_CALLTYPE Process::lowerPrivilege()
 {
     jassertfalse; // xxx not implemented
 }
 
-void Process::terminate()
+void JUCE_CALLTYPE Process::terminate()
 {
    #if JUCE_MSVC && JUCE_CHECK_MEMORY_LEAKS
     _CrtDumpMemoryLeaks();
    #endif
 
     // bullet in the head in case there's a problem shutting down..
-    ExitProcess (0);
+    ExitProcess (1);
 }
 
 bool juce_isRunningInWine()
@@ -582,3 +585,55 @@ bool ChildProcess::kill()
 {
     return activeProcess == nullptr || activeProcess->killProcess();
 }
+
+//==============================================================================
+struct HighResolutionTimer::Pimpl
+{
+    Pimpl (HighResolutionTimer& t) noexcept  : owner (t), periodMs (0)
+    {
+    }
+
+    ~Pimpl()
+    {
+        jassert (periodMs == 0);
+    }
+
+    void start (int newPeriod)
+    {
+        if (newPeriod != periodMs)
+        {
+            stop();
+            periodMs = newPeriod;
+
+            TIMECAPS tc;
+            if (timeGetDevCaps (&tc, sizeof (tc)) == TIMERR_NOERROR)
+            {
+                const int actualPeriod = jlimit ((int) tc.wPeriodMin, (int) tc.wPeriodMax, newPeriod);
+
+                timerID = timeSetEvent (actualPeriod, tc.wPeriodMin, callbackFunction, (DWORD_PTR) this,
+                                        TIME_PERIODIC | TIME_CALLBACK_FUNCTION | 0x100 /*TIME_KILL_SYNCHRONOUS*/);
+            }
+        }
+    }
+
+    void stop()
+    {
+        periodMs = 0;
+        timeKillEvent (timerID);
+    }
+
+    HighResolutionTimer& owner;
+    int periodMs;
+
+private:
+    unsigned int timerID;
+
+    static void __stdcall callbackFunction (UINT, UINT, DWORD_PTR userInfo, DWORD_PTR, DWORD_PTR)
+    {
+        if (Pimpl* const timer = reinterpret_cast<Pimpl*> (userInfo))
+            if (timer->periodMs != 0)
+                timer->owner.hiResTimerCallback();
+    }
+
+    JUCE_DECLARE_NON_COPYABLE (Pimpl)
+};

@@ -1,35 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_APPLICATIONCOMMANDMANAGER_JUCEHEADER__
-#define __JUCE_APPLICATIONCOMMANDMANAGER_JUCEHEADER__
-
-#include "juce_ApplicationCommandTarget.h"
-class KeyPressMappingSet;
-class ApplicationCommandManagerListener;
-class Desktop;
+#ifndef JUCE_APPLICATIONCOMMANDMANAGER_H_INCLUDED
+#define JUCE_APPLICATIONCOMMANDMANAGER_H_INCLUDED
 
 
 //==============================================================================
@@ -182,7 +176,7 @@ public:
 
     /** Returns the list of categories.
 
-        This will go through all registered commands, and return a list of all the distict
+        This will go through all registered commands, and return a list of all the distinct
         categoryName values from their ApplicationCommandInfo structure.
 
         @see getCommandsInCategory()
@@ -312,8 +306,8 @@ private:
     ApplicationCommandTarget* firstTarget;
 
     void sendListenerInvokeCallback (const ApplicationCommandTarget::InvocationInfo&);
-    void handleAsyncUpdate();
-    void globalFocusChanged (Component*);
+    void handleAsyncUpdate() override;
+    void globalFocusChanged (Component*) override;
 
    #if JUCE_CATCH_DEPRECATED_CODE_MISUSE
     // This is just here to cause a compile error in old code that hasn't been changed to use the new
@@ -355,4 +349,4 @@ public:
 
 
 
-#endif   // __JUCE_APPLICATIONCOMMANDMANAGER_JUCEHEADER__
+#endif   // JUCE_APPLICATIONCOMMANDMANAGER_H_INCLUDED

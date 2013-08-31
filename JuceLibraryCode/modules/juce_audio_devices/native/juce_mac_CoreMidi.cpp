@@ -1,51 +1,57 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
+#ifndef JUCE_LOG_COREMIDI_ERRORS
+ #define JUCE_LOG_COREMIDI_ERRORS 1
+#endif
+
 namespace CoreMidiHelpers
 {
-    static bool logError (const OSStatus err, const int lineNum)
+    static bool checkError (const OSStatus err, const int lineNum)
     {
         if (err == noErr)
             return true;
 
-        Logger::writeToLog ("CoreMidi error: " + String (lineNum) + " - " + String::toHexString ((int) err));
-        jassertfalse;
+       #if JUCE_LOG_COREMIDI_ERRORS
+        Logger::writeToLog ("CoreMIDI error: " + String (lineNum) + " - " + String::toHexString ((int) err));
+       #endif
+
+        (void) lineNum;
         return false;
     }
 
     #undef CHECK_ERROR
-    #define CHECK_ERROR(a) CoreMidiHelpers::logError (a, __LINE__)
+    #define CHECK_ERROR(a) CoreMidiHelpers::checkError (a, __LINE__)
 
     //==============================================================================
     static String getMidiObjectName (MIDIObjectRef entity)
     {
         String result;
-        CFStringRef str = 0;
+        CFStringRef str = nullptr;
         MIDIObjectGetStringProperty (entity, kMIDIPropertyName, &str);
 
-        if (str != 0)
+        if (str != nullptr)
         {
             result = String::fromCFString (str);
             CFRelease (str);
@@ -58,7 +64,7 @@ namespace CoreMidiHelpers
     {
         String result (getMidiObjectName (endpoint));
 
-        MIDIEntityRef entity = 0;
+        MIDIEntityRef entity = 0;  // NB: don't attempt to use nullptr for refs - it fails in some types of build.
         MIDIEndpointGetEntity (endpoint, &entity);
 
         if (entity == 0)
@@ -99,12 +105,12 @@ namespace CoreMidiHelpers
         String result;
 
         // Does the endpoint have connections?
-        CFDataRef connections = 0;
+        CFDataRef connections = nullptr;
         int numConnections = 0;
 
         MIDIObjectGetDataProperty (endpoint, kMIDIPropertyConnectionUniqueID, &connections);
 
-        if (connections != 0)
+        if (connections != nullptr)
         {
             numConnections = ((int) CFDataGetLength (connections)) / (int) sizeof (MIDIUniqueID);
 
@@ -186,8 +192,10 @@ namespace CoreMidiHelpers
 
     static String getGlobalMidiClientName()
     {
-        JUCEApplicationBase* const app = JUCEApplicationBase::getInstance();
-        return app != nullptr ? app->getApplicationName() : "JUCE";
+        if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
+            return app->getApplicationName();
+
+        return "JUCE";
     }
 
     static MIDIClientRef getGlobalMidiClient()
@@ -201,7 +209,7 @@ namespace CoreMidiHelpers
             jassert (MessageManager::getInstance()->isThisTheMessageThread());
 
             CFStringRef name = getGlobalMidiClientName().toCFString();
-            CHECK_ERROR (MIDIClientCreate (name, &globalSystemChangeCallback, 0, &globalMidiClient));
+            CHECK_ERROR (MIDIClientCreate (name, &globalSystemChangeCallback, nullptr, &globalMidiClient));
             CFRelease (name);
         }
 
@@ -212,8 +220,8 @@ namespace CoreMidiHelpers
     class MidiPortAndEndpoint
     {
     public:
-        MidiPortAndEndpoint (MIDIPortRef port_, MIDIEndpointRef endPoint_)
-            : port (port_), endPoint (endPoint_)
+        MidiPortAndEndpoint (MIDIPortRef p, MIDIEndpointRef ep)
+            : port (p), endPoint (ep)
         {
         }
 
@@ -222,7 +230,7 @@ namespace CoreMidiHelpers
             if (port != 0)
                 MIDIPortDispose (port);
 
-            if (port == 0 && endPoint != 0) // if port == 0, it means we created the endpoint, so it's safe to delete it
+            if (port == 0 && endPoint != 0) // if port == nullptr, it means we created the endpoint, so it's safe to delete it
                 MIDIEndpointDispose (endPoint);
         }
 
@@ -246,8 +254,8 @@ namespace CoreMidiHelpers
     class MidiPortAndCallback
     {
     public:
-        MidiPortAndCallback (MidiInputCallback& callback_)
-            : input (nullptr), active (false), callback (callback_), concatenator (2048)
+        MidiPortAndCallback (MidiInputCallback& cb)
+            : input (nullptr), active (false), callback (cb), concatenator (2048)
         {
         }
 
@@ -260,7 +268,7 @@ namespace CoreMidiHelpers
                 activeCallbacks.removeFirstMatchingValue (this);
             }
 
-            if (portAndEndpoint != nullptr && portAndEndpoint->port != 0)
+            if (portAndEndpoint != 0 && portAndEndpoint->port != 0)
                 CHECK_ERROR (MIDIPortDisconnectSource (portAndEndpoint->port, portAndEndpoint->endPoint));
         }
 
@@ -417,16 +425,14 @@ int MidiInput::getDefaultDeviceIndex()  { return 0; }
 
 MidiInput* MidiInput::openDevice (int index, MidiInputCallback* callback)
 {
-    jassert (callback != 0);
+    jassert (callback != nullptr);
 
     using namespace CoreMidiHelpers;
     MidiInput* newInput = nullptr;
 
     if (isPositiveAndBelow (index, (int) MIDIGetNumberOfSources()))
     {
-        MIDIEndpointRef endPoint = MIDIGetSource ((ItemCount) index);
-
-        if (endPoint != 0)
+        if (MIDIEndpointRef endPoint = MIDIGetSource ((ItemCount) index))
         {
             CFStringRef name;
 
@@ -439,7 +445,7 @@ MidiInput* MidiInput::openDevice (int index, MidiInputCallback* callback)
 
                     if (CHECK_ERROR (MIDIInputPortCreate (client, name, midiInputProc, mpc, &port)))
                     {
-                        if (CHECK_ERROR (MIDIPortConnectSource (port, endPoint, 0)))
+                        if (CHECK_ERROR (MIDIPortConnectSource (port, endPoint, nullptr)))
                         {
                             mpc->portAndEndpoint = new MidiPortAndEndpoint (port, endPoint);
 
@@ -498,8 +504,7 @@ MidiInput* MidiInput::createNewDevice (const String& deviceName, MidiInputCallba
     return mi;
 }
 
-MidiInput::MidiInput (const String& name_)
-    : name (name_)
+MidiInput::MidiInput (const String& nm)  : name (nm)
 {
 }
 

@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -40,7 +39,7 @@ public:
         manager->enableInputLevelMeasurement (false);
     }
 
-    void timerCallback()
+    void timerCallback() override
     {
         const float newLevel = (float) manager->getCurrentInputLevel();
 
@@ -51,7 +50,7 @@ public:
         }
     }
 
-    void paint (Graphics& g)
+    void paint (Graphics& g) override
     {
         getLookAndFeel().drawLevelMeter (g, getWidth(), getHeight(),
                                          (float) exp (log (level) / 3.0)); // (add a bit of a skew to make the level more obvious)
@@ -70,16 +69,11 @@ class AudioDeviceSelectorComponent::MidiInputSelectorComponentListBox  : public 
                                                                          private ListBoxModel
 {
 public:
-    //==============================================================================
-    MidiInputSelectorComponentListBox (AudioDeviceManager& deviceManager_,
-                                       const String& noItemsMessage_,
-                                       const int minNumber_,
-                                       const int maxNumber_)
+    MidiInputSelectorComponentListBox (AudioDeviceManager& dm,
+                                       const String& noItemsMessage_)
         : ListBox (String::empty, nullptr),
-          deviceManager (deviceManager_),
-          noItemsMessage (noItemsMessage_),
-          minNumber (minNumber_),
-          maxNumber (maxNumber_)
+          deviceManager (dm),
+          noItemsMessage (noItemsMessage_)
     {
         items = MidiInput::getDevices();
 
@@ -136,7 +130,7 @@ public:
         flipEnablement (row);
     }
 
-    void paint (Graphics& g)
+    void paint (Graphics& g) override
     {
         ListBox::paint (g);
 
@@ -164,7 +158,6 @@ private:
     AudioDeviceManager& deviceManager;
     const String noItemsMessage;
     StringArray items;
-    int minNumber, maxNumber;
 
     void flipEnablement (const int row)
     {
@@ -193,6 +186,7 @@ struct AudioDeviceSetupDetails
     bool useStereoPairs;
 };
 
+static String getNoDeviceString()   { return "<< " + TRANS("none") + " >>"; }
 
 //==============================================================================
 class AudioDeviceSettingsPanel : public Component,
@@ -224,7 +218,7 @@ public:
         setup.manager->removeChangeListener (this);
     }
 
-    void resized()
+    void resized() override
     {
         const int lx = proportionOfWidth (0.35f);
         const int w = proportionOfWidth (0.4f);
@@ -256,7 +250,7 @@ public:
             y += dh;
         }
 
-        const int maxBoxHeight = 100;//(getHeight() - y - dh * 2) / numBoxes;
+        const int maxBoxHeight = 100;
 
         if (outputChanList != nullptr)
         {
@@ -306,7 +300,7 @@ public:
         }
     }
 
-    void comboBoxChanged (ComboBox* comboBoxThatHasChanged)
+    void comboBoxChanged (ComboBox* comboBoxThatHasChanged) override
     {
         if (comboBoxThatHasChanged == nullptr)
             return;
@@ -382,7 +376,7 @@ public:
         return device->showControlPanel();
     }
 
-    void buttonClicked (Button* button)
+    void buttonClicked (Button* button) override
     {
         if (button == showAdvancedSettingsButton)
         {
@@ -466,17 +460,17 @@ public:
             bufferSizeDropDown = nullptr;
 
             if (outputDeviceDropDown != nullptr)
-                outputDeviceDropDown->setSelectedId (-1, true);
+                outputDeviceDropDown->setSelectedId (-1, dontSendNotification);
 
             if (inputDeviceDropDown != nullptr)
-                inputDeviceDropDown->setSelectedId (-1, true);
+                inputDeviceDropDown->setSelectedId (-1, dontSendNotification);
         }
 
         resized();
         setSize (getWidth(), getLowestY() + 4);
     }
 
-    void changeListenerCallback (ChangeBroadcaster*)
+    void changeListenerCallback (ChangeBroadcaster*) override
     {
         updateAllControls();
     }
@@ -499,7 +493,7 @@ private:
 
             const int index = type->getIndexOfDevice (currentDevice, isInput);
 
-            box->setSelectedId (index + 1, true);
+            box->setSelectedId (index + 1, dontSendNotification);
 
             if (testButton != nullptr && ! isInput)
                 testButton->setEnabled (index >= 0);
@@ -510,13 +504,13 @@ private:
     {
         const StringArray devs (type->getDeviceNames (isInputs));
 
-        combo.clear (true);
+        combo.clear (dontSendNotification);
 
         for (int i = 0; i < devs.size(); ++i)
             combo.addItem (devs[i], i + 1);
 
-        combo.addItem (TRANS("<< none >>"), -1);
-        combo.setSelectedId (-1, true);
+        combo.addItem (getNoDeviceString(), -1);
+        combo.setSelectedId (-1, dontSendNotification);
     }
 
     int getLowestY() const
@@ -618,7 +612,7 @@ private:
             sampleRateDropDown->addItem (String (rate) + " Hz", rate);
         }
 
-        sampleRateDropDown->setSelectedId (roundToInt (currentDevice->getCurrentSampleRate()), true);
+        sampleRateDropDown->setSelectedId (roundToInt (currentDevice->getCurrentSampleRate()), dontSendNotification);
         sampleRateDropDown->addListener (this);
     }
 
@@ -652,7 +646,7 @@ private:
                                          bs);
         }
 
-        bufferSizeDropDown->setSelectedId (currentDevice->getCurrentBufferSizeSamples(), true);
+        bufferSizeDropDown->setSelectedId (currentDevice->getCurrentBufferSizeSamples(), dontSendNotification);
         bufferSizeDropDown->addListener (this);
     }
 
@@ -715,12 +709,12 @@ public:
             repaint();
         }
 
-        int getNumRows()
+        int getNumRows() override
         {
             return items.size();
         }
 
-        void paintListBoxItem (int row, Graphics& g, int width, int height, bool rowIsSelected)
+        void paintListBoxItem (int row, Graphics& g, int width, int height, bool rowIsSelected) override
         {
             if (isPositiveAndBelow (row, items.size()))
             {
@@ -761,7 +755,7 @@ public:
             }
         }
 
-        void listBoxItemClicked (int row, const MouseEvent& e)
+        void listBoxItemClicked (int row, const MouseEvent& e) override
         {
             selectRow (row);
 
@@ -769,17 +763,17 @@ public:
                 flipEnablement (row);
         }
 
-        void listBoxItemDoubleClicked (int row, const MouseEvent&)
+        void listBoxItemDoubleClicked (int row, const MouseEvent&) override
         {
             flipEnablement (row);
         }
 
-        void returnKeyPressed (int row)
+        void returnKeyPressed (int row) override
         {
             flipEnablement (row);
         }
 
-        void paint (Graphics& g)
+        void paint (Graphics& g) override
         {
             ListBox::paint (g);
 
@@ -918,7 +912,7 @@ private:
 
 
 //==============================================================================
-AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& deviceManager_,
+AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& dm,
                                                             const int minInputChannels_,
                                                             const int maxInputChannels_,
                                                             const int minOutputChannels_,
@@ -927,7 +921,7 @@ AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& 
                                                             const bool showMidiOutputSelector,
                                                             const bool showChannelsAsStereoPairs_,
                                                             const bool hideAdvancedOptionsWithButton_)
-    : deviceManager (deviceManager_),
+    : deviceManager (dm),
       minOutputChannels (minOutputChannels_),
       maxOutputChannels (maxOutputChannels_),
       minInputChannels (minInputChannels_),
@@ -938,7 +932,7 @@ AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& 
     jassert (minOutputChannels >= 0 && minOutputChannels <= maxOutputChannels);
     jassert (minInputChannels >= 0 && minInputChannels <= maxInputChannels);
 
-    const OwnedArray<AudioIODeviceType>& types = deviceManager_.getAvailableDeviceTypes();
+    const OwnedArray<AudioIODeviceType>& types = deviceManager.getAvailableDeviceTypes();
 
     if (types.size() > 1)
     {
@@ -959,8 +953,7 @@ AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& 
     {
         addAndMakeVisible (midiInputsList
                             = new MidiInputSelectorComponentListBox (deviceManager,
-                                                                     TRANS("(No MIDI inputs available)"),
-                                                                     0, 0));
+                                                                     "(" + TRANS("No MIDI inputs available") + ")"));
 
         midiInputsLabel = new Label (String::empty, TRANS ("Active MIDI inputs:"));
         midiInputsLabel->setJustificationType (Justification::topRight);
@@ -986,7 +979,7 @@ AudioDeviceSelectorComponent::AudioDeviceSelectorComponent (AudioDeviceManager& 
         midiOutputLabel = nullptr;
     }
 
-    deviceManager_.addChangeListener (this);
+    deviceManager.addChangeListener (this);
     updateAllControls();
 }
 
@@ -1060,7 +1053,7 @@ void AudioDeviceSelectorComponent::changeListenerCallback (ChangeBroadcaster*)
 void AudioDeviceSelectorComponent::updateAllControls()
 {
     if (deviceTypeDropDown != nullptr)
-        deviceTypeDropDown->setText (deviceManager.getCurrentAudioDeviceType(), false);
+        deviceTypeDropDown->setText (deviceManager.getCurrentAudioDeviceType(), dontSendNotification);
 
     if (audioDeviceSettingsComp == nullptr
          || audioDeviceSettingsCompType != deviceManager.getCurrentAudioDeviceType())
@@ -1102,7 +1095,7 @@ void AudioDeviceSelectorComponent::updateAllControls()
 
         const StringArray midiOuts (MidiOutput::getDevices());
 
-        midiOutputSelector->addItem (TRANS("<< none >>"), -1);
+        midiOutputSelector->addItem (getNoDeviceString(), -1);
         midiOutputSelector->addSeparator();
 
         for (int i = 0; i < midiOuts.size(); ++i)
@@ -1113,7 +1106,7 @@ void AudioDeviceSelectorComponent::updateAllControls()
         if (deviceManager.getDefaultMidiOutput() != nullptr)
             current = 1 + midiOuts.indexOf (deviceManager.getDefaultMidiOutputName());
 
-        midiOutputSelector->setSelectedId (current, true);
+        midiOutputSelector->setSelectedId (current, dontSendNotification);
     }
 
     resized();

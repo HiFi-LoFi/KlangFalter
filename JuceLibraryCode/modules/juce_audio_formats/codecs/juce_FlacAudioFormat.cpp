@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -146,7 +145,7 @@ public:
 
     // returns the number of samples read
     bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
-                      int64 startSampleInFile, int numSamples)
+                      int64 startSampleInFile, int numSamples) override
     {
         using namespace FlacNamespace;
 
@@ -356,7 +355,7 @@ public:
     }
 
     //==============================================================================
-    bool write (const int** samplesToWrite, int numSamples)
+    bool write (const int** samplesToWrite, int numSamples) override
     {
         using namespace FlacNamespace;
         if (! ok)
@@ -391,7 +390,7 @@ public:
 
     bool writeData (const void* const data, const int size) const
     {
-        return output->write (data, size);
+        return output->write (data, (size_t) size);
     }
 
     static void packUint32 (FlacNamespace::FLAC__uint32 val, FlacNamespace::FLAC__byte* b, const int bytes)
@@ -492,14 +491,17 @@ FlacAudioFormat::~FlacAudioFormat()
 
 Array<int> FlacAudioFormat::getPossibleSampleRates()
 {
-    const int rates[] = { 22050, 32000, 44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000, 0 };
-    return Array <int> (rates);
+    const int rates[] = { 8000, 11025, 12000, 16000, 22050, 32000, 44100, 48000,
+                          88200, 96000, 176400, 192000, 352800, 384000 };
+
+    return Array<int> (rates, numElementsInArray (rates));
 }
 
 Array<int> FlacAudioFormat::getPossibleBitDepths()
 {
-    const int depths[] = { 16, 24, 0 };
-    return Array <int> (depths);
+    const int depths[] = { 16, 24 };
+
+    return Array<int> (depths, numElementsInArray (depths));
 }
 
 bool FlacAudioFormat::canDoStereo()     { return true; }

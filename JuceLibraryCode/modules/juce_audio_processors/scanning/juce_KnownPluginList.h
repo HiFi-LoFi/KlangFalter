@@ -1,33 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_KNOWNPLUGINLIST_JUCEHEADER__
-#define __JUCE_KNOWNPLUGINLIST_JUCEHEADER__
-
-#include "../processors/juce_PluginDescription.h"
-#include "../format/juce_AudioPluginFormat.h"
+#ifndef JUCE_KNOWNPLUGINLIST_H_INCLUDED
+#define JUCE_KNOWNPLUGINLIST_H_INCLUDED
 
 
 //==============================================================================
@@ -104,7 +100,8 @@ public:
     /** Returns true if the specified file is already known about and if it
         hasn't been modified since our entry was created.
     */
-    bool isListingUpToDate (const String& possiblePluginFileOrIdentifier) const;
+    bool isListingUpToDate (const String& possiblePluginFileOrIdentifier,
+                            AudioPluginFormat& formatToUse) const;
 
     /** Scans and adds a bunch of files that might have been dragged-and-dropped.
         If any types are found in the files, their descriptions are returned in the array.
@@ -179,13 +176,32 @@ public:
     /** Creates a PluginTree object containing all the known plugins. */
     PluginTree* createTree (const SortMethod sortMethod) const;
 
+    //==============================================================================
+    class CustomScanner
+    {
+    public:
+        CustomScanner();
+        virtual ~CustomScanner();
+
+        /** Attempts to load the given file and find a list of plugins in it.
+            @returns true if the plugin loaded, false if it crashed
+        */
+        virtual bool findPluginTypesFor (AudioPluginFormat& format,
+                                         OwnedArray <PluginDescription>& result,
+                                         const String& fileOrIdentifier) = 0;
+    };
+
+    void setCustomScanner (CustomScanner* scanner);
+
 private:
     //==============================================================================
     OwnedArray <PluginDescription> types;
     StringArray blacklist;
+    ScopedPointer<CustomScanner> scanner;
+    CriticalSection scanLock;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KnownPluginList)
 };
 
 
-#endif   // __JUCE_KNOWNPLUGINLIST_JUCEHEADER__
+#endif   // JUCE_KNOWNPLUGINLIST_H_INCLUDED

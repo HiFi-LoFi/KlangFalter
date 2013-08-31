@@ -1,31 +1,31 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_NATIVEMESSAGEBOX_JUCEHEADER__
-#define __JUCE_NATIVEMESSAGEBOX_JUCEHEADER__
+#ifndef JUCE_NATIVEMESSAGEBOX_H_INCLUDED
+#define JUCE_NATIVEMESSAGEBOX_H_INCLUDED
 
+//==============================================================================
 /**
     This class contains some static methods for showing native alert windows.
 */
@@ -62,11 +62,17 @@ public:
         @param associatedComponent   if this is non-null, it specifies the component that the
                             alert window should be associated with. Depending on the look
                             and feel, this might be used for positioning of the alert window.
+        @param callback     if this is non-null, the callback will receive a call to its
+                            modalStateFinished() when the box is dismissed. The callback object
+                            will be owned and deleted by the system, so make sure that it works
+                            safely and doesn't keep any references to objects that might be deleted
+                            before it gets called.
     */
     static void JUCE_CALLTYPE showMessageBoxAsync (AlertWindow::AlertIconType iconType,
-                                                   const String& title,
-                                                   const String& message,
-                                                   Component* associatedComponent = nullptr);
+                                                    const String& title,
+                                                    const String& message,
+                                                    Component* associatedComponent = nullptr,
+                                                    ModalComponentManager::Callback* callback = nullptr);
 
     /** Shows a dialog box with two buttons.
 
@@ -149,6 +155,10 @@ public:
                                                  Component* associatedComponent,
                                                  ModalComponentManager::Callback* callback);
                                                #endif
+
+private:
+    NativeMessageBox() JUCE_DELETED_FUNCTION;
+    JUCE_DECLARE_NON_COPYABLE (NativeMessageBox)
 };
 
-#endif   // __JUCE_NATIVEMESSAGEBOX_JUCEHEADER__
+#endif   // JUCE_NATIVEMESSAGEBOX_H_INCLUDED

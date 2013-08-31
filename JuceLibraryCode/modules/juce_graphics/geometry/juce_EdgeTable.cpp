@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -26,11 +25,11 @@
 const int juce_edgeTableDefaultEdgesPerLine = 32;
 
 //==============================================================================
-EdgeTable::EdgeTable (const Rectangle<int>& bounds_,
+EdgeTable::EdgeTable (const Rectangle<int>& area,
                       const Path& path, const AffineTransform& transform)
-   : bounds (bounds_),
+   : bounds (area),
      maxEdgesPerLine (juce_edgeTableDefaultEdgesPerLine),
-     lineStrideElements ((juce_edgeTableDefaultEdgesPerLine << 1) + 1),
+     lineStrideElements (juce_edgeTableDefaultEdgesPerLine * 2 + 1),
      needToCheckEmptinesss (true)
 {
     table.malloc ((size_t) ((bounds.getHeight() + 1) * lineStrideElements));
@@ -104,10 +103,10 @@ EdgeTable::EdgeTable (const Rectangle<int>& bounds_,
 EdgeTable::EdgeTable (const Rectangle<int>& rectangleToAdd)
    : bounds (rectangleToAdd),
      maxEdgesPerLine (juce_edgeTableDefaultEdgesPerLine),
-     lineStrideElements ((juce_edgeTableDefaultEdgesPerLine << 1) + 1),
+     lineStrideElements (juce_edgeTableDefaultEdgesPerLine * 2 + 1),
      needToCheckEmptinesss (true)
 {
-    table.malloc ((size_t) (jmax (1, bounds.getHeight()) * lineStrideElements));
+    allocate();
     table[0] = 0;
 
     const int x1 = rectangleToAdd.getX() << 8;
@@ -125,20 +124,14 @@ EdgeTable::EdgeTable (const Rectangle<int>& rectangleToAdd)
     }
 }
 
-EdgeTable::EdgeTable (const RectangleList& rectanglesToAdd)
+EdgeTable::EdgeTable (const RectangleList<int>& rectanglesToAdd)
    : bounds (rectanglesToAdd.getBounds()),
      maxEdgesPerLine (juce_edgeTableDefaultEdgesPerLine),
-     lineStrideElements ((juce_edgeTableDefaultEdgesPerLine << 1) + 1),
+     lineStrideElements (juce_edgeTableDefaultEdgesPerLine * 2 + 1),
      needToCheckEmptinesss (true)
 {
-    table.malloc ((size_t) (jmax (1, bounds.getHeight()) * lineStrideElements));
-
-    int* t = table;
-    for (int i = bounds.getHeight(); --i >= 0;)
-    {
-        *t = 0;
-        t += lineStrideElements;
-    }
+    allocate();
+    clearLineSizes();
 
     for (const Rectangle<int>* r = rectanglesToAdd.begin(), * const e = rectanglesToAdd.end(); r != e; ++r)
     {
@@ -147,10 +140,49 @@ EdgeTable::EdgeTable (const RectangleList& rectanglesToAdd)
         int y = r->getY() - bounds.getY();
 
         for (int j = r->getHeight(); --j >= 0;)
+            addEdgePointPair (x1, x2, y++, 255);
+    }
+
+    sanitiseLevels (true);
+}
+
+EdgeTable::EdgeTable (const RectangleList<float>& rectanglesToAdd)
+   : bounds (rectanglesToAdd.getBounds().getSmallestIntegerContainer()),
+     maxEdgesPerLine (rectanglesToAdd.getNumRectangles() * 2),
+     lineStrideElements (rectanglesToAdd.getNumRectangles() * 4 + 1),
+     needToCheckEmptinesss (true)
+{
+    bounds.setHeight (bounds.getHeight() + 1);
+    allocate();
+    clearLineSizes();
+
+    for (const Rectangle<float>* r = rectanglesToAdd.begin(), * const e = rectanglesToAdd.end(); r != e; ++r)
+    {
+        const int x1 = roundToInt (r->getX() * 256.0f);
+        const int x2 = roundToInt (r->getRight() * 256.0f);
+
+        const int y1 = roundToInt (r->getY() * 256.0f) - (bounds.getY() << 8);
+        const int y2 = roundToInt (r->getBottom() * 256.0f) - (bounds.getY() << 8);
+
+        if (x2 <= x1 || y2 <= y1)
+            continue;
+
+        int y = y1 >> 8;
+        const int lastLine = y2 >> 8;
+
+        if (y == lastLine)
         {
-            addEdgePoint (x1, y, 255);
-            addEdgePoint (x2, y, -255);
-            ++y;
+            addEdgePointPair (x1, x2, y, y2 - y1);
+        }
+        else
+        {
+            addEdgePointPair (x1, x2, y++, 255 - (y1 & 255));
+
+            while (y < lastLine)
+                addEdgePointPair (x1, x2, y++, 255);
+
+            jassert (y < bounds.getHeight());
+            addEdgePointPair (x1, x2, y, y2 & 255);
         }
     }
 
@@ -167,7 +199,7 @@ EdgeTable::EdgeTable (const Rectangle<float>& rectangleToAdd)
      needToCheckEmptinesss (true)
 {
     jassert (! rectangleToAdd.isEmpty());
-    table.malloc ((size_t) (jmax (1, bounds.getHeight()) * lineStrideElements));
+    allocate();
     table[0] = 0;
 
     const int x1 = roundToInt (rectangleToAdd.getX() * 256.0f);
@@ -247,7 +279,7 @@ EdgeTable& EdgeTable::operator= (const EdgeTable& other)
     lineStrideElements = other.lineStrideElements;
     needToCheckEmptinesss = other.needToCheckEmptinesss;
 
-    table.malloc ((size_t) (jmax (1, bounds.getHeight()) * lineStrideElements));
+    allocate();
     copyEdgeTableData (table, lineStrideElements, other.table, lineStrideElements, bounds.getHeight());
     return *this;
 }
@@ -257,6 +289,21 @@ EdgeTable::~EdgeTable()
 }
 
 //==============================================================================
+void EdgeTable::allocate()
+{
+    table.malloc ((size_t) (jmax (1, bounds.getHeight()) * lineStrideElements));
+}
+
+void EdgeTable::clearLineSizes() noexcept
+{
+    int* t = table;
+    for (int i = bounds.getHeight(); --i >= 0;)
+    {
+        *t = 0;
+        t += lineStrideElements;
+    }
+}
+
 void EdgeTable::copyEdgeTableData (int* dest, const int destLineStride, const int* src, const int srcLineStride, int numLines) noexcept
 {
     while (--numLines >= 0)
@@ -267,54 +314,83 @@ void EdgeTable::copyEdgeTableData (int* dest, const int destLineStride, const in
     }
 }
 
+struct EdgeTable::LineSorter
+{
+    static int compareElements (const LineItem& item1, const LineItem& item2) noexcept
+    {
+        return item1.x - item2.x;
+    }
+};
+
 void EdgeTable::sanitiseLevels (const bool useNonZeroWinding) noexcept
 {
     // Convert the table from relative windings to absolute levels..
     int* lineStart = table;
 
-    for (int i = bounds.getHeight(); --i >= 0;)
+    for (int y = bounds.getHeight(); --y >= 0;)
     {
-        int* line = lineStart;
-        lineStart += lineStrideElements;
+        int num = lineStart[0];
 
-        int num = *line;
-        if (num == 0)
-            continue;
-
-        int level = 0;
-
-        if (useNonZeroWinding)
+        if (num > 0)
         {
-            while (--num > 0)
-            {
-                line += 2;
-                level += *line;
-                int corrected = abs (level);
-                if (corrected >> 8)
-                    corrected = 255;
+            LineItem* items = reinterpret_cast<LineItem*> (lineStart + 1);
 
-                *line = corrected;
+            {
+                // sort the X coords
+                LineSorter sorter;
+                sortArray (sorter, items, 0, num - 1, false);
             }
-        }
-        else
-        {
-            while (--num > 0)
+
+            // merge duplicate X coords
+            for (int i = 0; i < num - 1; ++i)
             {
-                line += 2;
-                level += *line;
-                int corrected = abs (level);
-                if (corrected >> 8)
+                if (items[i].x == items[i + 1].x)
                 {
-                    corrected &= 511;
-                    if (corrected >> 8)
-                        corrected = 511 - corrected;
+                    items[i].level += items[i + 1].level;
+                    memmove (items + i + 1, items + i + 2, (num - i - 2) * sizeof (LineItem));
+                    --num;
+                    --lineStart[0];
+                    --i;
                 }
-
-                *line = corrected;
             }
+
+            int level = 0;
+
+            if (useNonZeroWinding)
+            {
+                while (--num > 0)
+                {
+                    level += items->level;
+                    int corrected = std::abs (level);
+                    if (corrected >> 8)
+                        corrected = 255;
+
+                    items->level = corrected;
+                    ++items;
+                }
+            }
+            else
+            {
+                while (--num > 0)
+                {
+                    level += items->level;
+                    int corrected = std::abs (level);
+                    if (corrected >> 8)
+                    {
+                        corrected &= 511;
+                        if (corrected >> 8)
+                            corrected = 511 - corrected;
+                    }
+
+                    items->level = corrected;
+                    ++items;
+                }
+            }
+
+            items->level = 0; // force the last level to 0, just in case something went wrong in creating the table
         }
 
-        line[2] = 0; // force the last level to 0, just in case something went wrong in creating the table
+        lineStart += lineStrideElements;
     }
 }
 
@@ -352,41 +428,40 @@ void EdgeTable::addEdgePoint (const int x, const int y, const int winding)
 
     int* line = table + lineStrideElements * y;
     const int numPoints = line[0];
-    int n = numPoints << 1;
 
-    if (n > 0)
+    if (numPoints >= maxEdgesPerLine)
     {
-        while (n > 0)
-        {
-            const int cx = line [n - 1];
-
-            if (cx <= x)
-            {
-                if (cx == x)
-                {
-                    line [n] += winding;
-                    return;
-                }
-
-                break;
-            }
-
-            n -= 2;
-        }
-
-        if (numPoints >= maxEdgesPerLine)
-        {
-            remapTableForNumEdges (maxEdgesPerLine + juce_edgeTableDefaultEdgesPerLine);
-            jassert (numPoints < maxEdgesPerLine);
-            line = table + lineStrideElements * y;
-        }
-
-        memmove (line + (n + 3), line + (n + 1), sizeof (int) * (size_t) ((numPoints << 1) - n));
+        remapTableForNumEdges (maxEdgesPerLine + juce_edgeTableDefaultEdgesPerLine);
+        jassert (numPoints < maxEdgesPerLine);
+        line = table + lineStrideElements * y;
     }
 
+    line[0]++;
+    int n = numPoints << 1;
     line [n + 1] = x;
     line [n + 2] = winding;
-    line[0]++;
+}
+
+void EdgeTable::addEdgePointPair (int x1, int x2, int y, int winding)
+{
+    jassert (y >= 0 && y < bounds.getHeight());
+
+    int* line = table + lineStrideElements * y;
+    const int numPoints = line[0];
+
+    if (numPoints + 1 >= maxEdgesPerLine)
+    {
+        remapTableForNumEdges (maxEdgesPerLine + juce_edgeTableDefaultEdgesPerLine);
+        jassert (numPoints < maxEdgesPerLine);
+        line = table + lineStrideElements * y;
+    }
+
+    line[0] += 2;
+    int n = numPoints << 1;
+    line [n + 1] = x1;
+    line [n + 2] = winding;
+    line [n + 3] = x2;
+    line [n + 4] = -winding;
 }
 
 void EdgeTable::translate (float dx, const int dy) noexcept
@@ -418,7 +493,7 @@ void EdgeTable::intersectWithEdgeTableLine (const int y, const int* otherLine)
     if (dest[0] == 0)
         return;
 
-    int otherNumPoints = *otherLine;
+    const int otherNumPoints = *otherLine;
     if (otherNumPoints == 0)
     {
         *dest = 0;
@@ -496,7 +571,7 @@ void EdgeTable::intersectWithEdgeTableLine (const int y, const int* otherLine)
                 if (destTotal >= maxEdgesPerLine)
                 {
                     dest[0] = destTotal;
-                    remapTableForNumEdges (maxEdgesPerLine + juce_edgeTableDefaultEdgesPerLine);
+                    remapTableForNumEdges (jmax (256, destTotal * 2));
                     dest = table + lineStrideElements * y;
                 }
 
@@ -513,7 +588,7 @@ void EdgeTable::intersectWithEdgeTableLine (const int y, const int* otherLine)
         if (destTotal >= maxEdgesPerLine)
         {
             dest[0] = destTotal;
-            remapTableForNumEdges (maxEdgesPerLine + juce_edgeTableDefaultEdgesPerLine);
+            remapTableForNumEdges (jmax (256, destTotal * 2));
             dest = table + lineStrideElements * y;
         }
 
@@ -523,17 +598,6 @@ void EdgeTable::intersectWithEdgeTableLine (const int y, const int* otherLine)
     }
 
     dest[0] = destTotal;
-
-#if JUCE_DEBUG
-    int last = std::numeric_limits<int>::min();
-    for (int i = 0; i < dest[0]; ++i)
-    {
-        jassert (dest[i * 2 + 1] > last);
-        last = dest[i * 2 + 1];
-    }
-
-    jassert (dest [dest[0] * 2] == 0);
-#endif
 }
 
 void EdgeTable::clipEdgeTableLineToRange (int* dest, const int x1, const int x2) noexcept
@@ -657,13 +721,12 @@ void EdgeTable::clipToEdgeTable (const EdgeTable& other)
         if (clipped.getRight() < bounds.getRight())
             bounds.setRight (clipped.getRight());
 
-        int i = 0;
-        for (i = top; --i >= 0;)
+        for (int i = 0; i < top; ++i)
             table [lineStrideElements * i] = 0;
 
         const int* otherLine = other.table + other.lineStrideElements * (clipped.getY() - other.bounds.getY());
 
-        for (i = top; i < bottom; ++i)
+        for (int i = top; i < bottom; ++i)
         {
             intersectWithEdgeTableLine (i, otherLine);
             otherLine += other.lineStrideElements;

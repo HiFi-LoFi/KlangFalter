@@ -1,33 +1,30 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_SLIDER_JUCEHEADER__
-#define __JUCE_SLIDER_JUCEHEADER__
+#ifndef JUCE_SLIDER_H_INCLUDED
+#define JUCE_SLIDER_H_INCLUDED
 
-#include "juce_Label.h"
-#include "../buttons/juce_Button.h"
 
 //==============================================================================
 /**
@@ -494,7 +491,7 @@ public:
 
         @see Slider::addListener, Slider::removeListener
     */
-    class Listener
+    class JUCE_API  Listener
     {
     public:
         //==============================================================================
@@ -773,29 +770,29 @@ public:
 protected:
     //==============================================================================
     /** @internal */
-    void paint (Graphics&);
+    void paint (Graphics&) override;
     /** @internal */
-    void resized();
+    void resized() override;
     /** @internal */
-    void mouseDown (const MouseEvent&);
+    void mouseDown (const MouseEvent&) override;
     /** @internal */
-    void mouseUp (const MouseEvent&);
+    void mouseUp (const MouseEvent&) override;
     /** @internal */
-    void mouseDrag (const MouseEvent&);
+    void mouseDrag (const MouseEvent&) override;
     /** @internal */
-    void mouseDoubleClick (const MouseEvent&);
+    void mouseDoubleClick (const MouseEvent&) override;
     /** @internal */
-    void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&);
+    void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override;
     /** @internal */
-    void modifierKeysChanged (const ModifierKeys&);
+    void modifierKeysChanged (const ModifierKeys&) override;
     /** @internal */
-    void lookAndFeelChanged();
+    void lookAndFeelChanged() override;
     /** @internal */
-    void enablementChanged();
+    void enablementChanged() override;
     /** @internal */
-    void focusOfChildComponentChanged (FocusChangeType);
+    void focusOfChildComponentChanged (FocusChangeType) override;
     /** @internal */
-    void colourChanged();
+    void colourChanged() override;
 
     /** Returns the best number of decimal places to use when displaying numbers.
         This is calculated from the slider's interval setting.
@@ -806,7 +803,7 @@ private:
     //==============================================================================
     JUCE_PUBLIC_IN_DLL_BUILD (class Pimpl)
     friend class Pimpl;
-    friend class ScopedPointer<Pimpl>;
+    friend struct ContainerDeletePolicy<Pimpl>;
     ScopedPointer<Pimpl> pimpl;
 
     void init (SliderStyle, TextEntryBoxPosition);
@@ -831,4 +828,4 @@ private:
 /** This typedef is just for compatibility with old code - newer code should use the Slider::Listener class directly. */
 typedef Slider::Listener SliderListener;
 
-#endif   // __JUCE_SLIDER_JUCEHEADER__
+#endif   // JUCE_SLIDER_H_INCLUDED

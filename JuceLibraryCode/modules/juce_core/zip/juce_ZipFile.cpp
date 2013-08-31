@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -111,21 +114,21 @@ namespace
 class ZipFile::ZipInputStream  : public InputStream
 {
 public:
-    ZipInputStream (ZipFile& file_, ZipFile::ZipEntryHolder& zei)
-        : file (file_),
+    ZipInputStream (ZipFile& zf, ZipFile::ZipEntryHolder& zei)
+        : file (zf),
           zipEntryHolder (zei),
           pos (0),
           headerSize (0),
-          inputStream (file_.inputStream)
+          inputStream (zf.inputStream)
     {
-        if (file_.inputSource != nullptr)
+        if (zf.inputSource != nullptr)
         {
             inputStream = streamToDelete = file.inputSource->createInputStream();
         }
         else
         {
            #if JUCE_DEBUG
-            file_.streamCounter.numOpenStreams++;
+            zf.streamCounter.numOpenStreams++;
            #endif
         }
 
@@ -233,9 +236,9 @@ ZipFile::ZipFile (const File& file)
     init();
 }
 
-ZipFile::ZipFile (InputSource* const inputSource_)
+ZipFile::ZipFile (InputSource* const source)
     : inputStream (nullptr),
-      inputSource (inputSource_)
+      inputSource (source)
 {
     init();
 }
@@ -391,9 +394,15 @@ Result ZipFile::uncompressEntry (const int index,
 {
     const ZipEntryHolder* zei = entries.getUnchecked (index);
 
-    const File targetFile (targetDirectory.getChildFile (zei->entry.filename));
+   #if JUCE_WINDOWS
+    const String entryPath (zei->entry.filename);
+   #else
+    const String entryPath (zei->entry.filename.replaceCharacter ('\\', '/'));
+   #endif
 
-    if (zei->entry.filename.endsWithChar ('/'))
+    const File targetFile (targetDirectory.getChildFile (entryPath));
+
+    if (entryPath.endsWithChar ('/') || entryPath.endsWithChar ('\\'))
         return targetFile.createDirectory(); // (entry is a directory, not a file)
 
     ScopedPointer<InputStream> in (createStreamForEntry (index));
@@ -431,17 +440,18 @@ Result ZipFile::uncompressEntry (const int index,
 
 
 //=============================================================================
-extern unsigned long juce_crc32 (unsigned long crc, const unsigned char* buf, unsigned len);
+extern unsigned long juce_crc32 (unsigned long crc, const unsigned char*, unsigned len);
 
 class ZipFile::Builder::Item
 {
 public:
-    Item (const File& file_, const int compressionLevel_, const String& storedPathName_)
-        : file (file_),
-          storedPathname (storedPathName_.isEmpty() ? file_.getFileName() : storedPathName_),
-          compressionLevel (compressionLevel_),
+    Item (const File& f, const int compression, const String& storedPath)
+        : file (f),
+          storedPathname (storedPath.isEmpty() ? f.getFileName() : storedPath),
+          compressionLevel (compression),
           compressedSize (0),
-          headerStart (0)
+          headerStart (0),
+          checksum (0)
     {
     }
 
@@ -520,7 +530,7 @@ private:
                 return false;
 
             checksum = juce_crc32 (checksum, buffer, (unsigned int) bytesRead);
-            target.write (buffer, bytesRead);
+            target.write (buffer, (size_t) bytesRead);
         }
 
         return true;

@@ -1,31 +1,30 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
 static ThreadLocalValue<AudioProcessor::WrapperType> wrapperTypeBeingCreated;
 
-void AudioProcessor::setTypeOfNextNewPlugin (AudioProcessor::WrapperType type)
+void JUCE_CALLTYPE AudioProcessor::setTypeOfNextNewPlugin (AudioProcessor::WrapperType type)
 {
     wrapperTypeBeingCreated = type;
 }
@@ -118,6 +117,19 @@ void AudioProcessor::setParameterNotifyingHost (const int parameterIndex,
     setParameter (parameterIndex, newValue);
     sendParamChangeMessageToListeners (parameterIndex, newValue);
 }
+
+String AudioProcessor::getParameterName (int parameterIndex, int maximumStringLength)
+{
+    return getParameterName (parameterIndex).substring (0, maximumStringLength);
+}
+
+String AudioProcessor::getParameterText (int parameterIndex, int maximumStringLength)
+{
+    return getParameterText (parameterIndex).substring (0, maximumStringLength);
+}
+
+int AudioProcessor::getParameterNumSteps (int /*parameterIndex*/)        { return 0x7fffffff; }
+float AudioProcessor::getParameterDefaultValue (int /*parameterIndex*/)  { return 0.0f; }
 
 AudioProcessorListener* AudioProcessor::getListenerLocked (const int index) const noexcept
 {
@@ -236,15 +248,15 @@ const uint32 magicXmlNumber = 0x21324356;
 void AudioProcessor::copyXmlToBinary (const XmlElement& xml, juce::MemoryBlock& destData)
 {
     const String xmlString (xml.createDocument (String::empty, true, false));
-    const int stringLength = xmlString.getNumBytesAsUTF8();
+    const size_t stringLength = xmlString.getNumBytesAsUTF8();
 
-    destData.setSize ((size_t) stringLength + 9);
+    destData.setSize (stringLength + 9);
 
-    char* const d = static_cast<char*> (destData.getData());
-    *(uint32*) d = ByteOrder::swapIfBigEndian ((const uint32) magicXmlNumber);
-    *(uint32*) (d + 4) = ByteOrder::swapIfBigEndian ((const uint32) stringLength);
+    uint32* const d = static_cast<uint32*> (destData.getData());
+    d[0] = ByteOrder::swapIfBigEndian ((const uint32) magicXmlNumber);
+    d[1] = ByteOrder::swapIfBigEndian ((const uint32) stringLength);
 
-    xmlString.copyToUTF8 (d + 8, stringLength + 1);
+    xmlString.copyToUTF8 ((CharPointer_UTF8::CharType*) (d + 2), stringLength + 1);
 }
 
 XmlElement* AudioProcessor::getXmlFromBinary (const void* data, const int sizeInBytes)

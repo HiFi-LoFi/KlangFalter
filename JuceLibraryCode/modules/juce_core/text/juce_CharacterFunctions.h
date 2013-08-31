@@ -1,30 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
 
-#ifndef __JUCE_CHARACTERFUNCTIONS_JUCEHEADER__
-#define __JUCE_CHARACTERFUNCTIONS_JUCEHEADER__
+#ifndef JUCE_CHARACTERFUNCTIONS_H_INCLUDED
+#define JUCE_CHARACTERFUNCTIONS_H_INCLUDED
 
 
 //==============================================================================
@@ -255,7 +258,7 @@ public:
     //==============================================================================
     /** Parses a character string, to read an integer value. */
     template <typename IntType, typename CharPointerType>
-    static IntType getIntValue (const CharPointerType& text) noexcept
+    static IntType getIntValue (const CharPointerType text) noexcept
     {
         IntType v = 0;
         CharPointerType s (text.findEndOfWhitespace());
@@ -294,7 +297,7 @@ public:
     /** Counts the number of characters in a given string, stopping if the count exceeds
         a specified end-pointer. */
     template <typename CharPointerType>
-    static size_t lengthUpTo (CharPointerType start, const CharPointerType& end) noexcept
+    static size_t lengthUpTo (CharPointerType start, const CharPointerType end) noexcept
     {
         size_t len = 0;
 
@@ -324,15 +327,16 @@ public:
     /** Copies characters from one string to another, up to a null terminator
         or a given byte size limit. */
     template <typename DestCharPointerType, typename SrcCharPointerType>
-    static int copyWithDestByteLimit (DestCharPointerType& dest, SrcCharPointerType src, int maxBytes) noexcept
+    static size_t copyWithDestByteLimit (DestCharPointerType& dest, SrcCharPointerType src, size_t maxBytesToWrite) noexcept
     {
         typename DestCharPointerType::CharType const* const startAddress = dest.getAddress();
+        ssize_t maxBytes = (ssize_t) maxBytesToWrite;
         maxBytes -= sizeof (typename DestCharPointerType::CharType); // (allow for a terminating null)
 
         for (;;)
         {
             const juce_wchar c = src.getAndAdvance();
-            const int bytesNeeded = (int) DestCharPointerType::getBytesRequiredFor (c);
+            const size_t bytesNeeded = DestCharPointerType::getBytesRequiredFor (c);
 
             maxBytes -= bytesNeeded;
             if (c == 0 || maxBytes < 0)
@@ -343,7 +347,8 @@ public:
 
         dest.writeNull();
 
-        return (int) ((size_t) getAddressDifference (dest.getAddress(), startAddress) + sizeof (typename DestCharPointerType::CharType));
+        return (size_t) getAddressDifference (dest.getAddress(), startAddress)
+                 + sizeof (typename DestCharPointerType::CharType);
     }
 
     /** Copies characters from one string to another, up to a null terminator
@@ -371,12 +376,10 @@ public:
         {
             const int c1 = (int) s1.getAndAdvance();
             const int c2 = (int) s2.getAndAdvance();
-
             const int diff = c1 - c2;
-            if (diff != 0)
-                return diff < 0 ? -1 : 1;
-            else if (c1 == 0)
-                break;
+
+            if (diff != 0)  return diff < 0 ? -1 : 1;
+            if (c1 == 0)    break;
         }
 
         return 0;
@@ -390,12 +393,10 @@ public:
         {
             const int c1 = (int) s1.getAndAdvance();
             const int c2 = (int) s2.getAndAdvance();
-
             const int diff = c1 - c2;
-            if (diff != 0)
-                return diff < 0 ? -1 : 1;
-            else if (c1 == 0)
-                break;
+
+            if (diff != 0)  return diff < 0 ? -1 : 1;
+            if (c1 == 0)    break;
         }
 
         return 0;
@@ -407,16 +408,12 @@ public:
     {
         for (;;)
         {
-            int c1 = (int) s1.toUpperCase();
-            int c2 = (int) s2.toUpperCase();
-            ++s1;
-            ++s2;
-
+            const int c1 = (int) s1.toUpperCase(); ++s1;
+            const int c2 = (int) s2.toUpperCase(); ++s2;
             const int diff = c1 - c2;
-            if (diff != 0)
-                return diff < 0 ? -1 : 1;
-            else if (c1 == 0)
-                break;
+
+            if (diff != 0)  return diff < 0 ? -1 : 1;
+            if (c1 == 0)    break;
         }
 
         return 0;
@@ -428,16 +425,12 @@ public:
     {
         while (--maxChars >= 0)
         {
-            int c1 = s1.toUpperCase();
-            int c2 = s2.toUpperCase();
-            ++s1;
-            ++s2;
-
+            const int c1 = (int) s1.toUpperCase(); ++s1;
+            const int c2 = (int) s2.toUpperCase(); ++s2;
             const int diff = c1 - c2;
-            if (diff != 0)
-                return diff < 0 ? -1 : 1;
-            else if (c1 == 0)
-                break;
+
+            if (diff != 0)  return diff < 0 ? -1 : 1;
+            if (c1 == 0)    break;
         }
 
         return 0;
@@ -447,7 +440,7 @@ public:
         Returns -1 if the substring is not found.
     */
     template <typename CharPointerType1, typename CharPointerType2>
-    static int indexOf (CharPointerType1 textToSearch, const CharPointerType2& substringToLookFor) noexcept
+    static int indexOf (CharPointerType1 textToSearch, const CharPointerType2 substringToLookFor) noexcept
     {
         int index = 0;
         const int substringLength = (int) substringToLookFor.length();
@@ -469,7 +462,7 @@ public:
         null terminator.
     */
     template <typename CharPointerType1, typename CharPointerType2>
-    static CharPointerType1 find (CharPointerType1 textToSearch, const CharPointerType2& substringToLookFor) noexcept
+    static CharPointerType1 find (CharPointerType1 textToSearch, const CharPointerType2 substringToLookFor) noexcept
     {
         const int substringLength = (int) substringToLookFor.length();
 
@@ -485,7 +478,7 @@ public:
         Returns -1 if the substring is not found.
     */
     template <typename CharPointerType1, typename CharPointerType2>
-    static int indexOfIgnoreCase (CharPointerType1 haystack, const CharPointerType2& needle) noexcept
+    static int indexOfIgnoreCase (CharPointerType1 haystack, const CharPointerType2 needle) noexcept
     {
         int index = 0;
         const int needleLength = (int) needle.length();
@@ -548,32 +541,29 @@ public:
         to its null terminator.
     */
     template <typename Type>
-    static Type findEndOfWhitespace (const Type& text) noexcept
+    static Type findEndOfWhitespace (Type text) noexcept
     {
-        Type p (text);
+        while (text.isWhitespace())
+            ++text;
 
-        while (p.isWhitespace())
-            ++p;
-
-        return p;
+        return text;
     }
 
     /** Returns a pointer to the first character in the string which is found in
         the breakCharacters string.
     */
     template <typename Type>
-    static Type findEndOfToken (const Type& text, const Type& breakCharacters, const Type& quoteCharacters)
+    static Type findEndOfToken (Type text, const Type breakCharacters, const Type quoteCharacters)
     {
-        Type t (text);
         juce_wchar currentQuoteChar = 0;
 
-        while (! t.isEmpty())
+        while (! text.isEmpty())
         {
-            const juce_wchar c = t.getAndAdvance();
+            const juce_wchar c = text.getAndAdvance();
 
             if (currentQuoteChar == 0 && breakCharacters.indexOf (c) >= 0)
             {
-                --t;
+                --text;
                 break;
             }
 
@@ -586,7 +576,7 @@ public:
             }
         }
 
-        return t;
+        return text;
     }
 
 private:
@@ -594,4 +584,4 @@ private:
 };
 
 
-#endif   // __JUCE_CHARACTERFUNCTIONS_JUCEHEADER__
+#endif   // JUCE_CHARACTERFUNCTIONS_H_INCLUDED

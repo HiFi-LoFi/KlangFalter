@@ -1,42 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_GRAPHICSCONTEXT_JUCEHEADER__
-#define __JUCE_GRAPHICSCONTEXT_JUCEHEADER__
-
-#include "../fonts/juce_Font.h"
-#include "../geometry/juce_Rectangle.h"
-#include "../geometry/juce_PathStrokeType.h"
-#include "../geometry/juce_Line.h"
-#include "../colour/juce_Colours.h"
-#include "../colour/juce_ColourGradient.h"
-#include "../placement/juce_RectanglePlacement.h"
-class LowLevelGraphicsContext;
-class Image;
-class FillType;
-class RectangleList;
+#ifndef JUCE_GRAPHICSCONTEXT_H_INCLUDED
+#define JUCE_GRAPHICSCONTEXT_H_INCLUDED
 
 
 //==============================================================================
@@ -81,7 +68,7 @@ public:
 
         @see setOpacity
     */
-    void setColour (const Colour& newColour);
+    void setColour (Colour newColour);
 
     /** Changes the opacity to use with the current colour.
 
@@ -117,7 +104,7 @@ public:
         Note there's also a setFont (float, int) method to quickly change the size and
         style of the current font.
 
-        @see drawSingleLineText, drawMultiLineText, drawTextAsPath, drawText, drawFittedText
+        @see drawSingleLineText, drawMultiLineText, drawText, drawFittedText
     */
     void setFont (const Font& newFont);
 
@@ -145,7 +132,7 @@ public:
     */
     void drawSingleLineText (const String& text,
                              int startX, int baselineY,
-                             const Justification& justification = Justification::left) const;
+                             Justification justification = Justification::left) const;
 
     /** Draws text across multiple lines.
 
@@ -159,17 +146,6 @@ public:
                             int startX, int baselineY,
                             int maximumLineWidth) const;
 
-    /** Renders a string of text as a vector path.
-
-        This allows a string to be transformed with an arbitrary AffineTransform and
-        rendered using the current colour/brush. It's much slower than the normal text methods
-        but more accurate.
-
-        @see setFont
-    */
-    void drawTextAsPath (const String& text,
-                         const AffineTransform& transform) const;
-
     /** Draws a line of text within a specified rectangle.
 
         The text will be positioned within the rectangle based on the justification
@@ -181,7 +157,7 @@ public:
     */
     void drawText (const String& text,
                    int x, int y, int width, int height,
-                   const Justification& justificationType,
+                   Justification justificationType,
                    bool useEllipsesIfTooBig) const;
 
     /** Draws a line of text within a specified rectangle.
@@ -195,7 +171,7 @@ public:
     */
     void drawText (const String& text,
                    const Rectangle<int>& area,
-                   const Justification& justificationType,
+                   Justification justificationType,
                    bool useEllipsesIfTooBig) const;
 
     /** Tries to draw a text string inside a given space.
@@ -219,7 +195,7 @@ public:
     */
     void drawFittedText (const String& text,
                          int x, int y, int width, int height,
-                         const Justification& justificationFlags,
+                         Justification justificationFlags,
                          int maximumNumberOfLines,
                          float minimumHorizontalScale = 0.7f) const;
 
@@ -244,14 +220,14 @@ public:
     */
     void drawFittedText (const String& text,
                          const Rectangle<int>& area,
-                         const Justification& justificationFlags,
+                         Justification justificationFlags,
                          int maximumNumberOfLines,
                          float minimumHorizontalScale = 0.7f) const;
 
     //==============================================================================
     /** Fills the context's entire clip region with the current colour or brush.
 
-        (See also the fillAll (const Colour&) method which is a quick way of filling
+        (See also the fillAll (Colour) method which is a quick way of filling
         it with a given colour).
     */
     void fillAll() const;
@@ -261,37 +237,43 @@ public:
         This leaves the context's current colour and brush unchanged, it just
         uses the specified colour temporarily.
     */
-    void fillAll (const Colour& colourToUse) const;
+    void fillAll (Colour colourToUse) const;
 
     //==============================================================================
     /** Fills a rectangle with the current colour or brush.
+        @see drawRect, fillRoundedRectangle
+    */
+    void fillRect (const Rectangle<int>& rectangle) const;
 
+    /** Fills a rectangle with the current colour or brush.
+        @see drawRect, fillRoundedRectangle
+    */
+    void fillRect (const Rectangle<float>& rectangle) const;
+
+    /** Fills a rectangle with the current colour or brush.
         @see drawRect, fillRoundedRectangle
     */
     void fillRect (int x, int y, int width, int height) const;
 
-    /** Fills a rectangle with the current colour or brush. */
-    void fillRect (const Rectangle<int>& rectangle) const;
-
-    /** Fills a rectangle with the current colour or brush. */
-    void fillRect (const Rectangle<float>& rectangle) const;
-
     /** Fills a rectangle with the current colour or brush.
-
-        This uses sub-pixel positioning so is slower than the fillRect method which
-        takes integer co-ordinates.
+        @see drawRect, fillRoundedRectangle
     */
     void fillRect (float x, float y, float width, float height) const;
 
-    /** Uses the current colour or brush to fill a rectangle with rounded corners.
+    /** Fills a set of rectangles using the current colour or brush.
+        If you have a lot of rectangles to draw, it may be more efficient
+        to create a RectangleList and use this method than to call fillRect()
+        multiple times.
+    */
+    void fillRectList (const RectangleList<float>& rectangles) const;
 
+    /** Uses the current colour or brush to fill a rectangle with rounded corners.
         @see drawRoundedRectangle, Path::addRoundedRectangle
     */
     void fillRoundedRectangle (float x, float y, float width, float height,
                                float cornerSize) const;
 
     /** Uses the current colour or brush to fill a rectangle with rounded corners.
-
         @see drawRoundedRectangle, Path::addRoundedRectangle
     */
     void fillRoundedRectangle (const Rectangle<float>& rectangle,
@@ -301,7 +283,7 @@ public:
     */
     void fillCheckerBoard (const Rectangle<int>& area,
                            int checkWidth, int checkHeight,
-                           const Colour& colour1, const Colour& colour2) const;
+                           Colour colour1, Colour colour2) const;
 
     /** Draws four lines to form a rectangular outline, using the current colour or brush.
 
@@ -310,8 +292,7 @@ public:
 
         @see fillRect
     */
-    void drawRect (int x, int y, int width, int height,
-                   int lineThickness = 1) const;
+    void drawRect (int x, int y, int width, int height, int lineThickness = 1) const;
 
     /** Draws four lines to form a rectangular outline, using the current colour or brush.
 
@@ -320,8 +301,7 @@ public:
 
         @see fillRect
     */
-    void drawRect (float x, float y, float width, float height,
-                   float lineThickness = 1.0f) const;
+    void drawRect (float x, float y, float width, float height, float lineThickness = 1.0f) const;
 
     /** Draws four lines to form a rectangular outline, using the current colour or brush.
 
@@ -355,7 +335,10 @@ public:
     void drawRoundedRectangle (const Rectangle<float>& rectangle,
                                float cornerSize, float lineThickness) const;
 
-    /** Draws a 1x1 pixel using the current colour or brush. */
+    /** Draws a 1x1 pixel using the current colour or brush.
+        Note that because the context may be transformed, this is effectively the same as
+        calling fillRect (x, y, 1, 1), and the actual result may involve multiple pixels.
+    */
     void setPixel (int x, int y) const;
 
     //==============================================================================
@@ -486,7 +469,7 @@ public:
     /** Draws an image.
 
         This will draw the whole of an image, positioning its top-left corner at the
-        given co-ordinates, and keeping its size the same. This is the simplest image
+        given coordinates, and keeping its size the same. This is the simplest image
         drawing method - the others give more control over the scaling and clipping
         of the images.
 
@@ -571,7 +554,7 @@ public:
     */
     void drawImageWithin (const Image& imageToDraw,
                           int destX, int destY, int destWidth, int destHeight,
-                          const RectanglePlacement& placementWithinTarget,
+                          RectanglePlacement placementWithinTarget,
                           bool fillAlphaChannelWithCurrentBrush = false) const;
 
 
@@ -609,7 +592,7 @@ public:
         @returns true if the resulting clipping region is non-zero in size
         @see setOrigin, clipRegionIntersects
     */
-    bool reduceClipRegion (const RectangleList& clipRegion);
+    bool reduceClipRegion (const RectangleList<int>& clipRegion);
 
     /** Intersects the current clipping region with a path.
 
@@ -733,4 +716,4 @@ private:
 };
 
 
-#endif   // __JUCE_GRAPHICSCONTEXT_JUCEHEADER__
+#endif   // JUCE_GRAPHICSCONTEXT_H_INCLUDED

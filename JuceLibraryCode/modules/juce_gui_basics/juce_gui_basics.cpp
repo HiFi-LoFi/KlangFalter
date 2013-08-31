@@ -1,29 +1,28 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#if defined (__JUCE_GUI_BASICS_JUCEHEADER__) && ! JUCE_AMALGAMATED_INCLUDE
+#if defined (JUCE_GUI_BASICS_H_INCLUDED) && ! JUCE_AMALGAMATED_INCLUDE
  /* When you add this cpp file to your project, you mustn't include it in a file where you've
     already included any other headers - just put it inside a file on its own, possibly with your config
     flags preceding it, but don't include anything else. That also includes avoiding any automatic prefix
@@ -46,11 +45,15 @@
 //==============================================================================
 #if JUCE_MAC
  #import <WebKit/WebKit.h>
- #define Point CarbonDummyPointName
- #define Component CarbonDummyCompName
- #import <Carbon/Carbon.h> // still needed for SetSystemUIMode()
- #undef Point
- #undef Component
+ #import <IOKit/pwr_mgt/IOPMLib.h>
+
+ #if JUCE_SUPPORT_CARBON
+  #define Point CarbonDummyPointName
+  #define Component CarbonDummyCompName
+  #import <Carbon/Carbon.h> // still needed for SetSystemUIMode()
+  #undef Point
+  #undef Component
+ #endif
 
 //==============================================================================
 #elif JUCE_WINDOWS
@@ -59,7 +62,7 @@
  #include <commdlg.h>
 
  #if JUCE_WEB_BROWSER
-  #include <Exdisp.h>
+  #include <exdisp.h>
   #include <exdispid.h>
  #endif
 
@@ -144,6 +147,7 @@ namespace juce
 #include "mouse/juce_DragAndDropContainer.cpp"
 #include "mouse/juce_MouseCursor.cpp"
 #include "mouse/juce_MouseEvent.cpp"
+#include "mouse/juce_MouseInactivityDetector.cpp"
 #include "mouse/juce_MouseInputSource.cpp"
 #include "mouse/juce_MouseListener.cpp"
 #include "keyboard/juce_CaretComponent.cpp"
@@ -224,8 +228,8 @@ namespace juce
 #include "widgets/juce_TableHeaderComponent.cpp"
 #include "widgets/juce_TableListBox.cpp"
 #include "widgets/juce_TextEditor.cpp"
-#include "widgets/juce_Toolbar.cpp"
 #include "widgets/juce_ToolbarItemComponent.cpp"
+#include "widgets/juce_Toolbar.cpp"
 #include "widgets/juce_ToolbarItemPalette.cpp"
 #include "widgets/juce_TreeView.cpp"
 #include "windows/juce_AlertWindow.cpp"

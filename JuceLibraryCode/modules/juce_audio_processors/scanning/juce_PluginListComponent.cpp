@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -26,12 +25,13 @@
 PluginListComponent::PluginListComponent (AudioPluginFormatManager& manager,
                                           KnownPluginList& listToEdit,
                                           const File& deadMansPedal,
-                                          PropertiesFile* const properties)
+                                          PropertiesFile* const props)
     : formatManager (manager),
       list (listToEdit),
       deadMansPedalFile (deadMansPedal),
       optionsButton ("Options..."),
-      propertiesToUse (properties)
+      propertiesToUse (props),
+      numThreads (0)
 {
     listBox.setModel (this);
     addAndMakeVisible (&listBox);
@@ -57,6 +57,11 @@ void PluginListComponent::setOptionsButtonText (const String& newText)
 {
     optionsButton.setButtonText (newText);
     resized();
+}
+
+void PluginListComponent::setNumberOfThreadsForScanning (int num)
+{
+    numThreads = num;
 }
 
 void PluginListComponent::resized()
@@ -113,7 +118,8 @@ void PluginListComponent::paintListBoxItem (int row, Graphics& g, int width, int
     if (name.isNotEmpty())
     {
         GlyphArrangement ga;
-        ga.addCurtailedLineOfText (Font (height * 0.7f, Font::bold), name, 8.0f, height * 0.8f, width - 10.0f, true);
+        ga.addCurtailedLineOfText (Font (height * 0.7f, Font::bold),
+                                   name, 8.0f, height * 0.8f, width - 10.0f, true);
 
         g.setColour (isBlacklisted ? Colours::red : Colours::black);
         ga.draw (g);
@@ -193,7 +199,11 @@ void PluginListComponent::optionsMenuCallback (int result)
         case 6:   showSelectedFolder(); break;
         case 7:   removeMissingPlugins(); break;
 
-        default:  scanFor (formatManager.getFormat (result - 10)); break;
+        default:
+            if (AudioPluginFormat* format = formatManager.getFormat (result - 10))
+                scanFor (*format);
+
+            break;
     }
 }
 
@@ -203,9 +213,9 @@ void PluginListComponent::buttonClicked (Button* button)
     {
         PopupMenu menu;
         menu.addItem (1, TRANS("Clear list"));
-        menu.addItem (5, TRANS("Remove selected plugin from list"), listBox.getNumSelectedRows() > 0);
-        menu.addItem (6, TRANS("Show folder containing selected plugin"), canShowSelectedFolder());
-        menu.addItem (7, TRANS("Remove any plugins whose files no longer exist"));
+        menu.addItem (5, TRANS("Remove selected plug-in from list"), listBox.getNumSelectedRows() > 0);
+        menu.addItem (6, TRANS("Show folder containing selected plug-in"), canShowSelectedFolder());
+        menu.addItem (7, TRANS("Remove any plug-ins whose files no longer exist"));
         menu.addSeparator();
         menu.addItem (2, TRANS("Sort alphabetically"));
         menu.addItem (3, TRANS("Sort by category"));
@@ -217,7 +227,7 @@ void PluginListComponent::buttonClicked (Button* button)
             AudioPluginFormat* const format = formatManager.getFormat (i);
 
             if (format->canScanForPlugins())
-                menu.addItem (10 + i, "Scan for new or updated " + format->getName() + " plugins...");
+                menu.addItem (10 + i, "Scan for new or updated " + format->getName() + " plug-ins");
         }
 
         menu.showMenuAsync (PopupMenu::Options().withTargetComponent (&optionsButton),
@@ -236,84 +246,246 @@ void PluginListComponent::filesDropped (const StringArray& files, int, int)
     list.scanAndAddDragAndDroppedFiles (formatManager, files, typesFound);
 }
 
+FileSearchPath PluginListComponent::getLastSearchPath (PropertiesFile& properties, AudioPluginFormat& format)
+{
+    return FileSearchPath (properties.getValue ("lastPluginScanPath_" + format.getName(),
+                                                format.getDefaultLocationsToSearch().toString()));
+}
+
+void PluginListComponent::setLastSearchPath (PropertiesFile& properties, AudioPluginFormat& format,
+                                             const FileSearchPath& newPath)
+{
+    properties.setValue ("lastPluginScanPath_" + format.getName(), newPath.toString());
+}
+
 //==============================================================================
 class PluginListComponent::Scanner    : private Timer
 {
 public:
-    Scanner (PluginListComponent& plc, AudioPluginFormat& format, const FileSearchPath& path)
-        : owner (plc),
-          aw (TRANS("Scanning for plugins..."),
-              TRANS("Searching for all possible plugin files..."), AlertWindow::NoIcon),
-          progress (0.0),
-          scanner (owner.list, format, path, true, owner.deadMansPedalFile)
+    Scanner (PluginListComponent& plc,
+             AudioPluginFormat& format,
+             PropertiesFile* properties,
+             int threads)
+        : owner (plc), formatToScan (format), propertiesToUse (properties),
+          pathChooserWindow (TRANS("Select folders to scan..."), String::empty, AlertWindow::NoIcon),
+          progressWindow (TRANS("Scanning for plug-ins..."),
+                          TRANS("Searching for all possible plug-in files..."), AlertWindow::NoIcon),
+          progress (0.0), numThreads (threads), finished (false)
     {
-        aw.addButton (TRANS("Cancel"), 0, KeyPress (KeyPress::escapeKey));
-        aw.addProgressBarComponent (progress);
-        aw.enterModalState();
+        FileSearchPath path (formatToScan.getDefaultLocationsToSearch());
+
+        if (path.getNumPaths() > 0) // if the path is empty, then paths aren't used for this format.
+        {
+            if (propertiesToUse != nullptr)
+                path = getLastSearchPath (*propertiesToUse, formatToScan);
+
+            pathList.setSize (500, 300);
+            pathList.setPath (path);
+
+            pathChooserWindow.addCustomComponent (&pathList);
+            pathChooserWindow.addButton (TRANS("Scan"),   1, KeyPress (KeyPress::returnKey));
+            pathChooserWindow.addButton (TRANS("Cancel"), 0, KeyPress (KeyPress::escapeKey));
+
+            pathChooserWindow.enterModalState (true,
+                                               ModalCallbackFunction::forComponent (startScanCallback,
+                                                                                    &pathChooserWindow, this),
+                                               false);
+        }
+        else
+        {
+            startScan();
+        }
+    }
+
+    ~Scanner()
+    {
+        if (pool != nullptr)
+        {
+            pool->removeAllJobs (true, 60000);
+            pool = nullptr;
+        }
+    }
+
+private:
+    PluginListComponent& owner;
+    AudioPluginFormat& formatToScan;
+    PropertiesFile* propertiesToUse;
+    ScopedPointer<PluginDirectoryScanner> scanner;
+    AlertWindow pathChooserWindow, progressWindow;
+    FileSearchPathListComponent pathList;
+    String pluginBeingScanned;
+    double progress;
+    int numThreads;
+    bool finished;
+    ScopedPointer<ThreadPool> pool;
+
+    static void startScanCallback (int result, AlertWindow* alert, Scanner* scanner)
+    {
+        if (alert != nullptr && scanner != nullptr)
+        {
+            if (result != 0)
+                scanner->warnUserAboutStupidPaths();
+            else
+                scanner->finishedScan();
+        }
+    }
+
+    // Try to dissuade people from to scanning their entire C: drive, or other system folders.
+    void warnUserAboutStupidPaths()
+    {
+        for (int i = 0; i < pathList.getPath().getNumPaths(); ++i)
+        {
+            const File f (pathList.getPath()[i]);
+
+            if (isStupidPath (f))
+            {
+                AlertWindow::showOkCancelBox (AlertWindow::WarningIcon,
+                                              TRANS("Plugin Scanning"),
+                                              TRANS("If you choose to scan folders that contain non-plugin files, "
+                                                    "then scanning may take a long time, and can cause crashes when "
+                                                    "attempting to load unsuitable files.")
+                                                + newLine
+                                                + TRANS ("Are you sure you want to scan the folder \"XYZ\"?")
+                                                   .replace ("XYZ", f.getFullPathName()),
+                                              TRANS ("Scan"),
+                                              String::empty,
+                                              nullptr,
+                                              ModalCallbackFunction::create (warnAboutStupidPathsCallback, this));
+                return;
+            }
+        }
+
+        startScan();
+    }
+
+    static bool isStupidPath (const File& f)
+    {
+        Array<File> roots;
+        File::findFileSystemRoots (roots);
+
+        if (roots.contains (f))
+            return true;
+
+        File::SpecialLocationType pathsThatWouldBeStupidToScan[]
+            = { File::globalApplicationsDirectory,
+                File::userHomeDirectory,
+                File::userDocumentsDirectory,
+                File::userDesktopDirectory,
+                File::tempDirectory,
+                File::userMusicDirectory,
+                File::userMoviesDirectory,
+                File::userPicturesDirectory };
+
+        for (int i = 0; i < numElementsInArray (pathsThatWouldBeStupidToScan); ++i)
+        {
+            const File sillyFolder (File::getSpecialLocation (pathsThatWouldBeStupidToScan[i]));
+
+            if (f == sillyFolder || sillyFolder.isAChildOf (f))
+                return true;
+        }
+
+        return false;
+    }
+
+    static void warnAboutStupidPathsCallback (int result, Scanner* scanner)
+    {
+        if (result != 0)
+            scanner->startScan();
+        else
+            scanner->finishedScan();
+    }
+
+    void startScan()
+    {
+        pathChooserWindow.setVisible (false);
+
+        scanner = new PluginDirectoryScanner (owner.list, formatToScan, pathList.getPath(),
+                                              true, owner.deadMansPedalFile);
+
+        if (propertiesToUse != nullptr)
+        {
+            setLastSearchPath (*propertiesToUse, formatToScan, pathList.getPath());
+            propertiesToUse->saveIfNeeded();
+        }
+
+        progressWindow.addButton (TRANS("Cancel"), 0, KeyPress (KeyPress::escapeKey));
+        progressWindow.addProgressBarComponent (progress);
+        progressWindow.enterModalState();
+
+        if (numThreads > 0)
+        {
+            pool = new ThreadPool (numThreads);
+
+            for (int i = numThreads; --i >= 0;)
+                pool->addJob (new ScanJob (*this), true);
+        }
 
         startTimer (20);
     }
 
-private:
-    void timerCallback()
+    void finishedScan()
     {
-        aw.setMessage (TRANS("Testing:\n\n") + scanner.getNextPluginFileThatWillBeScanned());
-
-        if (scanner.scanNextFile (true) && aw.isCurrentlyModal())
-        {
-            progress = scanner.getProgress();
-            startTimer (20);
-        }
-        else
-        {
-            owner.scanFinished (scanner.getFailedFiles());
-        }
+        owner.scanFinished (scanner != nullptr ? scanner->getFailedFiles()
+                                               : StringArray());
     }
 
-    PluginListComponent& owner;
-    AlertWindow aw;
-    double progress;
-    PluginDirectoryScanner scanner;
+    void timerCallback() override
+    {
+        if (pool == nullptr)
+        {
+            if (doNextScan())
+                startTimer (20);
+        }
+
+        if (! progressWindow.isCurrentlyModal())
+            finished = true;
+
+        if (finished)
+            finishedScan();
+        else
+            progressWindow.setMessage (TRANS("Testing") + ":\n\n" + pluginBeingScanned);
+    }
+
+    bool doNextScan()
+    {
+        if (scanner->scanNextFile (true, pluginBeingScanned))
+        {
+            progress = scanner->getProgress();
+            return true;
+        }
+
+        finished = true;
+        return false;
+    }
+
+    struct ScanJob  : public ThreadPoolJob
+    {
+        ScanJob (Scanner& s)  : ThreadPoolJob ("pluginscan"), scanner (s) {}
+
+        JobStatus runJob()
+        {
+            while (scanner.doNextScan() && ! shouldExit())
+            {}
+
+            return jobHasFinished;
+        }
+
+        Scanner& scanner;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ScanJob)
+    };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Scanner)
 };
 
-void PluginListComponent::scanFor (AudioPluginFormat* format)
+void PluginListComponent::scanFor (AudioPluginFormat& format)
 {
-    if (format != nullptr)
-    {
-        FileSearchPath path (format->getDefaultLocationsToSearch());
+    currentScanner = new Scanner (*this, format, propertiesToUse, numThreads);
+}
 
-        if (path.getNumPaths() > 0) // if the path is empty, then paths aren't used for this format.
-        {
-           #if JUCE_MODAL_LOOPS_PERMITTED
-            if (propertiesToUse != nullptr)
-                path = propertiesToUse->getValue ("lastPluginScanPath_" + format->getName(), path.toString());
-
-            AlertWindow aw (TRANS("Select folders to scan..."), String::empty, AlertWindow::NoIcon);
-            FileSearchPathListComponent pathList;
-            pathList.setSize (500, 300);
-            pathList.setPath (path);
-
-            aw.addCustomComponent (&pathList);
-            aw.addButton (TRANS("Scan"), 1, KeyPress (KeyPress::returnKey));
-            aw.addButton (TRANS("Cancel"), 0, KeyPress (KeyPress::escapeKey));
-
-            if (aw.runModalLoop() == 0)
-                return;
-
-            path = pathList.getPath();
-           #else
-            jassertfalse; // XXX this method needs refactoring to work without modal loops..
-           #endif
-        }
-
-        if (propertiesToUse != nullptr)
-        {
-            propertiesToUse->setValue ("lastPluginScanPath_" + format->getName(), path.toString());
-            propertiesToUse->saveIfNeeded();
-        }
-
-        currentScanner = new Scanner (*this, *format, path);
-    }
+bool PluginListComponent::isScanning() const noexcept
+{
+    return currentScanner != nullptr;
 }
 
 void PluginListComponent::scanFinished (const StringArray& failedFiles)
@@ -328,6 +500,7 @@ void PluginListComponent::scanFinished (const StringArray& failedFiles)
     if (shortNames.size() > 0)
         AlertWindow::showMessageBoxAsync (AlertWindow::InfoIcon,
                                           TRANS("Scan complete"),
-                                          TRANS("Note that the following files appeared to be plugin files, but failed to load correctly:\n\n")
+                                          TRANS("Note that the following files appeared to be plugin files, but failed to load correctly")
+                                            + ":\n\n"
                                             + shortNames.joinIntoString (", "));
 }

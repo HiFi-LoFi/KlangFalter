@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -46,7 +49,7 @@ public:
             zlibNamespace::deflateEnd (&stream);
     }
 
-    bool write (const uint8* data, unsigned int dataSize, OutputStream& out)
+    bool write (const uint8* data, size_t dataSize, OutputStream& out)
     {
         // When you call flush() on a gzip stream, the stream is closed, and you can
         // no longer continue to write data to it!
@@ -62,7 +65,7 @@ public:
     void finish (OutputStream& out)
     {
         const uint8* data = nullptr;
-        unsigned int dataSize = 0;
+        size_t dataSize = 0;
 
         while (! finished)
             doNextBlock (data, dataSize, out, Z_FINISH);
@@ -76,9 +79,10 @@ private:
     bool isFirstDeflate, streamIsValid, finished;
     zlibNamespace::Bytef buffer[32768];
 
-    bool doNextBlock (const uint8*& data, unsigned int& dataSize, OutputStream& out, const int flushMode)
+    bool doNextBlock (const uint8*& data, size_t& dataSize, OutputStream& out, const int flushMode)
     {
         using namespace zlibNamespace;
+
         if (streamIsValid)
         {
             stream.next_in   = const_cast <uint8*> (data);
@@ -99,8 +103,8 @@ private:
                 {
                     data += dataSize - stream.avail_in;
                     dataSize = stream.avail_in;
-                    const int bytesDone = ((int) sizeof (buffer)) - (int) stream.avail_out;
-                    return bytesDone <= 0 || out.write (buffer, bytesDone);
+                    const ssize_t bytesDone = (ssize_t) sizeof (buffer) - (ssize_t) stream.avail_out;
+                    return bytesDone <= 0 || out.write (buffer, (size_t) bytesDone);
                 }
 
                 default:
@@ -136,12 +140,11 @@ void GZIPCompressorOutputStream::flush()
     destStream->flush();
 }
 
-bool GZIPCompressorOutputStream::write (const void* destBuffer, int howMany)
+bool GZIPCompressorOutputStream::write (const void* destBuffer, size_t howMany)
 {
-    jassert (destBuffer != nullptr && howMany >= 0);
+    jassert (destBuffer != nullptr && (ssize_t) howMany >= 0);
 
-    return helper->write (static_cast <const uint8*> (destBuffer),
-                          (unsigned int) howMany, *destStream);
+    return helper->write (static_cast <const uint8*> (destBuffer), howMany, *destStream);
 }
 
 int64 GZIPCompressorOutputStream::getPosition()
@@ -182,8 +185,8 @@ public:
                     for (int k = (int) data.getSize(); --k >= 0;)
                         data[k] = (char) rng.nextInt (255);
 
-                    original.write (data.getData(), (int) data.getSize());
-                    zipper  .write (data.getData(), (int) data.getSize());
+                    original << data;
+                    zipper   << data;
                 }
             }
 

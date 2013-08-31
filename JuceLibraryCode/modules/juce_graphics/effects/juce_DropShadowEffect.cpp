@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -69,7 +68,7 @@ DropShadow::DropShadow() noexcept
 {
 }
 
-DropShadow::DropShadow (const Colour& shadowColour, const int r, const Point<int>& o) noexcept
+DropShadow::DropShadow (Colour shadowColour, const int r, Point<int> o) noexcept
     : colour (shadowColour), radius (r), offset (o)
 {
     jassert (radius > 0);
@@ -96,8 +95,8 @@ void DropShadow::drawForPath (Graphics& g, const Path& path) const
     jassert (radius > 0);
 
     const Rectangle<int> area ((path.getBounds().getSmallestIntegerContainer() + offset)
-                                   .getIntersection (g.getClipBounds())
-                                   .expanded (radius + 1, radius + 1));
+                                   .expanded (radius + 1)
+                                   .getIntersection (g.getClipBounds().expanded (radius + 1)));
 
     if (area.getWidth() > 2 && area.getHeight() > 2)
     {
@@ -115,6 +114,48 @@ void DropShadow::drawForPath (Graphics& g, const Path& path) const
         g.setColour (colour);
         g.drawImageAt (renderedPath, area.getX(), area.getY(), true);
     }
+}
+
+static void drawShadowSection (Graphics& g, ColourGradient& cg, const Rectangle<int>& area,
+                               bool isCorner, float centreX, float centreY, float edgeX, float edgeY)
+{
+    cg.point1 = area.getRelativePoint (centreX, centreY).toFloat();
+    cg.point2 = area.getRelativePoint (edgeX, edgeY).toFloat();
+    cg.isRadial = isCorner;
+
+    g.setGradientFill (cg);
+    g.fillRect (area);
+}
+
+void DropShadow::drawForRectangle (Graphics& g, const Rectangle<int>& targetArea) const
+{
+    ColourGradient cg (colour, 0, 0, colour.withAlpha (0.0f), 0, 0, false);
+
+    for (float i = 0.05f; i < 1.0f; i += 0.1f)
+        cg.addColour (1.0 - i, colour.withMultipliedAlpha (i * i));
+
+    const int radiusInset = (radius + 1) / 2;
+    const int expandedRadius = radius + radiusInset;
+
+    const Rectangle<int> area (targetArea.reduced (radiusInset) + offset);
+
+    Rectangle<int> r (area.expanded (expandedRadius));
+    Rectangle<int> top (r.removeFromTop (expandedRadius));
+    Rectangle<int> bottom (r.removeFromBottom (expandedRadius));
+
+    drawShadowSection (g, cg, top.removeFromLeft  (expandedRadius), true, 1.0f, 1.0f, 0, 1.0f);
+    drawShadowSection (g, cg, top.removeFromRight (expandedRadius), true, 0, 1.0f, 1.0f, 1.0f);
+    drawShadowSection (g, cg, top, false, 0, 1.0f, 0, 0);
+
+    drawShadowSection (g, cg, bottom.removeFromLeft  (expandedRadius), true, 1.0f, 0, 0, 0);
+    drawShadowSection (g, cg, bottom.removeFromRight (expandedRadius), true, 0, 0, 1.0f, 0);
+    drawShadowSection (g, cg, bottom, false, 0, 0, 0, 1.0f);
+
+    drawShadowSection (g, cg, r.removeFromLeft  (expandedRadius), false, 1.0f, 0, 0, 0);
+    drawShadowSection (g, cg, r.removeFromRight (expandedRadius), false, 0, 0, 1.0f, 0);
+
+    g.setColour (colour);
+    g.fillRect (area);
 }
 
 //==============================================================================

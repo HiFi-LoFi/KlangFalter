@@ -1,32 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_AUDIOTHUMBNAILCACHE_JUCEHEADER__
-#define __JUCE_AUDIOTHUMBNAILCACHE_JUCEHEADER__
-
-#include "juce_AudioThumbnailBase.h"
+#ifndef JUCE_AUDIOTHUMBNAILCACHE_H_INCLUDED
+#define JUCE_AUDIOTHUMBNAILCACHE_H_INCLUDED
 
 
 //==============================================================================
@@ -51,11 +48,10 @@ public:
     explicit AudioThumbnailCache (int maxNumThumbsToStore);
 
     /** Destructor. */
-    ~AudioThumbnailCache();
+    virtual ~AudioThumbnailCache();
 
     //==============================================================================
-    /** Clears out any stored thumbnails.
-    */
+    /** Clears out any stored thumbnails. */
     void clear();
 
     /** Reloads the specified thumb if this cache contains the appropriate stored
@@ -73,6 +69,9 @@ public:
     */
     void storeThumb (const AudioThumbnailBase& thumb, int64 hashCode);
 
+    /** Tells the cache to forget about the thumb with the given hashcode. */
+    void removeThumb (int64 hashCode);
+
     //==============================================================================
     /** Attempts to re-load a saved cache of thumbnails from a stream.
         The cache data must have been written by the writeToStream() method.
@@ -88,12 +87,23 @@ public:
     /** Returns the thread that client thumbnails can use. */
     TimeSliceThread& getTimeSliceThread() noexcept      { return thread; }
 
+protected:
+    /** This can be overridden to provide a custom callback for saving thumbnails
+        once they have finished being loaded.
+    */
+    virtual void saveNewlyFinishedThumbnail (const AudioThumbnailBase&, int64 hashCode);
+
+    /** This can be overridden to provide a custom callback for loading thumbnails
+        from pre-saved files to save the cache the trouble of having to create them.
+    */
+    virtual bool loadNewThumb (AudioThumbnailBase&, int64 hashCode);
+
 private:
     //==============================================================================
     TimeSliceThread thread;
 
     class ThumbnailCacheEntry;
-    friend class OwnedArray<ThumbnailCacheEntry>;
+    friend struct ContainerDeletePolicy<ThumbnailCacheEntry>;
     OwnedArray<ThumbnailCacheEntry> thumbs;
     CriticalSection lock;
     int maxNumThumbsToStore;
@@ -105,4 +115,4 @@ private:
 };
 
 
-#endif   // __JUCE_AUDIOTHUMBNAILCACHE_JUCEHEADER__
+#endif   // JUCE_AUDIOTHUMBNAILCACHE_H_INCLUDED

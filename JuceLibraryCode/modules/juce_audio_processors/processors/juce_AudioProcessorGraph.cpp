@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -886,7 +885,7 @@ AudioProcessorGraph::Node::Node (const uint32 nodeId_, AudioProcessor* const pro
       processor (processor_),
       isPrepared (false)
 {
-    jassert (processor_ != nullptr);
+    jassert (processor != nullptr);
 }
 
 void AudioProcessorGraph::Node::prepare (const double sampleRate, const int blockSize,
@@ -925,7 +924,9 @@ void AudioProcessorGraph::Node::setParentGraph (AudioProcessorGraph* const graph
 AudioProcessorGraph::AudioProcessorGraph()
     : lastNodeId (0),
       renderingBuffers (1, 1),
-      currentAudioOutputBuffer (1, 1)
+      currentAudioInputBuffer (nullptr),
+      currentAudioOutputBuffer (1, 1),
+      currentMidiInputBuffer (nullptr)
 {
 }
 
@@ -959,10 +960,19 @@ AudioProcessorGraph::Node* AudioProcessorGraph::getNodeForId (const uint32 nodeI
 
 AudioProcessorGraph::Node* AudioProcessorGraph::addNode (AudioProcessor* const newProcessor, uint32 nodeId)
 {
-    if (newProcessor == nullptr)
+    if (newProcessor == nullptr || newProcessor == this)
     {
         jassertfalse;
         return nullptr;
+    }
+
+    for (int i = nodes.size(); --i >= 0;)
+    {
+        if (nodes.getUnchecked(i)->getProcessor() == newProcessor)
+        {
+            jassertfalse; // Cannot add the same object to the graph twice!
+            return nullptr;
+        }
     }
 
     if (nodeId == 0)
@@ -978,6 +988,8 @@ AudioProcessorGraph::Node* AudioProcessorGraph::addNode (AudioProcessor* const n
         if (nodeId > lastNodeId)
             lastNodeId = nodeId;
     }
+
+    newProcessor->setPlayHead (getPlayHead());
 
     Node* const n = new Node (nodeId, newProcessor);
     nodes.add (n);
@@ -1167,8 +1179,8 @@ void AudioProcessorGraph::clearRenderingSequence()
     Array<void*> oldOps;
 
     {
-        const ScopedLock sl (renderLock);
-        renderingOps.swapWithArray (oldOps);
+        const ScopedLock sl (getCallbackLock());
+        renderingOps.swapWith (oldOps);
     }
 
     deleteRenderOpArray (oldOps);
@@ -1231,7 +1243,7 @@ void AudioProcessorGraph::buildRenderingSequence()
 
     {
         // swap over to the new rendering sequence..
-        const ScopedLock sl (renderLock);
+        const ScopedLock sl (getCallbackLock());
 
         renderingBuffers.setSize (numRenderingBuffersNeeded, getBlockSize());
         renderingBuffers.clear();
@@ -1242,7 +1254,7 @@ void AudioProcessorGraph::buildRenderingSequence()
         while (midiBuffers.size() < numMidiBuffersNeeded)
             midiBuffers.add (new MidiBuffer());
 
-        renderingOps.swapWithArray (newRenderingOps);
+        renderingOps.swapWith (newRenderingOps);
     }
 
     // delete the old ones..
@@ -1280,11 +1292,17 @@ void AudioProcessorGraph::releaseResources()
     currentMidiOutputBuffer.clear();
 }
 
+void AudioProcessorGraph::reset()
+{
+    const ScopedLock sl (getCallbackLock());
+
+    for (int i = 0; i < nodes.size(); ++i)
+        nodes.getUnchecked(i)->getProcessor()->reset();
+}
+
 void AudioProcessorGraph::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
     const int numSamples = buffer.getNumSamples();
-
-    const ScopedLock sl (renderLock);
 
     currentAudioInputBuffer = &buffer;
     currentAudioOutputBuffer.setSize (jmax (1, buffer.getNumChannels()), numSamples);
@@ -1320,6 +1338,7 @@ const String AudioProcessorGraph::getOutputChannelName (int channelIndex) const
 bool AudioProcessorGraph::isInputChannelStereoPair (int /*index*/) const    { return true; }
 bool AudioProcessorGraph::isOutputChannelStereoPair (int /*index*/) const   { return true; }
 bool AudioProcessorGraph::silenceInProducesSilenceOut() const               { return false; }
+double AudioProcessorGraph::getTailLengthSeconds() const                    { return 0; }
 bool AudioProcessorGraph::acceptsMidi() const   { return true; }
 bool AudioProcessorGraph::producesMidi() const  { return true; }
 void AudioProcessorGraph::getStateInformation (juce::MemoryBlock& /*destData*/)   {}
@@ -1424,6 +1443,11 @@ void AudioProcessorGraph::AudioGraphIOProcessor::processBlock (AudioSampleBuffer
 bool AudioProcessorGraph::AudioGraphIOProcessor::silenceInProducesSilenceOut() const
 {
     return isOutput();
+}
+
+double AudioProcessorGraph::AudioGraphIOProcessor::getTailLengthSeconds() const
+{
+    return 0;
 }
 
 bool AudioProcessorGraph::AudioGraphIOProcessor::acceptsMidi() const

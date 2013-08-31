@@ -1,32 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_DIALOGWINDOW_JUCEHEADER__
-#define __JUCE_DIALOGWINDOW_JUCEHEADER__
-
-#include "juce_DocumentWindow.h"
+#ifndef JUCE_DIALOGWINDOW_H_INCLUDED
+#define JUCE_DIALOGWINDOW_H_INCLUDED
 
 
 //==============================================================================
@@ -65,7 +62,7 @@ public:
                                     desktop; if false, you can use it as a child component
     */
     DialogWindow (const String& name,
-                  const Colour& backgroundColour,
+                  Colour backgroundColour,
                   bool escapeKeyTriggersCloseButton,
                   bool addToDesktop = true);
 
@@ -119,7 +116,7 @@ public:
             will be automatically deleted when the modal state is terminated.
 
             When the dialog's close button is clicked, it'll automatically terminate its
-            modal state, but you can also do this programatically by calling
+            modal state, but you can also do this programmatically by calling
             exitModalState (returnValue) on the DialogWindow.
 
             If your content component needs to find the dialog window that it is
@@ -162,7 +159,7 @@ public:
         you want to block and run a modal loop until the dialog is dismissed, use showModalDialog()
         instead.
 
-        To close the dialog programatically, you should call exitModalState (returnValue) on
+        To close the dialog programmatically, you should call exitModalState (returnValue) on
         the DialogWindow that is created. To find a pointer to this window from your
         contentComponent, you can do something like this:
         @code
@@ -193,7 +190,7 @@ public:
     static void showDialog (const String& dialogTitle,
                             Component* contentComponent,
                             Component* componentToCentreAround,
-                            const Colour& backgroundColour,
+                            Colour backgroundColour,
                             bool escapeKeyTriggersCloseButton,
                             bool shouldBeResizable = false,
                             bool useBottomRightCornerResizer = false);
@@ -210,7 +207,7 @@ public:
 
         It returns the value that was returned by the dialog box's runModalLoop() call.
 
-        To close the dialog programatically, you should call exitModalState (returnValue) on
+        To close the dialog programmatically, you should call exitModalState (returnValue) on
         the DialogWindow that is created. To find a pointer to this window from your
         contentComponent, you can do something like this:
         @code
@@ -241,7 +238,7 @@ public:
     static int showModalDialog (const String& dialogTitle,
                                 Component* contentComponent,
                                 Component* componentToCentreAround,
-                                const Colour& backgroundColour,
+                                Colour backgroundColour,
                                 bool escapeKeyTriggersCloseButton,
                                 bool shouldBeResizable = false,
                                 bool useBottomRightCornerResizer = false);
@@ -251,9 +248,9 @@ public:
 protected:
     //==============================================================================
     /** @internal */
-    void resized();
+    void resized() override;
     /** @internal */
-    bool keyPressed (const KeyPress&);
+    bool keyPressed (const KeyPress&) override;
 
 private:
     bool escapeKeyTriggersCloseButton;
@@ -261,4 +258,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DialogWindow)
 };
 
-#endif   // __JUCE_DIALOGWINDOW_JUCEHEADER__
+#endif   // JUCE_DIALOGWINDOW_H_INCLUDED

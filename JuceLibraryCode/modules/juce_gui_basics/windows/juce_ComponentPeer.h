@@ -1,36 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_COMPONENTPEER_JUCEHEADER__
-#define __JUCE_COMPONENTPEER_JUCEHEADER__
-
-#include "../components/juce_Component.h"
-#include "../mouse/juce_MouseCursor.h"
-#include "../keyboard/juce_TextInputTarget.h"
-
-class ComponentBoundsConstrainer;
+#ifndef JUCE_COMPONENTPEER_H_INCLUDED
+#define JUCE_COMPONENTPEER_H_INCLUDED
 
 
 //==============================================================================
@@ -127,51 +120,49 @@ public:
     */
     virtual bool setDocumentEditedStatus (bool edited);
 
+    /** If this type of window is capable of indicating that it represents a file, then
+        this lets you set the file.
+
+        E.g. in OSX it'll show an icon for the file in the title bar.
+    */
+    virtual void setRepresentedFile (const File&);
+
     //==============================================================================
-    /** Moves the window without changing its size.
-
-        If the native window is contained in another window, then the co-ordinates are
-        relative to the parent window's origin, not the screen origin.
-
-        This should result in a callback to handleMovedOrResized().
-    */
-    virtual void setPosition (int x, int y) = 0;
-
-    /** Resizes the window without changing its position.
-        This should result in a callback to handleMovedOrResized().
-    */
-    virtual void setSize (int w, int h) = 0;
-
     /** Moves and resizes the window.
 
-        If the native window is contained in another window, then the co-ordinates are
+        If the native window is contained in another window, then the coordinates are
         relative to the parent window's origin, not the screen origin.
 
         This should result in a callback to handleMovedOrResized().
     */
-    virtual void setBounds (int x, int y, int w, int h, bool isNowFullScreen) = 0;
+    virtual void setBounds (const Rectangle<int>& newBounds, bool isNowFullScreen) = 0;
+
+    /** Updates the peer's bounds to match its component. */
+    void updateBounds();
 
     /** Returns the current position and size of the window.
 
-        If the native window is contained in another window, then the co-ordinates are
+        If the native window is contained in another window, then the coordinates are
         relative to the parent window's origin, not the screen origin.
     */
     virtual Rectangle<int> getBounds() const = 0;
 
-    /** Returns the x-position of this window, relative to the screen's origin. */
-    virtual Point<int> getScreenPosition() const = 0;
+    /** Converts a position relative to the top-left of this component to screen coordinates. */
+    virtual Point<int> localToGlobal (Point<int> relativePosition) = 0;
 
-    /** Converts a position relative to the top-left of this component to screen co-ordinates. */
-    virtual Point<int> localToGlobal (const Point<int>& relativePosition) = 0;
-
-    /** Converts a rectangle relative to the top-left of this component to screen co-ordinates. */
+    /** Converts a rectangle relative to the top-left of this component to screen coordinates. */
     virtual Rectangle<int> localToGlobal (const Rectangle<int>& relativePosition);
 
-    /** Converts a screen co-ordinate to a position relative to the top-left of this component. */
-    virtual Point<int> globalToLocal (const Point<int>& screenPosition) = 0;
+    /** Converts a screen coordinate to a position relative to the top-left of this component. */
+    virtual Point<int> globalToLocal (Point<int> screenPosition) = 0;
 
     /** Converts a screen area to a position relative to the top-left of this component. */
     virtual Rectangle<int> globalToLocal (const Rectangle<int>& screenPosition);
+
+    /** Returns the area in peer coordinates that is covered by the given sub-comp (which
+        may be at any depth)
+    */
+    Rectangle<int> getAreaCoveredBy (Component& subComponent) const;
 
     /** Minimises the window. */
     virtual void setMinimised (bool shouldBeMinimised) = 0;
@@ -204,11 +195,11 @@ public:
 
     /** Checks if a point is in the window.
 
-        Coordinates are relative to the top-left of this window. If trueIfInAChildWindow
-        is false, then this returns false if the point is actually inside a child of this
-        window.
+        The position is relative to the top-left of this window, in unscaled peer coordinates.
+        If trueIfInAChildWindow is false, then this returns false if the point is actually
+        inside a child of this window.
     */
-    virtual bool contains (const Point<int>& position, bool trueIfInAChildWindow) const = 0;
+    virtual bool contains (Point<int> localPos, bool trueIfInAChildWindow) const = 0;
 
     /** Returns the size of the window frame that's around this window.
         Whether or not the window has a normal window frame depends on the flags
@@ -306,8 +297,9 @@ public:
     virtual void setAlpha (float newAlpha) = 0;
 
     //==============================================================================
-    void handleMouseEvent (int touchIndex, const Point<int>& positionWithinPeer, const ModifierKeys& newMods, int64 time);
-    void handleMouseWheel (int touchIndex, const Point<int>& positionWithinPeer, int64 time, const MouseWheelDetails&);
+    void handleMouseEvent (int touchIndex, const Point<int> positionWithinPeer, const ModifierKeys newMods, int64 time);
+    void handleMouseWheel (int touchIndex, const Point<int> positionWithinPeer, int64 time, const MouseWheelDetails&);
+    void handleMagnifyGesture (int touchIndex, const Point<int> positionWithinPeer, int64 time, float scaleFactor);
 
     void handleUserClosingWindow();
 
@@ -324,24 +316,6 @@ public:
     bool handleDragMove (const DragInfo&);
     bool handleDragExit (const DragInfo&);
     bool handleDragDrop (const DragInfo&);
-
-    //==============================================================================
-    /** Resets the masking region.
-        The subclass should call this every time it's about to call the handlePaint method.
-        @see addMaskedRegion
-    */
-    void clearMaskedRegion();
-
-    /** Adds a rectangle to the set of areas not to paint over.
-
-        A component can call this on its peer during its paint() method, to signal
-        that the painting code should ignore a given region. The reason
-        for this is to stop embedded windows (such as OpenGL) getting painted over.
-
-        The masked region is cleared each time before a paint happens, so a component
-        will have to make sure it calls this every time it's painted.
-    */
-    void addMaskedRegion (const Rectangle<int>& area);
 
     //==============================================================================
     /** Returns the number of currently-active peers.
@@ -363,7 +337,7 @@ public:
     static bool isValidPeer (const ComponentPeer* peer) noexcept;
 
     //==============================================================================
-    virtual StringArray getAvailableRenderingEngines();
+    virtual StringArray getAvailableRenderingEngines() = 0;
     virtual int getCurrentRenderingEngine() const;
     virtual void setCurrentRenderingEngine (int index);
 
@@ -371,22 +345,19 @@ protected:
     //==============================================================================
     Component& component;
     const int styleFlags;
-    RectangleList maskedRegion;
     Rectangle<int> lastNonFullscreenBounds;
     ComponentBoundsConstrainer* constrainer;
-
-    static void updateCurrentModifiers() noexcept;
 
 private:
     //==============================================================================
     WeakReference<Component> lastFocusedComponent, dragAndDropTargetComponent;
     Component* lastDragAndDropCompUnderMouse;
     const uint32 uniqueID;
-    bool fakeMouseMessageSent, isWindowMinimised;
+    bool isWindowMinimised;
     Component* getTargetForKeyPress();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentPeer)
 };
 
 
-#endif   // __JUCE_COMPONENTPEER_JUCEHEADER__
+#endif   // JUCE_COMPONENTPEER_H_INCLUDED

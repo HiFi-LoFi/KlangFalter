@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -40,7 +39,7 @@ public:
                                  : TRANS("click to change this key-mapping"));
     }
 
-    void paintButton (Graphics& g, bool /*isOver*/, bool /*isDown*/)
+    void paintButton (Graphics& g, bool /*isOver*/, bool /*isDown*/) override
     {
         getLookAndFeel().drawKeymapChangeButton (g, getWidth(), getHeight(), *this,
                                                  keyNum >= 0 ? getName() : String::empty);
@@ -59,7 +58,7 @@ public:
         }
     }
 
-    void clicked()
+    void clicked() override
     {
         if (keyNum >= 0)
         {
@@ -96,7 +95,7 @@ public:
                            AlertWindow::NoIcon),
               owner (kec)
         {
-            addButton (TRANS("Ok"), 1);
+            addButton (TRANS("OK"), 1);
             addButton (TRANS("Cancel"), 0);
 
             // (avoid return + escape keys getting processed by the buttons..)
@@ -107,22 +106,24 @@ public:
             grabKeyboardFocus();
         }
 
-        bool keyPressed (const KeyPress& key)
+        bool keyPressed (const KeyPress& key) override
         {
             lastPress = key;
-            String message (TRANS("Key: ") + owner.getDescriptionForKeyPress (key));
+            String message (TRANS("Key") + ": " + owner.getDescriptionForKeyPress (key));
 
             const CommandID previousCommand = owner.getMappings().findCommandForKeyPress (key);
 
             if (previousCommand != 0)
-                message << "\n\n" << TRANS("(Currently assigned to \"")
-                        << owner.getCommandManager().getNameOfCommand (previousCommand) << "\")";
+                message << "\n\n("
+                        << TRANS("Currently assigned to \"CMDN\"")
+                            .replace ("CMDN", owner.getCommandManager().getNameOfCommand (previousCommand))
+                        << ')';
 
             setMessage (message);
             return true;
         }
 
-        bool keyStateChanged (bool)
+        bool keyStateChanged (bool) override
         {
             return true;
         }
@@ -160,9 +161,10 @@ public:
             {
                 AlertWindow::showOkCancelBox (AlertWindow::WarningIcon,
                                               TRANS("Change key-mapping"),
-                                              TRANS("This key is already assigned to the command \"")
-                                                + owner.getCommandManager().getNameOfCommand (previousCommand)
-                                                + TRANS("\"\n\nDo you want to re-assign it to this new command instead?"),
+                                              TRANS("This key is already assigned to the command \"CMDN\"")
+                                                  .replace ("CMDN", owner.getCommandManager().getNameOfCommand (previousCommand))
+                                                + "\n\n"
+                                                + TRANS("Do you want to re-assign it to this new command instead?"),
                                               TRANS("Re-assign"),
                                               TRANS("Cancel"),
                                               this,
@@ -227,17 +229,17 @@ public:
         addChildComponent (b);
     }
 
-    void paint (Graphics& g)
+    void paint (Graphics& g) override
     {
         g.setFont (getHeight() * 0.7f);
         g.setColour (findColour (KeyMappingEditorComponent::textColourId));
 
-        g.drawFittedText (owner.getCommandManager().getNameOfCommand (commandID),
+        g.drawFittedText (TRANS (owner.getCommandManager().getNameOfCommand (commandID)),
                           4, 0, jmax (40, getChildComponent (0)->getX() - 5), getHeight(),
                           Justification::centredLeft, true);
     }
 
-    void resized()
+    void resized() override
     {
         int x = getWidth() - 4;
 
@@ -294,7 +296,7 @@ public:
     bool mightContainSubItems()                 { return true; }
     int getItemHeight() const                   { return 28; }
 
-    void paintItem (Graphics& g, int width, int height)
+    void paintItem (Graphics& g, int width, int height) override
     {
         g.setFont (Font (height * 0.6f, Font::bold));
         g.setColour (owner.findColour (KeyMappingEditorComponent::textColourId));
@@ -304,7 +306,7 @@ public:
                     Justification::centredLeft, true);
     }
 
-    void itemOpennessChanged (bool isNowOpen)
+    void itemOpennessChanged (bool isNowOpen) override
     {
         if (isNowOpen)
         {
@@ -351,7 +353,7 @@ public:
     bool mightContainSubItems()             { return true; }
     String getUniqueName() const            { return "keys"; }
 
-    void changeListenerCallback (ChangeBroadcaster*)
+    void changeListenerCallback (ChangeBroadcaster*) override
     {
         const OpennessRestorer opennessRestorer (*this);
         clearSubItems();
@@ -378,7 +380,7 @@ public:
             owner->getMappings().resetToDefaultMappings();
     }
 
-    void buttonClicked (Button*)
+    void buttonClicked (Button*) override
     {
         AlertWindow::showOkCancelBox (AlertWindow::QuestionIcon,
                                       TRANS("Reset to defaults"),
@@ -421,8 +423,8 @@ KeyMappingEditorComponent::~KeyMappingEditorComponent()
 }
 
 //==============================================================================
-void KeyMappingEditorComponent::setColours (const Colour& mainBackground,
-                                            const Colour& textColour)
+void KeyMappingEditorComponent::setColours (Colour mainBackground,
+                                            Colour textColour)
 {
     setColour (backgroundColourId, mainBackground);
     setColour (textColourId, textColour);

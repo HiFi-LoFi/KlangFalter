@@ -1,37 +1,35 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-AudioFormatReader::AudioFormatReader (InputStream* const in,
-                                      const String& formatName_)
+AudioFormatReader::AudioFormatReader (InputStream* const in, const String& name)
     : sampleRate (0),
       bitsPerSample (0),
       lengthInSamples (0),
       numChannels (0),
       usesFloatingPointData (false),
       input (in),
-      formatName (formatName_)
+      formatName (name)
 {
 }
 
@@ -162,17 +160,28 @@ void AudioFormatReader::read (AudioSampleBuffer* buffer,
 }
 
 template <typename SampleType>
+static inline void getChannelMinAndMax (SampleType* channel, const int numSamples, SampleType& mn, SampleType& mx)
+{
+    findMinAndMax (channel, numSamples, mn, mx);
+}
+
+static inline void getChannelMinAndMax (float* channel, const int numSamples, float& mn, float& mx)
+{
+    FloatVectorOperations::findMinAndMax (channel, numSamples, mn, mx);
+}
+
+template <typename SampleType>
 static void getStereoMinAndMax (SampleType* const* channels, const int numChannels, const int numSamples,
                                 SampleType& lmin, SampleType& lmax, SampleType& rmin, SampleType& rmax)
 {
     SampleType bufMin, bufMax;
-    findMinAndMax (channels[0], numSamples, bufMin, bufMax);
+    getChannelMinAndMax (channels[0], numSamples, bufMin, bufMax);
     lmax = jmax (lmax, bufMax);
     lmin = jmin (lmin, bufMin);
 
     if (numChannels > 1)
     {
-        findMinAndMax (channels[1], numSamples, bufMin, bufMax);
+        getChannelMinAndMax (channels[1], numSamples, bufMin, bufMax);
         rmax = jmax (rmax, bufMax);
         rmin = jmin (rmin, bufMin);
     }
@@ -364,4 +373,54 @@ int64 AudioFormatReader::searchForLevel (int64 startSample,
     }
 
     return -1;
+}
+
+//==============================================================================
+MemoryMappedAudioFormatReader::MemoryMappedAudioFormatReader (const File& f, const AudioFormatReader& reader,
+                                                              int64 start, int64 length, int frameSize)
+    : AudioFormatReader (nullptr, reader.getFormatName()), file (f),
+      dataChunkStart (start), dataLength (length), bytesPerFrame (frameSize)
+{
+    sampleRate      = reader.sampleRate;
+    bitsPerSample   = reader.bitsPerSample;
+    lengthInSamples = reader.lengthInSamples;
+    numChannels     = reader.numChannels;
+    metadataValues  = reader.metadataValues;
+    usesFloatingPointData = reader.usesFloatingPointData;
+}
+
+bool MemoryMappedAudioFormatReader::mapEntireFile()
+{
+    return mapSectionOfFile (Range<int64> (0, lengthInSamples));
+}
+
+bool MemoryMappedAudioFormatReader::mapSectionOfFile (Range<int64> samplesToMap)
+{
+    if (map == nullptr || samplesToMap != mappedSection)
+    {
+        map = nullptr;
+
+        const Range<int64> fileRange (sampleToFilePos (samplesToMap.getStart()),
+                                      sampleToFilePos (samplesToMap.getEnd()));
+
+        map = new MemoryMappedFile (file, fileRange, MemoryMappedFile::readOnly);
+
+        if (map->getData() == nullptr)
+            map = nullptr;
+        else
+            mappedSection = Range<int64> (jmax ((int64) 0, filePosToSample (map->getRange().getStart() + (bytesPerFrame - 1))),
+                                          jmin (lengthInSamples, filePosToSample (map->getRange().getEnd())));
+    }
+
+    return map != nullptr;
+}
+
+static int memoryReadDummyVariable; // used to force the compiler not to optimise-away the read operation
+
+void MemoryMappedAudioFormatReader::touchSample (int64 sample) const noexcept
+{
+    if (map != nullptr && mappedSection.contains (sample))
+        memoryReadDummyVariable += *(int*) sampleToPointer (sample);
+    else
+        jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read.
 }

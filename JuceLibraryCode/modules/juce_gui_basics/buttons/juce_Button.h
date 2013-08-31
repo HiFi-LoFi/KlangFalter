@@ -1,34 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_BUTTON_JUCEHEADER__
-#define __JUCE_BUTTON_JUCEHEADER__
-
-#include "../components/juce_Component.h"
-#include "../keyboard/juce_KeyListener.h"
-#include "../commands/juce_ApplicationCommandManager.h"
+#ifndef JUCE_BUTTON_H_INCLUDED
+#define JUCE_BUTTON_H_INCLUDED
 
 
 //==============================================================================
@@ -91,17 +86,17 @@ public:
         an action you won't change this. Toggle buttons, however will want to
         change their state when turned on or off.
 
-        @param shouldBeOn               whether to set the button's toggle state to be on or
-                                        off. If it's a member of a button group, this will
-                                        always try to turn it on, and to turn off any other
-                                        buttons in the group
-        @param sendChangeNotification   if true, a callback will be made to clicked(); if false
-                                        the button will be repainted but no notification will
-                                        be sent
+        @param shouldBeOn       whether to set the button's toggle state to be on or
+                                off. If it's a member of a button group, this will
+                                always try to turn it on, and to turn off any other
+                                buttons in the group
+        @param notification     determines the behaviour if the value changes - this
+                                can invoke a synchronous call to clicked(), but
+                                sendNotificationAsync is not supported
         @see getToggleState, setRadioGroupId
     */
     void setToggleState (bool shouldBeOn,
-                         bool sendChangeNotification);
+                         NotificationType notification);
 
     /** Returns true if the button is 'on'.
 
@@ -172,7 +167,7 @@ public:
         virtual ~Listener()  {}
 
         /** Called when the button is clicked. */
-        virtual void buttonClicked (Button* button) = 0;
+        virtual void buttonClicked (Button*) = 0;
 
         /** Called when the button's state changes. */
         virtual void buttonStateChanged (Button*)  {}
@@ -282,10 +277,10 @@ public:
 
         @see TooltipClient, TooltipWindow
     */
-    void setTooltip (const String& newTooltip);
+    void setTooltip (const String& newTooltip) override;
 
     // (implementation of the TooltipClient method)
-    String getTooltip();
+    String getTooltip() override;
 
 
     //==============================================================================
@@ -354,6 +349,8 @@ public:
     */
     void setState (const ButtonState newState);
 
+    // This method's parameters have changed - see the new version.
+    JUCE_DEPRECATED (void setToggleState (bool, bool));
 
 protected:
     //==============================================================================
@@ -405,43 +402,43 @@ protected:
     /** @internal */
     virtual void internalClickCallback (const ModifierKeys&);
     /** @internal */
-    void handleCommandMessage (int commandId);
+    void handleCommandMessage (int commandId) override;
     /** @internal */
-    void mouseEnter (const MouseEvent&);
+    void mouseEnter (const MouseEvent&) override;
     /** @internal */
-    void mouseExit (const MouseEvent&);
+    void mouseExit (const MouseEvent&) override;
     /** @internal */
-    void mouseDown (const MouseEvent&);
+    void mouseDown (const MouseEvent&) override;
     /** @internal */
-    void mouseDrag (const MouseEvent&);
+    void mouseDrag (const MouseEvent&) override;
     /** @internal */
-    void mouseUp (const MouseEvent&);
+    void mouseUp (const MouseEvent&) override;
     /** @internal */
-    bool keyPressed (const KeyPress&);
+    bool keyPressed (const KeyPress&) override;
     /** @internal */
-    bool keyPressed (const KeyPress&, Component*);
+    bool keyPressed (const KeyPress&, Component*) override;
     /** @internal */
-    bool keyStateChanged (bool isKeyDown, Component*);
+    bool keyStateChanged (bool isKeyDown, Component*) override;
     /** @internal */
     using Component::keyStateChanged;
     /** @internal */
-    void paint (Graphics&);
+    void paint (Graphics&) override;
     /** @internal */
-    void parentHierarchyChanged();
+    void parentHierarchyChanged() override;
     /** @internal */
-    void visibilityChanged();
+    void visibilityChanged() override;
     /** @internal */
-    void focusGained (FocusChangeType);
+    void focusGained (FocusChangeType) override;
     /** @internal */
-    void focusLost (FocusChangeType);
+    void focusLost (FocusChangeType) override;
     /** @internal */
-    void enablementChanged();
+    void enablementChanged() override;
     /** @internal */
-    void applicationCommandInvoked (const ApplicationCommandTarget::InvocationInfo&);
+    void applicationCommandInvoked (const ApplicationCommandTarget::InvocationInfo&) override;
     /** @internal */
-    void applicationCommandListChanged();
+    void applicationCommandListChanged() override;
     /** @internal */
-    void valueChanged (Value&);
+    void valueChanged (Value&) override;
 
 private:
     //==============================================================================
@@ -452,8 +449,8 @@ private:
 
     class RepeatTimer;
     friend class RepeatTimer;
-    friend class ScopedPointer <RepeatTimer>;
-    ScopedPointer <RepeatTimer> repeatTimer;
+    friend struct ContainerDeletePolicy<RepeatTimer>;
+    ScopedPointer<RepeatTimer> repeatTimer;
     uint32 buttonPressTime, lastRepeatTime;
     ApplicationCommandManager* commandManagerToUse;
     int autoRepeatDelay, autoRepeatSpeed, autoRepeatMinimumDelay;
@@ -475,15 +472,11 @@ private:
     ButtonState updateState();
     ButtonState updateState (bool isOver, bool isDown);
     bool isShortcutPressed() const;
-    void turnOffOtherButtonsInGroup (bool sendChangeNotification);
+    void turnOffOtherButtonsInGroup (NotificationType);
 
     void flashButtonState();
     void sendClickMessage (const ModifierKeys&);
     void sendStateMessage();
-
-    // These are deprecated - please use addListener() and removeListener() instead!
-    JUCE_DEPRECATED (void addButtonListener (Listener*));
-    JUCE_DEPRECATED (void removeButtonListener (Listener*));
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Button)
 };
@@ -493,4 +486,4 @@ private:
  typedef Button::Listener ButtonListener;
 #endif
 
-#endif   // __JUCE_BUTTON_JUCEHEADER__
+#endif   // JUCE_BUTTON_H_INCLUDED

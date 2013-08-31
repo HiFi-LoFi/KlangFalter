@@ -1,32 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_LABEL_JUCEHEADER__
-#define __JUCE_LABEL_JUCEHEADER__
-
-#include "juce_TextEditor.h"
+#ifndef JUCE_LABEL_H_INCLUDED
+#define JUCE_LABEL_H_INCLUDED
 
 
 //==============================================================================
@@ -56,11 +53,11 @@ public:
     //==============================================================================
     /** Changes the label text.
 
-        If broadcastChangeMessage is true and the new text is different to the current
-        text, then the class will broadcast a change message to any Label::Listener objects
-        that are registered.
+        The NotificationType parameter indicates whether to send a change message to
+        any Label::Listener objects if the new text is different.
     */
-    void setText (const String& newText, bool broadcastChangeMessage);
+    void setText (const String& newText,
+                  NotificationType notification);
 
     /** Returns the label's current text.
 
@@ -115,7 +112,7 @@ public:
 
         (The default is Justification::centredLeft)
     */
-    void setJustificationType (const Justification& justification);
+    void setJustificationType (Justification justification);
 
     /** Returns the type of justification, as set in setJustificationType(). */
     Justification getJustificationType() const noexcept                         { return justification; }
@@ -185,8 +182,7 @@ public:
         /** Destructor. */
         virtual ~Listener() {}
 
-        /** Called when a Label's text has changed.
-        */
+        /** Called when a Label's text has changed. */
         virtual void labelTextChanged (Label* labelThatHasChanged) = 0;
     };
 
@@ -269,46 +265,48 @@ protected:
     virtual void textWasChanged();
 
     /** Called when the text editor has just appeared, due to a user click or other focus change. */
-    virtual void editorShown (TextEditor* editorComponent);
+    virtual void editorShown (TextEditor*);
 
     /** Called when the text editor is going to be deleted, after editing has finished. */
-    virtual void editorAboutToBeHidden (TextEditor* editorComponent);
+    virtual void editorAboutToBeHidden (TextEditor*);
 
     //==============================================================================
     /** @internal */
-    void paint (Graphics&);
+    void paint (Graphics&) override;
     /** @internal */
-    void resized();
+    void resized() override;
     /** @internal */
-    void mouseUp (const MouseEvent&);
+    void mouseUp (const MouseEvent&) override;
     /** @internal */
-    void mouseDoubleClick (const MouseEvent&);
+    void mouseDoubleClick (const MouseEvent&) override;
     /** @internal */
-    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized);
+    void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
     /** @internal */
-    void componentParentHierarchyChanged (Component&);
+    void componentParentHierarchyChanged (Component&) override;
     /** @internal */
-    void componentVisibilityChanged (Component&);
+    void componentVisibilityChanged (Component&) override;
     /** @internal */
-    void inputAttemptWhenModal();
+    void inputAttemptWhenModal() override;
     /** @internal */
-    void focusGained (FocusChangeType);
+    void focusGained (FocusChangeType) override;
     /** @internal */
-    void enablementChanged();
+    void enablementChanged() override;
     /** @internal */
-    KeyboardFocusTraverser* createFocusTraverser();
+    KeyboardFocusTraverser* createFocusTraverser() override;
     /** @internal */
-    void textEditorTextChanged (TextEditor&);
+    void textEditorTextChanged (TextEditor&) override;
     /** @internal */
-    void textEditorReturnKeyPressed (TextEditor&);
+    void textEditorReturnKeyPressed (TextEditor&) override;
     /** @internal */
-    void textEditorEscapeKeyPressed (TextEditor&);
+    void textEditorEscapeKeyPressed (TextEditor&) override;
     /** @internal */
-    void textEditorFocusLost (TextEditor&);
+    void textEditorFocusLost (TextEditor&) override;
     /** @internal */
-    void colourChanged();
+    void colourChanged() override;
     /** @internal */
-    void valueChanged (Value&);
+    void valueChanged (Value&) override;
+    /** @internal */
+    void callChangeListeners();
 
 private:
     //==============================================================================
@@ -327,7 +325,6 @@ private:
     bool leftOfOwnerComp : 1;
 
     bool updateFromTextEditorContents (TextEditor&);
-    void callChangeListeners();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Label)
 };
@@ -335,4 +332,4 @@ private:
 /** This typedef is just for compatibility with old code - newer code should use the Label::Listener class directly. */
 typedef Label::Listener LabelListener;
 
-#endif   // __JUCE_LABEL_JUCEHEADER__
+#endif   // JUCE_LABEL_H_INCLUDED

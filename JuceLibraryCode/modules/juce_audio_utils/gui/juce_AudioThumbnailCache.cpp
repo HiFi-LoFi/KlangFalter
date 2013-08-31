@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -26,16 +25,16 @@
 class AudioThumbnailCache::ThumbnailCacheEntry
 {
 public:
-    ThumbnailCacheEntry (const int64 hash_)
-        : hash (hash_),
+    ThumbnailCacheEntry (const int64 hashCode)
+        : hash (hashCode),
           lastUsed (Time::getMillisecondCounter())
     {
     }
 
     ThumbnailCacheEntry (InputStream& in)
-        : lastUsed (0)
+        : hash (in.readInt64()),
+          lastUsed (0)
     {
-        hash = in.readInt64();
         const int64 len = in.readInt64();
         in.readIntoMemoryBlock (data, (ssize_t) len);
     }
@@ -56,9 +55,9 @@ private:
 };
 
 //==============================================================================
-AudioThumbnailCache::AudioThumbnailCache (const int maxNumThumbsToStore_)
+AudioThumbnailCache::AudioThumbnailCache (const int maxNumThumbs)
     : thread ("thumb cache"),
-      maxNumThumbsToStore (maxNumThumbsToStore_)
+      maxNumThumbsToStore (maxNumThumbs)
 {
     jassert (maxNumThumbsToStore > 0);
     thread.startThread (2);
@@ -109,7 +108,7 @@ bool AudioThumbnailCache::loadThumb (AudioThumbnailBase& thumb, const int64 hash
         return true;
     }
 
-    return false;
+    return loadNewThumb (thumb, hashCode);
 }
 
 void AudioThumbnailCache::storeThumb (const AudioThumbnailBase& thumb,
@@ -128,14 +127,27 @@ void AudioThumbnailCache::storeThumb (const AudioThumbnailBase& thumb,
             thumbs.set (findOldestThumb(), te);
     }
 
-    MemoryOutputStream out (te->data, false);
-    thumb.saveTo (out);
+    {
+        MemoryOutputStream out (te->data, false);
+        thumb.saveTo (out);
+    }
+
+    saveNewlyFinishedThumbnail (thumb, hashCode);
 }
 
 void AudioThumbnailCache::clear()
 {
     const ScopedLock sl (lock);
     thumbs.clear();
+}
+
+void AudioThumbnailCache::removeThumb (const int64 hashCode)
+{
+    const ScopedLock sl (lock);
+
+    for (int i = thumbs.size(); --i >= 0;)
+        if (thumbs.getUnchecked(i)->hash == hashCode)
+            thumbs.remove (i);
 }
 
 static inline int getThumbnailCacheFileMagicHeader() noexcept
@@ -167,4 +179,13 @@ void AudioThumbnailCache::writeToStream (OutputStream& out)
 
     for (int i = 0; i < thumbs.size(); ++i)
         thumbs.getUnchecked(i)->write (out);
+}
+
+void AudioThumbnailCache::saveNewlyFinishedThumbnail (const AudioThumbnailBase&, int64)
+{
+}
+
+bool AudioThumbnailCache::loadNewThumb (AudioThumbnailBase&, int64)
+{
+    return false;
 }

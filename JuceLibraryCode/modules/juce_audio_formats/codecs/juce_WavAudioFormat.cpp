@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -38,7 +37,7 @@ const char* const WavAudioFormat::bwavCodingHistory    = "bwav coding history";
 StringPairArray WavAudioFormat::createBWAVMetadata (const String& description,
                                                     const String& originator,
                                                     const String& originatorRef,
-                                                    const Time& date,
+                                                    const Time date,
                                                     const int64 timeReferenceSamples,
                                                     const String& codingHistory)
 {
@@ -55,11 +54,23 @@ StringPairArray WavAudioFormat::createBWAVMetadata (const String& description,
     return m;
 }
 
+const char* const WavAudioFormat::acidOneShot          = "acid one shot";
+const char* const WavAudioFormat::acidRootSet          = "acid root set";
+const char* const WavAudioFormat::acidStretch          = "acid stretch";
+const char* const WavAudioFormat::acidDiskBased        = "acid disk based";
+const char* const WavAudioFormat::acidizerFlag         = "acidizer flag";
+const char* const WavAudioFormat::acidRootNote         = "acid root note";
+const char* const WavAudioFormat::acidBeats            = "acid beats";
+const char* const WavAudioFormat::acidDenominator      = "acid denominator";
+const char* const WavAudioFormat::acidNumerator        = "acid numerator";
+const char* const WavAudioFormat::acidTempo            = "acid tempo";
+
 
 //==============================================================================
 namespace WavFileHelpers
 {
     inline int chunkName (const char* const name) noexcept   { return (int) ByteOrder::littleEndianInt (name); }
+    inline size_t roundUpSize (size_t sz) noexcept           { return (sz + 3) & ~3u; }
 
     #if JUCE_MSVC
      #pragma pack (push, 1)
@@ -98,8 +109,7 @@ namespace WavFileHelpers
 
         static MemoryBlock createFrom (const StringPairArray& values)
         {
-            const size_t sizeNeeded = sizeof (BWAVChunk) + (size_t) values [WavAudioFormat::bwavCodingHistory].getNumBytesAsUTF8();
-            MemoryBlock data ((sizeNeeded + 3) & ~3);
+            MemoryBlock data (roundUpSize (sizeof (BWAVChunk) + values [WavAudioFormat::bwavCodingHistory].getNumBytesAsUTF8()));
             data.fillWith (0);
 
             BWAVChunk* b = (BWAVChunk*) data.getData();
@@ -213,8 +223,7 @@ namespace WavFileHelpers
 
             if (numLoops > 0)
             {
-                const size_t sizeNeeded = sizeof (SMPLChunk) + (size_t) (numLoops - 1) * sizeof (SampleLoop);
-                data.setSize ((sizeNeeded + 3) & ~3, true);
+                data.setSize (roundUpSize (sizeof (SMPLChunk) + (size_t) (numLoops - 1) * sizeof (SampleLoop)), true);
 
                 SMPLChunk* const s = static_cast <SMPLChunk*> (data.getData());
 
@@ -343,8 +352,7 @@ namespace WavFileHelpers
 
             if (numCues > 0)
             {
-                const size_t sizeNeeded = sizeof (CueChunk) + (size_t) (numCues - 1) * sizeof (Cue);
-                data.setSize ((sizeNeeded + 3) & ~3, true);
+                data.setSize (roundUpSize (sizeof (CueChunk) + (size_t) (numCues - 1) * sizeof (Cue)), true);
 
                 CueChunk* const c = static_cast <CueChunk*> (data.getData());
 
@@ -401,13 +409,13 @@ namespace WavFileHelpers
                                             const int chunkType, MemoryOutputStream& out)
         {
             const String label (values.getValue (prefix + "Text", prefix));
-            const int labelLength = label.getNumBytesAsUTF8() + 1;
+            const int labelLength = (int) label.getNumBytesAsUTF8() + 1;
             const int chunkLength = 4 + labelLength + (labelLength & 1);
 
             out.writeInt (chunkType);
             out.writeInt (chunkLength);
             out.writeInt (getValue (values, prefix, "Identifier"));
-            out.write (label.toUTF8(), labelLength);
+            out.write (label.toUTF8(), (size_t) labelLength);
 
             if ((out.getDataSize() & 1) != 0)
                 out.writeByte (0);
@@ -417,7 +425,7 @@ namespace WavFileHelpers
         {
             const String text (values.getValue (prefix + "Text", prefix));
 
-            const int textLength = text.getNumBytesAsUTF8() + 1; // include null terminator
+            const int textLength = (int) text.getNumBytesAsUTF8() + 1; // include null terminator
             int chunkLength = textLength + 20 + (textLength & 1);
 
             out.writeInt (chunkName ("ltxt"));
@@ -429,7 +437,7 @@ namespace WavFileHelpers
             out.writeShort ((short) getValue (values, prefix, "Language"));
             out.writeShort ((short) getValue (values, prefix, "Dialect"));
             out.writeShort ((short) getValue (values, prefix, "CodePage"));
-            out.write (text.toUTF8(), textLength);
+            out.write (text.toUTF8(), (size_t) textLength);
 
             if ((out.getDataSize() & 1) != 0)
                 out.writeByte (0);
@@ -458,12 +466,59 @@ namespace WavFileHelpers
     }
 
     //==============================================================================
+    struct AcidChunk
+    {
+        /** Reads an acid RIFF chunk from a stream positioned just after the size byte. */
+        AcidChunk (InputStream& input, size_t length)
+        {
+            zerostruct (*this);
+            input.read (this, (int) jmin (sizeof (*this), length));
+        }
+
+        void addToMetadata (StringPairArray& values) const
+        {
+            setBoolFlag (values, WavAudioFormat::acidOneShot,   0x01);
+            setBoolFlag (values, WavAudioFormat::acidRootSet,   0x02);
+            setBoolFlag (values, WavAudioFormat::acidStretch,   0x04);
+            setBoolFlag (values, WavAudioFormat::acidDiskBased, 0x08);
+            setBoolFlag (values, WavAudioFormat::acidizerFlag,  0x10);
+
+            if (flags & 0x02) // root note set
+                values.set (WavAudioFormat::acidRootNote, String (rootNote));
+
+            values.set (WavAudioFormat::acidBeats,       String (numBeats));
+            values.set (WavAudioFormat::acidDenominator, String (meterDenominator));
+            values.set (WavAudioFormat::acidNumerator,   String (meterNumerator));
+            values.set (WavAudioFormat::acidTempo,       String (tempo));
+        }
+
+        void setBoolFlag (StringPairArray& values, const char* name, int32 mask) const
+        {
+            values.set (name, (flags & mask) ? "1" : "0");
+        }
+
+        int32 flags;
+        int16 rootNote;
+        int16 reserved1;
+        float reserved2;
+        int32 numBeats;
+        int16 meterDenominator;
+        int16 meterNumerator;
+        float tempo;
+
+    } JUCE_PACKED;
+
+    //==============================================================================
     struct ExtensibleWavSubFormat
     {
         uint32 data1;
         uint16 data2;
         uint16 data3;
         uint8  data4[8];
+
+        bool operator== (const ExtensibleWavSubFormat& other) const noexcept   { return memcmp (this, &other, sizeof (*this)) == 0; }
+        bool operator!= (const ExtensibleWavSubFormat& other) const noexcept   { return ! operator== (other); }
+
     } JUCE_PACKED;
 
     static const ExtensibleWavSubFormat pcmFormat       = { 0x00000001, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
@@ -586,9 +641,9 @@ public:
                             subFormat.data3 = (uint16) input->readShort();
                             input->read (subFormat.data4, sizeof (subFormat.data4));
 
-                            if (memcmp (&subFormat, &pcmFormat, sizeof (subFormat)) != 0
-                                 && memcmp (&subFormat, &IEEEFloatFormat, sizeof (subFormat)) != 0
-                                 && memcmp (&subFormat, &ambisonicFormat, sizeof (subFormat)) != 0)
+                            if (subFormat == IEEEFloatFormat)
+                                usesFloatingPointData = true;
+                            else if (subFormat != pcmFormat && subFormat != ambisonicFormat)
                                 bytesPerFrame = 0;
                         }
                     }
@@ -693,6 +748,10 @@ public:
                         }
                     }
                 }
+                else if (chunkType == chunkName ("acid"))
+                {
+                    AcidChunk (*input, length).addToMetadata (metadataValues);
+                }
                 else if (chunkEnd <= input->getPosition())
                 {
                     break;
@@ -710,19 +769,10 @@ public:
 
     //==============================================================================
     bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
-                      int64 startSampleInFile, int numSamples)
+                      int64 startSampleInFile, int numSamples) override
     {
-        jassert (destSamples != nullptr);
-        const int64 samplesAvailable = lengthInSamples - startSampleInFile;
-
-        if (samplesAvailable < numSamples)
-        {
-            for (int i = numDestChannels; --i >= 0;)
-                if (destSamples[i] != nullptr)
-                    zeromem (destSamples[i] + startOffsetInDestBuffer, sizeof (int) * (size_t) numSamples);
-
-            numSamples = (int) samplesAvailable;
-        }
+        clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
+                                           startSampleInFile, numSamples, lengthInSamples);
 
         if (numSamples <= 0)
             return true;
@@ -743,15 +793,9 @@ public:
                 zeromem (tempBuffer + bytesRead, (size_t) (numThisTime * bytesPerFrame - bytesRead));
             }
 
-            switch (bitsPerSample)
-            {
-                case 8:     ReadHelper<AudioData::Int32, AudioData::UInt8, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, tempBuffer, (int) numChannels, numThisTime); break;
-                case 16:    ReadHelper<AudioData::Int32, AudioData::Int16, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, tempBuffer, (int) numChannels, numThisTime); break;
-                case 24:    ReadHelper<AudioData::Int32, AudioData::Int24, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, tempBuffer, (int) numChannels, numThisTime); break;
-                case 32:    if (usesFloatingPointData) ReadHelper<AudioData::Float32, AudioData::Float32, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, tempBuffer, (int) numChannels, numThisTime);
-                            else                       ReadHelper<AudioData::Int32, AudioData::Int32, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, tempBuffer, (int) numChannels, numThisTime); break;
-                default:    jassertfalse; break;
-            }
+            copySampleData (bitsPerSample, usesFloatingPointData,
+                            destSamples, startOffsetInDestBuffer, numDestChannels,
+                            tempBuffer, (int) numChannels, numThisTime);
 
             startOffsetInDestBuffer += numThisTime;
             numSamples -= numThisTime;
@@ -760,14 +804,27 @@ public:
         return true;
     }
 
-    int64 bwavChunkStart, bwavSize;
+    static void copySampleData (unsigned int bitsPerSample, const bool usesFloatingPointData,
+                                int* const* destSamples, int startOffsetInDestBuffer, int numDestChannels,
+                                const void* sourceData, int numChannels, int numSamples) noexcept
+    {
+        switch (bitsPerSample)
+        {
+            case 8:     ReadHelper<AudioData::Int32, AudioData::UInt8, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
+            case 16:    ReadHelper<AudioData::Int32, AudioData::Int16, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
+            case 24:    ReadHelper<AudioData::Int32, AudioData::Int24, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
+            case 32:    if (usesFloatingPointData) ReadHelper<AudioData::Float32, AudioData::Float32, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples);
+                        else                       ReadHelper<AudioData::Int32,   AudioData::Int32,   AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
+            default:    jassertfalse; break;
+        }
+    }
 
-private:
-    ScopedPointer<AudioData::Converter> converter;
-    int bytesPerFrame;
+    int64 bwavChunkStart, bwavSize;
     int64 dataChunkStart, dataLength;
+    int bytesPerFrame;
     bool isRF64;
 
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WavAudioFormatReader)
 };
 
@@ -815,8 +872,9 @@ public:
     }
 
     //==============================================================================
-    bool write (const int** data, int numSamples)
+    bool write (const int** data, int numSamples) override
     {
+        jassert (numSamples >= 0);
         jassert (data != nullptr && *data != nullptr); // the input must contain at least one channel!
 
         if (writeFailed)
@@ -834,7 +892,7 @@ public:
             default:    jassertfalse; break;
         }
 
-        if (! output->write (tempBlock.getData(), (int) bytes))
+        if (! output->write (tempBlock.getData(), bytes))
         {
             // failed to write to disk, so let's try writing the header.
             // If it's just run out of disk space, then if it does manage
@@ -846,14 +904,13 @@ public:
         else
         {
             bytesWritten += bytes;
-            lengthInSamples += numSamples;
+            lengthInSamples += (uint64) numSamples;
 
             return true;
         }
     }
 
 private:
-    ScopedPointer<AudioData::Converter> converter;
     MemoryBlock tempBlock, bwavChunk, smplChunk, instChunk, cueChunk, listChunk;
     uint64 lengthInSamples, bytesWritten;
     int64 headerPosition;
@@ -888,7 +945,7 @@ private:
         const size_t bytesPerFrame = numChannels * bitsPerSample / 8;
         uint64 audioDataSize = bytesPerFrame * lengthInSamples;
 
-        const bool isRF64 = (bytesWritten >= literal64bit (0x100000000));
+        const bool isRF64 = (bytesWritten >= 0x100000000LL);
         const bool isWaveFmtEx = isRF64 || (numChannels > 2);
 
         int64 riffChunkSize = (int64) (4 /* 'RIFF' */ + 8 + 40 /* WAVEFORMATEX */
@@ -908,13 +965,29 @@ private:
 
         if (! isRF64)
         {
+           #if ! JUCE_WAV_DO_NOT_PAD_HEADER_SIZE
+            /* NB: This junk chunk is added for padding, so that the header is a fixed size
+               regardless of whether it's RF64 or not. That way, we can begin recording a file,
+               and when it's finished, can go back and write either a RIFF or RF64 header,
+               depending on whether more than 2^32 samples were written.
+
+               The JUCE_WAV_DO_NOT_PAD_HEADER_SIZE macro allows you to disable this feature in case
+               you need to create files for crappy WAV players with bugs that stop them skipping chunks
+               which they don't recognise. But DO NOT USE THIS option unless you really have no choice,
+               because it means that if you write more than 2^32 samples to the file, you'll corrupt it.
+            */
             output->writeInt (chunkName ("JUNK"));
             output->writeInt (28 + (isWaveFmtEx? 0 : 24));
             output->writeRepeatedByte (0, 28 /* ds64 */ + (isWaveFmtEx? 0 : 24));
+           #endif
         }
         else
         {
-            // write ds64 chunk
+           #if ! JUCE_WAV_DO_NOT_PAD_HEADER_SIZE
+            // If you disable padding, then you MUST NOT write more than 2^32 samples to a file.
+            jassertfalse;
+           #endif
+
             output->writeInt (chunkName ("ds64"));
             output->writeInt (28);  // chunk size for uncompressed data (no table)
             output->writeInt64 (riffChunkSize);
@@ -1002,6 +1075,78 @@ private:
 };
 
 //==============================================================================
+class MemoryMappedWavReader   : public MemoryMappedAudioFormatReader
+{
+public:
+    MemoryMappedWavReader (const File& file, const WavAudioFormatReader& reader)
+        : MemoryMappedAudioFormatReader (file, reader, reader.dataChunkStart,
+                                         reader.dataLength, reader.bytesPerFrame)
+    {
+    }
+
+    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+                      int64 startSampleInFile, int numSamples) override
+    {
+        clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
+                                           startSampleInFile, numSamples, lengthInSamples);
+
+        if (map == nullptr || ! mappedSection.contains (Range<int64> (startSampleInFile, startSampleInFile + numSamples)))
+        {
+            jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read.
+            return false;
+        }
+
+        WavAudioFormatReader::copySampleData (bitsPerSample, usesFloatingPointData,
+                                              destSamples, startOffsetInDestBuffer, numDestChannels,
+                                              sampleToPointer (startSampleInFile), (int) numChannels, numSamples);
+        return true;
+    }
+
+    void readMaxLevels (int64 startSampleInFile, int64 numSamples,
+                        float& min0, float& max0, float& min1, float& max1) override
+    {
+        if (numSamples <= 0)
+        {
+            min0 = max0 = min1 = max1 = 0;
+            return;
+        }
+
+        if (map == nullptr || ! mappedSection.contains (Range<int64> (startSampleInFile, startSampleInFile + numSamples)))
+        {
+            jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read.
+
+            min0 = max0 = min1 = max1 = 0;
+            return;
+        }
+
+        switch (bitsPerSample)
+        {
+            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, min0, max0, min1, max1); break;
+            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, min0, max0, min1, max1); break;
+            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, min0, max0, min1, max1); break;
+            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, min0, max0, min1, max1);
+                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, min0, max0, min1, max1); break;
+            default:    jassertfalse; break;
+        }
+    }
+
+private:
+    template <typename SampleType>
+    void scanMinAndMax (int64 startSampleInFile, int64 numSamples,
+                        float& min0, float& max0, float& min1, float& max1) const noexcept
+    {
+        scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (0, startSampleInFile, numSamples, min0, max0);
+
+        if (numChannels > 1)
+            scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (1, startSampleInFile, numSamples, min1, max1);
+        else
+            min1 = max1 = 0;
+    }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemoryMappedWavReader)
+};
+
+//==============================================================================
 WavAudioFormat::WavAudioFormat()
     : AudioFormat (TRANS (wavFormatName), StringArray (wavExtensions))
 {
@@ -1013,14 +1158,17 @@ WavAudioFormat::~WavAudioFormat()
 
 Array<int> WavAudioFormat::getPossibleSampleRates()
 {
-    const int rates[] = { 22050, 32000, 44100, 48000, 88200, 96000, 176400, 192000, 0 };
-    return Array <int> (rates);
+    const int rates[] = { 8000, 11025, 12000, 16000, 22050, 32000,
+                          44100, 48000, 88200, 96000, 176400, 192000 };
+
+    return Array<int> (rates, numElementsInArray (rates));
 }
 
 Array<int> WavAudioFormat::getPossibleBitDepths()
 {
-    const int depths[] = { 8, 16, 24, 32, 0 };
-    return Array <int> (depths);
+    const int depths[] = { 8, 16, 24, 32 };
+
+    return Array<int> (depths, numElementsInArray (depths));
 }
 
 bool WavAudioFormat::canDoStereo()  { return true; }
@@ -1036,6 +1184,19 @@ AudioFormatReader* WavAudioFormat::createReaderFor (InputStream* sourceStream,
 
     if (! deleteStreamIfOpeningFails)
         r->input = nullptr;
+
+    return nullptr;
+}
+
+MemoryMappedAudioFormatReader* WavAudioFormat::createMemoryMappedReader (const File& file)
+{
+    if (FileInputStream* fin = file.createInputStream())
+    {
+        WavAudioFormatReader reader (fin);
+
+        if (reader.lengthInSamples > 0)
+            return new MemoryMappedWavReader (file, reader);
+    }
 
     return nullptr;
 }

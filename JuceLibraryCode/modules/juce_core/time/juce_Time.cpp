@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -30,13 +33,13 @@ namespace TimeHelpers
         struct tm result;
         const int64 seconds = millis / 1000;
 
-        if (seconds < literal64bit (86400) || seconds >= literal64bit (2145916800))
+        if (seconds < 86400LL || seconds >= 2145916800LL)
         {
             // use extended maths for dates beyond 1970 to 2037..
             const int timeZoneAdjustment = 31536000 - (int) (Time (1971, 0, 1, 0, 0).toMilliseconds() / 1000);
-            const int64 jdm = seconds + timeZoneAdjustment + literal64bit (210866803200);
+            const int64 jdm = seconds + timeZoneAdjustment + 210866803200LL;
 
-            const int days = (int) (jdm / literal64bit (86400));
+            const int days = (int) (jdm / 86400LL);
             const int a = 32044 + days;
             const int b = (4 * a + 3) / 146097;
             const int c = a - (b * 146097) / 4;
@@ -50,7 +53,7 @@ namespace TimeHelpers
             result.tm_wday  = (days + 1) % 7;
             result.tm_yday  = -1;
 
-            int t = (int) (jdm % literal64bit (86400));
+            int t = (int) (jdm % 86400LL);
             result.tm_hour  = t / 3600;
             t %= 3600;
             result.tm_min   = t / 60;
@@ -85,26 +88,32 @@ namespace TimeHelpers
                                  : (value - ((value / modulo) + 1) * modulo));
     }
 
-    static int doFTime (CharPointer_UTF32 dest, const size_t maxChars,
-                        const String& format, const struct tm* const tm) noexcept
+    static inline String formatString (const String& format, const struct tm* const tm)
     {
        #if JUCE_ANDROID
-        HeapBlock <char> tempDest;
-        tempDest.calloc (maxChars + 2);
-        const int result = (int) strftime (tempDest, maxChars, format.toUTF8(), tm);
-        if (result > 0)
-            dest.writeAll (CharPointer_UTF8 (tempDest.getData()));
-        return result;
+        typedef CharPointer_UTF8  StringType;
        #elif JUCE_WINDOWS
-        HeapBlock <wchar_t> tempDest;
-        tempDest.calloc (maxChars + 2);
-        const int result = (int) wcsftime (tempDest, maxChars, format.toWideCharPointer(), tm);
-        if (result > 0)
-            dest.writeAll (CharPointer_UTF16 (tempDest.getData()));
-        return result;
+        typedef CharPointer_UTF16 StringType;
        #else
-        return (int) wcsftime (dest.getAddress(), maxChars, format.toUTF32(), tm);
+        typedef CharPointer_UTF32 StringType;
        #endif
+
+        for (size_t bufferSize = 256; ; bufferSize += 256)
+        {
+            HeapBlock<StringType::CharType> buffer (bufferSize);
+
+           #if JUCE_ANDROID
+            const size_t numChars = strftime (buffer, bufferSize - 1, format.toUTF8(), tm);
+           #elif JUCE_WINDOWS
+            const size_t numChars = wcsftime (buffer, bufferSize - 1, format.toWideCharPointer(), tm);
+           #else
+            const size_t numChars = wcsftime (buffer, bufferSize - 1, format.toUTF32(), tm);
+           #endif
+
+            if (numChars > 0)
+                return String (StringType (buffer),
+                               StringType (buffer) + (int) numChars);
+        }
     }
 
     static uint32 lastMSCounterValue = 0;
@@ -148,7 +157,7 @@ Time::Time (const int year,
                            + (y * 365) + (y /  4) - (y / 100) + (y / 400)
                            - 32045;
 
-        const int64 s = ((int64) jd) * literal64bit (86400) - literal64bit (210866803200);
+        const int64 s = ((int64) jd) * 86400LL - 210866803200LL;
 
         millisSinceEpoch = 1000 * (s + (hours * 3600 + minutes * 60 + seconds - timeZoneAdjustment))
                              + milliseconds;
@@ -313,18 +322,8 @@ String Time::toString (const bool includeDate,
 
 String Time::formatted (const String& format) const
 {
-    size_t bufferSize = 128;
-    HeapBlock<juce_wchar> buffer (128);
-
     struct tm t (TimeHelpers::millisToLocal (millisSinceEpoch));
-
-    while (TimeHelpers::doFTime (CharPointer_UTF32 (buffer.getData()), bufferSize, format, &t) <= 0)
-    {
-        bufferSize += 128;
-        buffer.malloc (bufferSize);
-    }
-
-    return CharPointer_UTF32 (buffer.getData());
+    return TimeHelpers::formatString (format, &t);
 }
 
 //==============================================================================
@@ -431,17 +430,17 @@ String Time::getWeekdayName (int day, const bool threeLetterVersion)
 }
 
 //==============================================================================
-Time& Time::operator+= (const RelativeTime& delta)        { millisSinceEpoch += delta.inMilliseconds(); return *this; }
-Time& Time::operator-= (const RelativeTime& delta)        { millisSinceEpoch -= delta.inMilliseconds(); return *this; }
+Time& Time::operator+= (RelativeTime delta)           { millisSinceEpoch += delta.inMilliseconds(); return *this; }
+Time& Time::operator-= (RelativeTime delta)           { millisSinceEpoch -= delta.inMilliseconds(); return *this; }
 
-Time operator+ (const Time& time, const RelativeTime& delta)        { Time t (time); return t += delta; }
-Time operator- (const Time& time, const RelativeTime& delta)        { Time t (time); return t -= delta; }
-Time operator+ (const RelativeTime& delta, const Time& time)        { Time t (time); return t += delta; }
-const RelativeTime operator- (const Time& time1, const Time& time2) { return RelativeTime::milliseconds (time1.toMilliseconds() - time2.toMilliseconds()); }
+Time operator+ (Time time, RelativeTime delta)        { Time t (time); return t += delta; }
+Time operator- (Time time, RelativeTime delta)        { Time t (time); return t -= delta; }
+Time operator+ (RelativeTime delta, Time time)        { Time t (time); return t += delta; }
+const RelativeTime operator- (Time time1, Time time2) { return RelativeTime::milliseconds (time1.toMilliseconds() - time2.toMilliseconds()); }
 
-bool operator== (const Time& time1, const Time& time2)      { return time1.toMilliseconds() == time2.toMilliseconds(); }
-bool operator!= (const Time& time1, const Time& time2)      { return time1.toMilliseconds() != time2.toMilliseconds(); }
-bool operator<  (const Time& time1, const Time& time2)      { return time1.toMilliseconds() <  time2.toMilliseconds(); }
-bool operator>  (const Time& time1, const Time& time2)      { return time1.toMilliseconds() >  time2.toMilliseconds(); }
-bool operator<= (const Time& time1, const Time& time2)      { return time1.toMilliseconds() <= time2.toMilliseconds(); }
-bool operator>= (const Time& time1, const Time& time2)      { return time1.toMilliseconds() >= time2.toMilliseconds(); }
+bool operator== (Time time1, Time time2)      { return time1.toMilliseconds() == time2.toMilliseconds(); }
+bool operator!= (Time time1, Time time2)      { return time1.toMilliseconds() != time2.toMilliseconds(); }
+bool operator<  (Time time1, Time time2)      { return time1.toMilliseconds() <  time2.toMilliseconds(); }
+bool operator>  (Time time1, Time time2)      { return time1.toMilliseconds() >  time2.toMilliseconds(); }
+bool operator<= (Time time1, Time time2)      { return time1.toMilliseconds() <= time2.toMilliseconds(); }
+bool operator>= (Time time1, Time time2)      { return time1.toMilliseconds() >= time2.toMilliseconds(); }

@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -77,9 +76,8 @@ namespace FileChooserHelpers
             if (ofn->hdr.code == CDN_SELCHANGE)
             {
                 FileChooserCallbackInfo* info = (FileChooserCallbackInfo*) ofn->lpOFN->lCustData;
-                FilePreviewComponent* comp = dynamic_cast<FilePreviewComponent*> (info->customComponent->getChildComponent(0));
 
-                if (comp != nullptr)
+                if (FilePreviewComponent* comp = dynamic_cast<FilePreviewComponent*> (info->customComponent->getChildComponent(0)))
                 {
                     WCHAR path [MAX_PATH * 2] = { 0 };
                     CommDlg_OpenSave_GetFilePath (GetParent (hdlg), (LPARAM) &path, MAX_PATH);
@@ -103,15 +101,14 @@ namespace FileChooserHelpers
             setSize (jlimit (20, 800, customComp->getWidth()), customComp->getHeight());
         }
 
-        void paint (Graphics& g)
+        void paint (Graphics& g) override
         {
             g.fillAll (Colours::lightgrey);
         }
 
-        void resized()
+        void resized() override
         {
-            Component* const c = getChildComponent(0);
-            if (c != nullptr)
+            if (Component* const c = getChildComponent(0))
                 c->setBounds (getLocalBounds());
         }
 
@@ -134,8 +131,10 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
     using namespace FileChooserHelpers;
 
     const String title (title_);
+    String defaultExtension; // scope of these strings must extend beyond dialog's lifetime.
+
     HeapBlock<WCHAR> files;
-    const int charsAvailableForResult = 32768;
+    const size_t charsAvailableForResult = 32768;
     files.calloc (charsAvailableForResult + 1);
     int filenameOffset = 0;
 
@@ -188,7 +187,7 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
         }
 
         LPMALLOC al;
-        if (list != 0 && SUCCEEDED (SHGetMalloc (&al)))
+        if (list != nullptr && SUCCEEDED (SHGetMalloc (&al)))
             al->Free (list);
 
         if (info.returnedString.isNotEmpty())
@@ -215,12 +214,12 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
             info.customComponent->enterModalState();
         }
 
-        const int filterSpaceNumChars = 2048;
+        const size_t filterSpaceNumChars = 2048;
         HeapBlock<WCHAR> filters;
         filters.calloc (filterSpaceNumChars);
-        const int bytesWritten = filter.copyToUTF16 (filters.getData(), filterSpaceNumChars * sizeof (WCHAR));
+        const size_t bytesWritten = filter.copyToUTF16 (filters.getData(), filterSpaceNumChars * sizeof (WCHAR));
         filter.copyToUTF16 (filters + (bytesWritten / sizeof (WCHAR)),
-                            (int) ((filterSpaceNumChars - 1) * sizeof (WCHAR) - bytesWritten));
+                            ((filterSpaceNumChars - 1) * sizeof (WCHAR) - bytesWritten));
 
         OPENFILENAMEW of = { 0 };
         String localPath (info.initialPath);
@@ -234,7 +233,7 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
         of.lpstrFilter = filters.getData();
         of.nFilterIndex = 1;
         of.lpstrFile = files;
-        of.nMaxFile = charsAvailableForResult;
+        of.nMaxFile = (DWORD) charsAvailableForResult;
         of.lpstrInitialDir = localPath.toWideCharPointer();
         of.lpstrTitle = title.toWideCharPointer();
         of.Flags = flags;
@@ -243,9 +242,27 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
         if (extraInfoComponent != nullptr)
             of.lpfnHook = &openCallback;
 
-        if (! (isSaveDialogue ? GetSaveFileName (&of)
-                              : GetOpenFileName (&of)))
-            return;
+        if (isSaveDialogue)
+        {
+            StringArray tokens;
+            tokens.addTokens (filter, ";,", "\"'");
+            tokens.trim();
+            tokens.removeEmptyStrings();
+
+            if (tokens.size() == 1 && tokens[0].removeCharacters ("*.").isNotEmpty())
+            {
+                defaultExtension = tokens[0].fromFirstOccurrenceOf (".", false, false);
+                of.lpstrDefExt = defaultExtension.toWideCharPointer();
+            }
+
+            if (! GetSaveFileName (&of))
+                return;
+        }
+        else
+        {
+            if (! GetOpenFileName (&of))
+                return;
+        }
 
         filenameOffset = of.nFileOffset;
     }

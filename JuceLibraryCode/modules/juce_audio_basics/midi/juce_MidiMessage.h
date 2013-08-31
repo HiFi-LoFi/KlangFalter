@@ -1,30 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_MIDIMESSAGE_JUCEHEADER__
-#define __JUCE_MIDIMESSAGE_JUCEHEADER__
+#ifndef JUCE_MIDIMESSAGE_H_INCLUDED
+#define JUCE_MIDIMESSAGE_H_INCLUDED
 
 
 //==============================================================================
@@ -116,7 +115,7 @@ public:
 
         @see getRawDataSize
     */
-    uint8* getRawData() const noexcept                          { return data; }
+    const uint8* getRawData() const noexcept                    { return data; }
 
     /** Returns the number of bytes of data in the message.
 
@@ -846,7 +845,7 @@ public:
 
         The data passed in is wrapped with header and tail bytes of 0xf0 and 0xf7.
     */
-    static MidiMessage createSysExMessage (const uint8* sysexData,
+    static MidiMessage createSysExMessage (const void* sysexData,
                                            int dataSize);
 
 
@@ -937,4 +936,4 @@ private:
     bool usesAllocatedData() const noexcept;
 };
 
-#endif   // __JUCE_MIDIMESSAGE_JUCEHEADER__
+#endif   // JUCE_MIDIMESSAGE_H_INCLUDED

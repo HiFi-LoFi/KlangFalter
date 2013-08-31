@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -39,7 +42,7 @@ namespace WindowsFileHelpers
     {
         static_jassert (sizeof (ULARGE_INTEGER) == sizeof (FILETIME)); // tell me if this fails!
 
-        return (int64) ((reinterpret_cast<const ULARGE_INTEGER*> (ft)->QuadPart - literal64bit (116444736000000000)) / 10000);
+        return (int64) ((reinterpret_cast<const ULARGE_INTEGER*> (ft)->QuadPart - 116444736000000000LL) / 10000);
     }
 
     FILETIME* timeToFileTime (const int64 time, FILETIME* const ft) noexcept
@@ -47,7 +50,7 @@ namespace WindowsFileHelpers
         if (time <= 0)
             return nullptr;
 
-        reinterpret_cast<ULARGE_INTEGER*> (ft)->QuadPart = (ULONGLONG) (time * 10000 + literal64bit (116444736000000000));
+        reinterpret_cast<ULARGE_INTEGER*> (ft)->QuadPart = (ULONGLONG) (time * 10000 + 116444736000000000LL);
         return ft;
     }
 
@@ -59,7 +62,7 @@ namespace WindowsFileHelpers
         const size_t numBytes = CharPointer_UTF16::getBytesRequiredFor (path.getCharPointer()) + 4;
         HeapBlock<WCHAR> pathCopy;
         pathCopy.calloc (numBytes, 1);
-        path.copyToUTF16 (pathCopy, (int) numBytes);
+        path.copyToUTF16 (pathCopy, numBytes);
 
         if (PathStripToRoot (pathCopy))
             path = static_cast <const WCHAR*> (pathCopy);
@@ -184,7 +187,7 @@ bool File::moveToTrash() const
     const size_t numBytes = CharPointer_UTF16::getBytesRequiredFor (fullPath.getCharPointer()) + 8;
     HeapBlock<WCHAR> doubleNullTermPath;
     doubleNullTermPath.calloc (numBytes, 1);
-    fullPath.copyToUTF16 (doubleNullTermPath, (int) numBytes);
+    fullPath.copyToUTF16 (doubleNullTermPath, numBytes);
 
     SHFILEOPSTRUCT fos = { 0 };
     fos.wFunc = FO_DELETE;
@@ -278,7 +281,7 @@ void FileOutputStream::closeHandle()
     CloseHandle ((HANDLE) fileHandle);
 }
 
-int FileOutputStream::writeInternal (const void* buffer, int numBytes)
+ssize_t FileOutputStream::writeInternal (const void* buffer, size_t numBytes)
 {
     if (fileHandle != nullptr)
     {
@@ -286,7 +289,7 @@ int FileOutputStream::writeInternal (const void* buffer, int numBytes)
         if (! WriteFile ((HANDLE) fileHandle, buffer, (DWORD) numBytes, &actualNum, 0))
             status = WindowsFileHelpers::getResultForLastError();
 
-        return (int) actualNum;
+        return (ssize_t) actualNum;
     }
 
     return 0;
@@ -310,12 +313,17 @@ Result FileOutputStream::truncate()
 }
 
 //==============================================================================
-MemoryMappedFile::MemoryMappedFile (const File& file, MemoryMappedFile::AccessMode mode)
-    : address (nullptr),
-      length (0),
-      fileHandle (nullptr)
+void MemoryMappedFile::openInternal (const File& file, AccessMode mode)
 {
     jassert (mode == readOnly || mode == readWrite);
+
+    if (range.getStart() > 0)
+    {
+        SYSTEM_INFO systemInfo;
+        GetNativeSystemInfo (&systemInfo);
+
+        range.setStart (range.getStart() - (range.getStart() % systemInfo.dwAllocationGranularity));
+    }
 
     DWORD accessMode = GENERIC_READ, createType = OPEN_EXISTING;
     DWORD protect = PAGE_READONLY, access = FILE_MAP_READ;
@@ -329,20 +337,21 @@ MemoryMappedFile::MemoryMappedFile (const File& file, MemoryMappedFile::AccessMo
     }
 
     HANDLE h = CreateFile (file.getFullPathName().toWideCharPointer(), accessMode, FILE_SHARE_READ, 0,
-                           createType, FILE_ATTRIBUTE_NORMAL, 0);
+                           createType, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
 
     if (h != INVALID_HANDLE_VALUE)
     {
         fileHandle = (void*) h;
-        const int64 fileSize = file.getSize();
 
-        HANDLE mappingHandle = CreateFileMapping (h, 0, protect, (DWORD) (fileSize >> 32), (DWORD) fileSize, 0);
+        HANDLE mappingHandle = CreateFileMapping (h, 0, protect, (DWORD) (range.getEnd() >> 32), (DWORD) range.getEnd(), 0);
+
         if (mappingHandle != 0)
         {
-            address = MapViewOfFile (mappingHandle, access, 0, 0, (SIZE_T) fileSize);
+            address = MapViewOfFile (mappingHandle, access, (DWORD) (range.getStart() >> 32),
+                                     (DWORD) range.getStart(), (SIZE_T) range.getLength());
 
-            if (address != nullptr)
-                length = (size_t) fileSize;
+            if (address == nullptr)
+                range = Range<int64>();
 
             CloseHandle (mappingHandle);
         }
@@ -695,7 +704,7 @@ bool DirectoryIterator::NativeIterator::next (String& filenameFound,
 
 
 //==============================================================================
-bool Process::openDocument (const String& fileName, const String& parameters)
+bool JUCE_CALLTYPE Process::openDocument (const String& fileName, const String& parameters)
 {
     HINSTANCE hInstance = 0;
 
@@ -911,7 +920,7 @@ private:
         return false;
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Pimpl);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Pimpl)
 };
 
 void NamedPipe::close()

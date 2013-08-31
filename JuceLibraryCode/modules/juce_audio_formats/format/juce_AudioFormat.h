@@ -1,33 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_AUDIOFORMAT_JUCEHEADER__
-#define __JUCE_AUDIOFORMAT_JUCEHEADER__
-
-#include "juce_AudioFormatReader.h"
-#include "juce_AudioFormatWriter.h"
+#ifndef JUCE_AUDIOFORMAT_H_INCLUDED
+#define JUCE_AUDIOFORMAT_H_INCLUDED
 
 
 //==============================================================================
@@ -113,6 +109,11 @@ public:
     virtual AudioFormatReader* createReaderFor (InputStream* sourceStream,
                                                 bool deleteStreamIfOpeningFails) = 0;
 
+    /** Attempts to create a MemoryMappedAudioFormatReader, if possible for this format.
+        If the format does not support this, the method will return nullptr;
+    */
+    virtual MemoryMappedAudioFormatReader* createMemoryMappedReader (const File& file);
+
     /** Tries to create an object that can write to a stream with this audio format.
 
         The writer object that is returned can be used to write to the stream, and
@@ -169,4 +170,4 @@ private:
 };
 
 
-#endif   // __JUCE_AUDIOFORMAT_JUCEHEADER__
+#endif   // JUCE_AUDIOFORMAT_H_INCLUDED

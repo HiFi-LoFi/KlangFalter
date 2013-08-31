@@ -1,34 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
 
-#ifndef __JUCE_ARRAY_JUCEHEADER__
-#define __JUCE_ARRAY_JUCEHEADER__
-
-#include "juce_ArrayAllocationBase.h"
-#include "juce_ElementComparator.h"
-#include "../threads/juce_CriticalSection.h"
+#ifndef JUCE_ARRAY_H_INCLUDED
+#define JUCE_ARRAY_H_INCLUDED
 
 
 //==============================================================================
@@ -56,7 +55,8 @@
     @see OwnedArray, ReferenceCountedArray, StringArray, CriticalSection
 */
 template <typename ElementType,
-          typename TypeOfCriticalSectionToUse = DummyCriticalSection>
+          typename TypeOfCriticalSectionToUse = DummyCriticalSection,
+          int minimumAllocatedSize = 0>
 class Array
 {
 private:
@@ -133,7 +133,7 @@ public:
         if (this != &other)
         {
             Array<ElementType, TypeOfCriticalSectionToUse> otherCopy (other);
-            swapWithArray (otherCopy);
+            swapWith (otherCopy);
         }
 
         return *this;
@@ -200,7 +200,6 @@ public:
     }
 
     /** Removes all elements from the array without freeing the array's allocated storage.
-
         @see clear
     */
     void clearQuick()
@@ -231,8 +230,14 @@ public:
     ElementType operator[] (const int index) const
     {
         const ScopedLockType lock (getLock());
-        return isPositiveAndBelow (index, numUsed) ? data.elements [index]
-                                                   : ElementType();
+
+        if (isPositiveAndBelow (index, numUsed))
+        {
+            jassert (data.elements != nullptr);
+            return data.elements [index];
+        }
+
+        return ElementType();
     }
 
     /** Returns one of the elements in the array, without checking the index passed in.
@@ -247,7 +252,7 @@ public:
     inline ElementType getUnchecked (const int index) const
     {
         const ScopedLockType lock (getLock());
-        jassert (isPositiveAndBelow (index, numUsed));
+        jassert (isPositiveAndBelow (index, numUsed) && data.elements != nullptr);
         return data.elements [index];
     }
 
@@ -263,7 +268,7 @@ public:
     inline ElementType& getReference (const int index) const noexcept
     {
         const ScopedLockType lock (getLock());
-        jassert (isPositiveAndBelow (index, numUsed));
+        jassert (isPositiveAndBelow (index, numUsed) && data.elements != nullptr);
         return data.elements [index];
     }
 
@@ -384,6 +389,7 @@ public:
     {
         const ScopedLockType lock (getLock());
         data.ensureAllocatedSize (numUsed + 1);
+        jassert (data.elements != nullptr);
 
         if (isPositiveAndBelow (indexToInsertAt, numUsed))
         {
@@ -565,11 +571,11 @@ public:
         If you need to exchange two arrays, this is vastly quicker than using copy-by-value
         because it just swaps their internal pointers.
     */
-    void swapWithArray (Array& otherArray) noexcept
+    template <class OtherArrayType>
+    void swapWith (OtherArrayType& otherArray) noexcept
     {
         const ScopedLockType lock1 (getLock());
-        const ScopedLockType lock2 (otherArray.getLock());
-
+        const typename OtherArrayType::ScopedLockType lock2 (otherArray.getLock());
         data.swapWith (otherArray.data);
         std::swap (numUsed, otherArray.numUsed);
     }
@@ -717,23 +723,13 @@ public:
 
         if (isPositiveAndBelow (indexToRemove, numUsed))
         {
-            --numUsed;
-
-            ElementType* const e = data.elements + indexToRemove;
-            ElementType removed (*e);
-            e->~ElementType();
-            const int numberToShift = numUsed - indexToRemove;
-
-            if (numberToShift > 0)
-                memmove (e, e + 1, ((size_t) numberToShift) * sizeof (ElementType));
-
-            minimiseStorageAfterRemoval();
+            jassert (data.elements != nullptr);
+            ElementType removed (data.elements[indexToRemove]);
+            removeInternal (indexToRemove);
             return removed;
         }
-        else
-        {
-            return ElementType();
-        }
+
+        return ElementType();
     }
 
     /** Removes an item from the array.
@@ -753,7 +749,7 @@ public:
         {
             if (valueToRemove == e[i])
             {
-                remove (i);
+                removeInternal (i);
                 break;
             }
         }
@@ -773,7 +769,7 @@ public:
 
         for (int i = numUsed; --i >= 0;)
             if (valueToRemove == data.elements[i])
-                remove (i);
+                removeInternal (i);
     }
 
     /** Removes a range of elements from the array.
@@ -851,7 +847,7 @@ public:
             {
                 for (int i = numUsed; --i >= 0;)
                     if (otherArray.contains (data.elements [i]))
-                        remove (i);
+                        removeInternal (i);
             }
         }
     }
@@ -879,7 +875,7 @@ public:
             {
                 for (int i = numUsed; --i >= 0;)
                     if (! otherArray.contains (data.elements [i]))
-                        remove (i);
+                        removeInternal (i);
             }
         }
     }
@@ -1024,10 +1020,30 @@ public:
     typedef typename TypeOfCriticalSectionToUse::ScopedLockType ScopedLockType;
 
 
+    //==============================================================================
+   #ifndef DOXYGEN
+    // Note that the swapWithArray method has been replaced by a more flexible templated version,
+    // and renamed "swapWith" to be more consistent with the names used in other classes.
+    JUCE_DEPRECATED_WITH_BODY (void swapWithArray (Array& other) noexcept, { swapWith (other); })
+   #endif
+
 private:
     //==============================================================================
     ArrayAllocationBase <ElementType, TypeOfCriticalSectionToUse> data;
     int numUsed;
+
+    void removeInternal (const int indexToRemove)
+    {
+        --numUsed;
+        ElementType* const e = data.elements + indexToRemove;
+        e->~ElementType();
+        const int numberToShift = numUsed - indexToRemove;
+
+        if (numberToShift > 0)
+            memmove (e, e + 1, ((size_t) numberToShift) * sizeof (ElementType));
+
+        minimiseStorageAfterRemoval();
+    }
 
     inline void deleteAllElements() noexcept
     {
@@ -1037,10 +1053,10 @@ private:
 
     void minimiseStorageAfterRemoval()
     {
-        if (data.numAllocated > numUsed * 2)
-            data.shrinkToNoMoreThan (jmax (numUsed, 64 / (int) sizeof (ElementType)));
+        if (data.numAllocated > jmax (minimumAllocatedSize, numUsed * 2))
+            data.shrinkToNoMoreThan (jmax (numUsed, jmax (minimumAllocatedSize, 64 / (int) sizeof (ElementType))));
     }
 };
 
 
-#endif   // __JUCE_ARRAY_JUCEHEADER__
+#endif   // JUCE_ARRAY_H_INCLUDED
