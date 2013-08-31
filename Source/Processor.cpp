@@ -164,25 +164,22 @@ bool Processor::isOutputChannelStereoPair(int /*index*/) const
 
 bool Processor::acceptsMidi() const
 {
-#if JucePlugin_WantsMidiInput
-  return true;
-#else
   return false;
-#endif
 }
 
 bool Processor::producesMidi() const
 {
-#if JucePlugin_ProducesMidiOutput
-  return true;
-#else
   return false;
-#endif
 }
 
 bool Processor::silenceInProducesSilenceOut() const
 {
   return false;
+}
+
+double Processor::getTailLengthSeconds() const
+{
+  return getIRDuration();
 }
 
 void Processor::numChannelsChanged()

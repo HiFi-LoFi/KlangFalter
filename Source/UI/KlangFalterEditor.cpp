@@ -1100,7 +1100,7 @@ void KlangFalterEditor::updateUI()
     _stretchSlider->setEnabled(irAvailable);
     _stretchSlider->setRange(0.5, 1.5);
     _stretchSlider->setValue(stretch, juce::dontSendNotification);
-    _stretchLabel->setText(String(static_cast<int>(100.0*stretch)) + String("%"), true);
+    _stretchLabel->setText(String(static_cast<int>(100.0*stretch)) + String("%"), juce::sendNotification);
   }
   {
     const float db = _processor.getParameter(Parameters::DryDecibels);
@@ -1108,8 +1108,8 @@ void KlangFalterEditor::updateUI()
     _drySlider->setEnabled(true);
     _drySlider->setRange(0.0, 1.0);
     _drySlider->setValue(scale, juce::dontSendNotification);
-    _dryLevelLabel->setText(DecibelScaling::DecibelString(db), true);
-    _dryButton->setToggleState(_processor.getParameter(Parameters::DryOn), false);
+    _dryLevelLabel->setText(DecibelScaling::DecibelString(db), juce::sendNotification);
+    _dryButton->setToggleState(_processor.getParameter(Parameters::DryOn), juce::dontSendNotification);
   }
   {
     const float db = _processor.getParameter(Parameters::WetDecibels);
@@ -1117,55 +1117,55 @@ void KlangFalterEditor::updateUI()
     _wetSlider->setEnabled(true);
     _wetSlider->setRange(0.0, 1.0);
     _wetSlider->setValue(scale, juce::dontSendNotification);
-    _wetLevelLabel->setText(DecibelScaling::DecibelString(db), true);
-    _wetButton->setToggleState(_processor.getParameter(Parameters::WetOn), false);
+    _wetLevelLabel->setText(DecibelScaling::DecibelString(db), juce::sendNotification);
+    _wetButton->setToggleState(_processor.getParameter(Parameters::WetOn), juce::dontSendNotification);
   }
   {
     _reverseButton->setEnabled(true);
-    _reverseButton->setToggleState(_processor.getReverse(), false);
+    _reverseButton->setToggleState(_processor.getReverse(), juce::dontSendNotification);
   }
   {
     const double irBegin = _processor.getIRBegin();
     _beginSlider->setEnabled(irAvailable);
     _beginSlider->setValue(irBegin, juce::dontSendNotification);
-    _beginLabel->setText(juce::String(static_cast<int>(100.0 * irBegin)) + juce::String("%"), true);
+    _beginLabel->setText(juce::String(static_cast<int>(100.0 * irBegin)) + juce::String("%"), juce::sendNotification);
   }
   {
     const double irEnd = _processor.getIREnd();
     _endSlider->setEnabled(irAvailable);
     _endSlider->setValue(irEnd, juce::dontSendNotification);
-    _endLabel->setText(juce::String(static_cast<int>(100.0 * irEnd)) + juce::String("%"), true);
+    _endLabel->setText(juce::String(static_cast<int>(100.0 * irEnd)) + juce::String("%"), juce::sendNotification);
   }
   {
     const double predelayMs = _processor.getPredelayMs();
     _predelaySlider->setValue(predelayMs);
     _predelaySlider->setEnabled(irAvailable);
-    _predelayLabel->setText(FormatSeconds(predelayMs / 1000.0), true);
+    _predelayLabel->setText(FormatSeconds(predelayMs / 1000.0), juce::sendNotification);
   }
   {
     const double attackLength = _processor.getAttackLength();
     _attackLengthSlider->setValue(attackLength);
     _attackLengthSlider->setEnabled(irAvailable);
-    _attackLengthLabel->setText(juce::String(100.0 * attackLength, 1)+juce::String("%"), true);
+    _attackLengthLabel->setText(juce::String(100.0 * attackLength, 1)+juce::String("%"), juce::sendNotification);
   }
   {
     const double attackShape = _processor.getAttackShape();
     _attackShapeSlider->setValue(attackShape);
     _attackShapeSlider->setEnabled(irAvailable);
-    _attackShapeLabel->setText((attackShape < 0.0001) ? juce::String("Neutral") : juce::String(attackShape, 2), true);
+    _attackShapeLabel->setText((attackShape < 0.0001) ? juce::String("Neutral") : juce::String(attackShape, 2), juce::sendNotification);
   }
   {
     const double decayShape = _processor.getDecayShape();
     _decayShapeSlider->setValue(decayShape);
     _decayShapeSlider->setEnabled(irAvailable);
-    _decayShapeLabel->setText((decayShape < 0.0001) ? juce::String("Neutral") : juce::String(decayShape, 2), true);
+    _decayShapeLabel->setText((decayShape < 0.0001) ? juce::String("Neutral") : juce::String(decayShape, 2), juce::sendNotification);
   }
   {
     const float autoGainDecibels = _processor.getParameter(Parameters::AutoGainDecibels);
     const bool autoGainOn = _processor.getParameter(Parameters::AutoGainOn);
     const juce::String autoGainText = DecibelScaling::DecibelString(autoGainDecibels);
     _autogainButton->setButtonText(juce::String("Autogain ") + autoGainText);
-    _autogainButton->setToggleState(autoGainOn, false);
+    _autogainButton->setToggleState(autoGainOn, juce::dontSendNotification);
   }
   {
     Parameters::EqType lowEqType = static_cast<Parameters::EqType>(_processor.getParameter(Parameters::EqLowType));
@@ -1176,19 +1176,19 @@ void KlangFalterEditor::updateUI()
     _lowEqButton->setButtonText(lowEqType == Parameters::Shelf ? juce::String("Low Shelf") : juce::String("Low Cut"));
     _lowCutFreqHeaderLabel->setVisible(lowEqType == Parameters::Cut);
     _lowCutFreqLabel->setVisible(lowEqType == Parameters::Cut);
-    _lowCutFreqLabel->setText((::fabs(cutFreq-Parameters::EqLowCutFreq.getMinValue()) > 0.0001f) ? FormatFrequency(cutFreq) : juce::String("Off"), false);
+    _lowCutFreqLabel->setText((::fabs(cutFreq-Parameters::EqLowCutFreq.getMinValue()) > 0.0001f) ? FormatFrequency(cutFreq) : juce::String("Off"), juce::sendNotification);
     _lowCutFreqSlider->setVisible(lowEqType == Parameters::Cut);
     _lowCutFreqSlider->setEnabled(loEqEnabled);
     _lowCutFreqSlider->setValue(cutFreq, juce::dontSendNotification);
     _loFreqHeaderLabel->setVisible(lowEqType == Parameters::Shelf);
     _loFreqLabel->setVisible(lowEqType == Parameters::Shelf);
-    _loFreqLabel->setText(FormatFrequency(shelfFreq), false);
+    _loFreqLabel->setText(FormatFrequency(shelfFreq), juce::sendNotification);
     _loFreqSlider->setVisible(lowEqType == Parameters::Shelf);
     _loFreqSlider->setEnabled(loEqEnabled);
     _loFreqSlider->setValue(shelfFreq, juce::dontSendNotification);
     _loGainHeaderLabel->setVisible(lowEqType == Parameters::Shelf);
     _loGainLabel->setVisible(lowEqType == Parameters::Shelf);
-    _loGainLabel->setText(DecibelScaling::DecibelString(shelfGainDb), false);
+    _loGainLabel->setText(DecibelScaling::DecibelString(shelfGainDb), juce::sendNotification);
     _loGainSlider->setVisible(lowEqType == Parameters::Shelf);
     _loGainSlider->setEnabled(loEqEnabled);
     _loGainSlider->setValue(shelfGainDb, juce::dontSendNotification);
@@ -1202,19 +1202,19 @@ void KlangFalterEditor::updateUI()
     _highEqButton->setButtonText(highEqType == Parameters::Shelf ? juce::String("High Shelf") : juce::String("High Cut"));
     _highCutFreqHeaderLabel->setVisible(highEqType == Parameters::Cut);
     _highCutFreqLabel->setVisible(highEqType == Parameters::Cut);
-    _highCutFreqLabel->setText((::fabs(cutFreq-Parameters::EqHighCutFreq.getMaxValue()) > 0.0001f) ? FormatFrequency(cutFreq) : juce::String("Off"), false);
+    _highCutFreqLabel->setText((::fabs(cutFreq-Parameters::EqHighCutFreq.getMaxValue()) > 0.0001f) ? FormatFrequency(cutFreq) : juce::String("Off"), juce::sendNotification);
     _highCutFreqSlider->setVisible(highEqType == Parameters::Cut);
     _highCutFreqSlider->setEnabled(hiEqEnabled);
     _highCutFreqSlider->setValue(cutFreq, juce::dontSendNotification);
     _hiFreqHeaderLabel->setVisible(highEqType == Parameters::Shelf);
     _hiFreqLabel->setVisible(highEqType == Parameters::Shelf);
-    _hiFreqLabel->setText(FormatFrequency(shelfFreq), false);
+    _hiFreqLabel->setText(FormatFrequency(shelfFreq), juce::sendNotification);
     _hiFreqSlider->setVisible(highEqType == Parameters::Shelf);
     _hiFreqSlider->setEnabled(hiEqEnabled);
     _hiFreqSlider->setValue(shelfFreq, juce::dontSendNotification);
     _hiGainHeaderLabel->setVisible(highEqType == Parameters::Shelf);
     _hiGainLabel->setVisible(highEqType == Parameters::Shelf);
-    _hiGainLabel->setText(DecibelScaling::DecibelString(shelfGainDb), false);
+    _hiGainLabel->setText(DecibelScaling::DecibelString(shelfGainDb), juce::sendNotification);
     _hiGainSlider->setVisible(highEqType == Parameters::Shelf);
     _hiGainSlider->setEnabled(hiEqEnabled);
     _hiGainSlider->setValue(shelfGainDb, juce::dontSendNotification);
@@ -1226,13 +1226,13 @@ void KlangFalterEditor::updateUI()
     _widthLabel->setVisible(numOutputChannels >= 2);
     const float stereoWidth = _processor.getParameter(Parameters::StereoWidth);
     _widthSlider->setValue(stereoWidth, juce::dontSendNotification);
-    _widthLabel->setText((::fabs(1.0f-stereoWidth) < 0.001) ? juce::String("Neutral") : juce::String(stereoWidth, 2), false);
+    _widthLabel->setText((::fabs(1.0f-stereoWidth) < 0.001) ? juce::String("Neutral") : juce::String(stereoWidth, 2), juce::sendNotification);
   }
   {
     _levelMeterDry->setChannelCount(numInputChannels);
     _levelMeterOut->setChannelCount(numOutputChannels);
     Settings::ResultLevelMeterDisplay resultDisplay = _processor.getSettings().getResultLevelMeterDisplay();
-    _levelMeterOutLabelButton->setToggleState(resultDisplay == Settings::Out, false);
+    _levelMeterOutLabelButton->setToggleState(resultDisplay == Settings::Out, juce::dontSendNotification);
     _levelMeterOutLabelButton->setButtonText((resultDisplay == Settings::Out) ? juce::String("Out") : juce::String("Wet"));
   }
   {
