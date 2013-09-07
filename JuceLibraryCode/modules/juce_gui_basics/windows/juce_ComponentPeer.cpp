@@ -83,22 +83,22 @@ void ComponentPeer::updateBounds()
 void ComponentPeer::handleMouseEvent (const int touchIndex, const Point<int> positionWithinPeer,
                                       const ModifierKeys newMods, const int64 time)
 {
-    if (MouseInputSource* mouse = Desktop::getInstance().getOrCreateMouseInputSource (touchIndex))
-        mouse->handleEvent (*this, positionWithinPeer, time, newMods);
+    if (MouseInputSource* mouse = Desktop::getInstance().mouseSources->getOrCreateMouseInputSource (touchIndex))
+        MouseInputSource (*mouse).handleEvent (*this, positionWithinPeer, time, newMods);
 }
 
 void ComponentPeer::handleMouseWheel (const int touchIndex, const Point<int> positionWithinPeer,
                                       const int64 time, const MouseWheelDetails& wheel)
 {
-    if (MouseInputSource* mouse = Desktop::getInstance().getOrCreateMouseInputSource (touchIndex))
-        mouse->handleWheel (*this, positionWithinPeer, time, wheel);
+    if (MouseInputSource* mouse = Desktop::getInstance().mouseSources->getOrCreateMouseInputSource (touchIndex))
+        MouseInputSource (*mouse).handleWheel (*this, positionWithinPeer, time, wheel);
 }
 
 void ComponentPeer::handleMagnifyGesture (const int touchIndex, const Point<int> positionWithinPeer,
                                           const int64 time, const float scaleFactor)
 {
-    if (MouseInputSource* mouse = Desktop::getInstance().getOrCreateMouseInputSource (touchIndex))
-        mouse->handleMagnifyGesture (*this, positionWithinPeer, time, scaleFactor);
+    if (MouseInputSource* mouse = Desktop::getInstance().mouseSources->getOrCreateMouseInputSource (touchIndex))
+        MouseInputSource (*mouse).handleMagnifyGesture (*this, positionWithinPeer, time, scaleFactor);
 }
 
 //==============================================================================
@@ -106,7 +106,7 @@ void ComponentPeer::handlePaint (LowLevelGraphicsContext& contextToPaintTo)
 {
     ModifierKeys::updateCurrentModifiers();
 
-    Graphics g (&contextToPaintTo);
+    Graphics g (contextToPaintTo);
 
     if (component.isTransformed())
         g.addTransform (component.getTransform());

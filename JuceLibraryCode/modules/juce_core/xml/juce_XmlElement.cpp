@@ -470,10 +470,7 @@ bool XmlElement::getBoolAttribute (const String& attributeName, const bool defau
     {
         if (att->hasName (attributeName))
         {
-            juce_wchar firstChar = att->value[0];
-
-            if (CharacterFunctions::isWhitespace (firstChar))
-                firstChar = att->value.trimStart() [0];
+            const juce_wchar firstChar = *(att->value.getCharPointer().findEndOfWhitespace());
 
             return firstChar == '1'
                 || firstChar == 't'
@@ -531,7 +528,7 @@ void XmlElement::setAttribute (const String& attributeName, const int number)
 
 void XmlElement::setAttribute (const String& attributeName, const double number)
 {
-    setAttribute (attributeName, String (number));
+    setAttribute (attributeName, String (number, 20));
 }
 
 void XmlElement::removeAttribute (const String& attributeName) noexcept
@@ -791,7 +788,7 @@ String XmlElement::getAllSubText() const
     for (const XmlElement* child = firstChildElement; child != nullptr; child = child->nextListItem)
         mem << child->getAllSubText();
 
-    return mem.toString();
+    return mem.toUTF8();
 }
 
 String XmlElement::getChildElementAllSubText (const String& childTagName,

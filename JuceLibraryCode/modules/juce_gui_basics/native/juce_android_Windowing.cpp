@@ -41,7 +41,7 @@ JUCE_JNI_CALLBACK (JUCE_ANDROID_ACTIVITY_CLASSNAME, launchApp, void, (JNIEnv* en
 
     initialiseJuce_GUI();
 
-    JUCEApplication* app = dynamic_cast <JUCEApplication*> (JUCEApplicationBase::createInstance());
+    JUCEApplicationBase* app = JUCEApplicationBase::createInstance();
     if (! app->initialiseApp())
         exit (0);
 
@@ -403,7 +403,7 @@ public:
 
                 {
                     LowLevelGraphicsSoftwareRenderer g (temp);
-                    g.setOrigin (-clip.getX(), -clip.getY());
+                    g.setOrigin (-clip.getPosition());
                     handlePaint (g);
                 }
             }
@@ -588,9 +588,9 @@ Desktop::DisplayOrientation Desktop::getCurrentOrientation() const
     return upright;
 }
 
-bool Desktop::addMouseInputSource()
+bool MouseInputSource::SourceList::addSource()
 {
-    mouseSources.add (new MouseInputSource (mouseSources.size(), false));
+    addSource (sources.size(), false);
     return true;
 }
 

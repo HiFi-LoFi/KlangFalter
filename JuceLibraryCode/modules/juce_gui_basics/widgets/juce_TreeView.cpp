@@ -367,14 +367,12 @@ private:
 
     static bool isMouseDraggingInChildCompOf (Component* const comp)
     {
-        Desktop& desktop = Desktop::getInstance();
+        const Array<MouseInputSource>& mouseSources = Desktop::getInstance().getMouseSources();
 
-        for (int i = desktop.getNumMouseSources(); --i >= 0;)
+        for (MouseInputSource* mi = mouseSources.begin(), * const e = mouseSources.end(); mi != e; ++mi)
         {
-            MouseInputSource* const source = desktop.getMouseSource(i);
-
-            if (source->isDragging())
-                if (Component* const underMouse = source->getComponentUnderMouse())
+            if (mi->isDragging())
+                if (Component* const underMouse = mi->getComponentUnderMouse())
                     if (comp == underMouse || comp->isParentOf (underMouse))
                         return true;
         }

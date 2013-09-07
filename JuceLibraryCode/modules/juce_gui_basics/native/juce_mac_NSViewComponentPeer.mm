@@ -915,7 +915,7 @@ public:
     static void showArrowCursorIfNeeded()
     {
         Desktop& desktop = Desktop::getInstance();
-        MouseInputSource& mouse = desktop.getMainMouseSource();
+        MouseInputSource mouse = desktop.getMainMouseSource();
 
         if (mouse.getComponentUnderMouse() == nullptr
              && desktop.findComponentAt (mouse.getScreenPosition()) == nullptr)
@@ -1388,7 +1388,7 @@ private:
 
     static void mouseDown (id self, SEL s, NSEvent* ev)
     {
-        if (JUCEApplication::isStandaloneApp())
+        if (JUCEApplicationBase::isStandaloneApp())
             asyncMouseDown (self, s, ev);
         else
             // In some host situations, the host will stop modal loops from working
@@ -1401,7 +1401,7 @@ private:
 
     static void mouseUp (id self, SEL s, NSEvent* ev)
     {
-        if (JUCEApplication::isStandaloneApp())
+        if (JUCEApplicationBase::isStandaloneApp())
             asyncMouseUp (self, s, ev);
         else
             // In some host situations, the host will stop modal loops from working
@@ -1844,11 +1844,11 @@ void ModifierKeys::updateCurrentModifiers() noexcept
 
 
 //==============================================================================
-bool Desktop::addMouseInputSource()
+bool MouseInputSource::SourceList::addSource()
 {
-    if (mouseSources.size() == 0)
+    if (sources.size() == 0)
     {
-        mouseSources.add (new MouseInputSource (0, true));
+        addSource (0, true);
         return true;
     }
 
