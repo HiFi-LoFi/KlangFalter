@@ -30,6 +30,14 @@
                        isDebug="1" optimisation="3" targetName="KlangFalter"/>
       </CONFIGURATIONS>
     </VS2010>
+    <LINUX_MAKE targetFolder="Builds/Linux" extraCompilerFlags="--std=c++11">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
+                       targetName="KlangFalter"/>
+        <CONFIGURATION name="Release" libraryPath="/usr/X11R6/lib/" isDebug="0" optimisation="2"
+                       targetName="KlangFalter"/>
+      </CONFIGURATIONS>
+    </LINUX_MAKE>
   </EXPORTFORMATS>
   <MAINGROUP id="tWkHhV" name="KlangFalter">
     <GROUP id="{25281D04-97AD-E16A-DD2E-04A6860714ED}" name="FFTConvolver">

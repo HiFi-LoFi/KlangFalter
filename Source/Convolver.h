@@ -20,7 +20,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "fftconvolver/TwoStageFFTConvolver.h"
+#include "FFTConvolver/TwoStageFFTConvolver.h"
 
 
 class Convolver : public fftconvolver::TwoStageFFTConvolver
