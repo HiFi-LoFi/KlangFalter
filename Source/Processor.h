@@ -23,7 +23,7 @@
 #include "ChangeNotifier.h"
 #include "IRAgent.h"
 #include "LevelMeasurement.h"
-#include "Parameterset.h"
+#include "ParameterSet.h"
 #include "Settings.h"
 #include "SmoothValue.h"
 #include "StereoWidth.h"
