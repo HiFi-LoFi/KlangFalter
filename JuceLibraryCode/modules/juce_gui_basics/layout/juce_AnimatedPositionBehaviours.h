@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -129,7 +129,9 @@ namespace AnimatedPositionBehaviours
 
             const double snapSpeed = 10.0;
             const double velocity = (targetSnapPosition - oldPos) * snapSpeed;
-            return oldPos + velocity * elapsedSeconds;
+            const double newPos = oldPos + velocity * elapsedSeconds;
+
+            return isStopped (newPos) ? targetSnapPosition : newPos;
         }
 
         /** Called by the AnimatedPosition class to check whether the object
@@ -143,7 +145,7 @@ namespace AnimatedPositionBehaviours
     private:
         double targetSnapPosition;
     };
-};
+}
 
 
 #endif   // JUCE_ANIMATEDPOSITIONBEHAVIOURS_H_INCLUDED

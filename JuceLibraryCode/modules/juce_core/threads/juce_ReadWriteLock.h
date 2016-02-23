@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -59,18 +59,15 @@ public:
     ReadWriteLock() noexcept;
 
     /** Destructor.
-
-        If the object is deleted whilst locked, any subsequent behaviour
-        is unpredictable.
+        If the object is deleted whilst locked, any subsequent behaviour is undefined.
     */
     ~ReadWriteLock() noexcept;
 
     //==============================================================================
     /** Locks this object for reading.
 
-        Multiple threads can simulaneously lock the object for reading, but if another
-        thread has it locked for writing, then this will block until it releases the
-        lock.
+        Multiple threads can simultaneously lock the object for reading, but if another
+        thread has it locked for writing, then this will block until it releases the lock.
 
         @see exitRead, ScopedReadLock
     */
@@ -78,7 +75,7 @@ public:
 
     /** Tries to lock this object for reading.
 
-        Multiple threads can simulaneously lock the object for reading, but if another
+        Multiple threads can simultaneously lock the object for reading, but if another
         thread has it locked for writing, then this will fail and return false.
 
         @returns true if the lock is successfully gained.
@@ -145,6 +142,8 @@ private:
     };
 
     mutable Array <ThreadRecursionCount> readerThreads;
+
+    bool tryEnterWriteInternal (Thread::ThreadID) const noexcept;
 
     JUCE_DECLARE_NON_COPYABLE (ReadWriteLock)
 };

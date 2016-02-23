@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -83,6 +83,20 @@ public:
     */
     void addSubItem (TreeViewItem* newItem, int insertPosition = -1);
 
+    /** Adds a sub-item with a sort-comparator, assuming that the existing items are already sorted.
+
+        @param comparator  the comparator object for sorting - see sortSubItems() for details about
+                        the methods this class must provide.
+        @param newItem  the object to add to the item's sub-item list. Once added, these can be
+                        found using getSubItem(). When the items are later removed with
+                        removeSubItem() (or when this item is deleted), they will be deleted.
+    */
+    template <class ElementComparator>
+    void addSubItemSorted (ElementComparator& comparator, TreeViewItem* newItem)
+    {
+        addSubItem (newItem, findInsertIndexInSortedArray (comparator, subItems.begin(), newItem, 0, subItems.size()));
+    }
+
     /** Removes one of the sub-items.
 
         @param index        the item to remove
@@ -119,7 +133,9 @@ public:
     TreeViewItem* getParentItem() const noexcept        { return parentItem; }
 
     //==============================================================================
-    /** True if this item is currently open in the treeview. */
+    /** True if this item is currently open in the treeview.
+        @see getOpenness
+    */
     bool isOpen() const noexcept;
 
     /** Opens or closes the item.
@@ -128,9 +144,37 @@ public:
         and a subclass should use this callback to create and add any sub-items that
         it needs to.
 
-        @see itemOpennessChanged, mightContainSubItems
+        Note that if this is called when the item is in its default openness state, and
+        this call would not change whether it's open or closed, then no change will be
+        stored. If you want to explicitly set the openness state to be non-default then
+        you should use setOpenness instead.
+
+        @see setOpenness, itemOpennessChanged, mightContainSubItems
     */
     void setOpen (bool shouldBeOpen);
+
+    /** An enum of states to describe the explicit or implicit openness of an item. */
+    enum Openness
+    {
+        opennessDefault = 0,
+        opennessClosed = 1,
+        opennessOpen = 2
+    };
+
+    /** Returns the openness state of this item.
+        @see isOpen
+    */
+    Openness getOpenness() const noexcept;
+
+    /** Opens or closes the item.
+
+        If this causes the value of isOpen() to change, then the item's itemOpennessChanged()
+        method will be called, and a subclass should use this callback to create and add any
+        sub-items that it needs to.
+
+        @see setOpen
+    */
+    void setOpenness (Openness newOpenness);
 
     /** True if this item is currently selected.
         Use this when painting the node, to decide whether to draw it as selected or not.
@@ -178,7 +222,7 @@ public:
     bool areAllParentsOpen() const noexcept;
 
     /** Changes whether lines are drawn to connect any sub-items to this item.
-        By default, line-drawing is turned on.
+        By default, line-drawing is turned on according to LookAndFeel::areLinesDrawnForTreeView().
     */
     void setLinesDrawnForSubItems (bool shouldDrawLines) noexcept;
 
@@ -299,11 +343,14 @@ public:
 
     /** Draws the item's open/close button.
 
-        If you don't implement this method, the default behaviour is to
-        call LookAndFeel::drawTreeviewPlusMinusBox(), but you can override
-        it for custom effects.
+        If you don't implement this method, the default behaviour is to call
+        LookAndFeel::drawTreeviewPlusMinusBox(), but you can override it for custom
+        effects. You may want to override it and call the base-class implementation
+        with a different backgroundColour parameter, if your implementation has a
+        background colour other than the default (white).
     */
-    virtual void paintOpenCloseButton (Graphics&, int width, int height, bool isMouseOver);
+    virtual void paintOpenCloseButton (Graphics&, const Rectangle<float>& area,
+                                       Colour backgroundColour, bool isMouseOver);
 
     /** Draws the line that connects this item to the vertical line extending below its parent. */
     virtual void paintHorizontalConnectingLine (Graphics&, const Line<float>& line);
@@ -346,6 +393,9 @@ public:
         changes. By default it'll get repainted when this happens.
     */
     virtual void itemSelectionChanged (bool isNowSelected);
+
+    /** Called when the owner view changes */
+    virtual void ownerViewChanged (TreeView* newOwner);
 
     /** The item can return a tool tip string here if it wants to.
         @see TooltipClient
@@ -429,6 +479,19 @@ public:
     */
     void setDrawsInLeftMargin (bool canDrawInLeftMargin) noexcept;
 
+    /** Sets a flag to indicate that the item wants to be allowed
+        to draw all the way across to the right edge of the treeview.
+
+        Similar to setDrawsInLeftMargin: when this flag is set to true,
+        then the graphics context isn't clipped on the right side. Unlike
+        setDrawsInLeftMargin, you will very rarely need to use this function,
+        as this method won't clip the right margin unless your TreeViewItem
+        overrides getItemWidth to return a positive value.
+
+        @see setDrawsInLeftMargin, getItemWidth
+     */
+    void setDrawsInRightMargin (bool canDrawInRightMargin) noexcept;
+
     //==============================================================================
     /** Saves the current state of open/closed nodes so it can be restored later.
 
@@ -510,7 +573,7 @@ public:
 
     private:
         TreeViewItem& treeViewItem;
-        ScopedPointer <XmlElement> oldOpenness;
+        ScopedPointer<XmlElement> oldOpenness;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpennessRestorer)
     };
@@ -519,13 +582,15 @@ private:
     //==============================================================================
     TreeView* ownerView;
     TreeViewItem* parentItem;
-    OwnedArray <TreeViewItem> subItems;
+    OwnedArray<TreeViewItem> subItems;
     int y, itemHeight, totalHeight, itemWidth, totalWidth;
     int uid;
     bool selected           : 1;
     bool redrawNeeded       : 1;
     bool drawLinesInside    : 1;
+    bool drawLinesSet       : 1;
     bool drawsInLeftMargin  : 1;
+    bool drawsInRightMargin : 1;
     unsigned int openness   : 2;
 
     friend class TreeView;
@@ -539,7 +604,7 @@ private:
     TreeViewItem* getDeepestOpenParentItem() noexcept;
     int getNumRows() const noexcept;
     TreeViewItem* getItemOnRow (int index) noexcept;
-    void deselectAllRecursively();
+    void deselectAllRecursively (TreeViewItem* itemToIgnore);
     int countSelectedItemsRecursively (int depth) const noexcept;
     TreeViewItem* getSelectedItemWithIndex (int index) noexcept;
     TreeViewItem* getNextVisibleItem (bool recurse) const noexcept;
@@ -549,6 +614,7 @@ private:
     XmlElement* getOpennessState (bool canReturnNull) const;
     bool removeSubItemFromList (int index, bool deleteItem);
     void removeAllSubItemsFromList();
+    bool areLinesDrawn() const;
 
    #if JUCE_CATCH_DEPRECATED_CODE_MISUSE
     // The parameters for these methods have changed - please update your code!
@@ -591,7 +657,7 @@ public:
         you want the tree to contain a number of root items, you should still use a single
         root item above these, but hide it using setRootItemVisible().
 
-        You can pass in 0 to this method to clear the tree and remove its current root item.
+        You can pass nullptr to this method to clear the tree and remove its current root item.
 
         The object passed in will not be deleted by the treeview, it's up to the caller
         to delete it when no longer needed. BUT make absolutely sure that you don't delete
@@ -692,17 +758,13 @@ public:
 
     //==============================================================================
     /** Returns the number of rows the tree is using.
-
         This will depend on which items are open.
-
         @see TreeViewItem::getRowNumberInTree()
     */
     int getNumRowsInTree() const;
 
     /** Returns the item on a particular row of the tree.
-
-        If the index is out of range, this will return 0.
-
+        If the index is out of range, this will return nullptr.
         @see getNumRowsInTree, TreeViewItem::getRowNumberInTree()
     */
     TreeViewItem* getItemOnRow (int index) const;
@@ -721,7 +783,7 @@ public:
     /** Returns the number of pixels by which each nested level of the tree is indented.
         @see setIndentSize
     */
-    int getIndentSize() const noexcept                              { return indentSize; }
+    int getIndentSize() noexcept;
 
     /** Changes the distance by which each nested level of the tree is indented.
         @see getIndentSize
@@ -729,7 +791,7 @@ public:
     void setIndentSize (int newIndentSize);
 
     /** Searches the tree for an item with the specified identifier.
-        The identifer string must have been created by calling TreeViewItem::getItemIdentifierString().
+        The identifier string must have been created by calling TreeViewItem::getItemIdentifierString().
         If no such item exists, this will return false. If the item is found, all of its items
         will be automatically opened.
     */
@@ -779,9 +841,25 @@ public:
     */
     enum ColourIds
     {
-        backgroundColourId            = 0x1000500, /**< A background colour to fill the component with. */
-        linesColourId                 = 0x1000501, /**< The colour to draw the lines with.*/
-        dragAndDropIndicatorColourId  = 0x1000502  /**< The colour to use for the drag-and-drop target position indicator. */
+        backgroundColourId             = 0x1000500, /**< A background colour to fill the component with. */
+        linesColourId                  = 0x1000501, /**< The colour to draw the lines with.*/
+        dragAndDropIndicatorColourId   = 0x1000502, /**< The colour to use for the drag-and-drop target position indicator. */
+        selectedItemBackgroundColourId = 0x1000503  /**< The colour to use to fill the background of any selected items. */
+    };
+
+    //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes to provide
+        treeview drawing functionality.
+    */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void drawTreeviewPlusMinusBox (Graphics&, const Rectangle<float>& area,
+                                               Colour backgroundColour, bool isItemOpen, bool isMouseOver) = 0;
+
+        virtual bool areLinesDrawnForTreeView (TreeView&) = 0;
+        virtual int getTreeViewIndentSize (TreeView&) = 0;
     };
 
     //==============================================================================
@@ -844,10 +922,15 @@ private:
     void hideDragHighlight() noexcept;
     void handleDrag (const StringArray&, const SourceDetails&);
     void handleDrop (const StringArray&, const SourceDetails&);
-    void toggleOpenSelectedItem();
+    bool toggleOpenSelectedItem();
     void moveOutOfSelectedItem();
     void moveIntoSelectedItem();
     void moveByPages (int numPages);
+
+   #if JUCE_CATCH_DEPRECATED_CODE_MISUSE
+    // this method has been deprecated - see the new version..
+    virtual int paintOpenCloseButton (Graphics&, int, int, bool) { return 0; }
+   #endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TreeView)
 };

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -29,7 +29,7 @@
     An AudioFormat class which can use an installed version of the LAME mp3
     encoder to encode a file.
 
-    This format can't read mp3s, it just writes them. Internally, the
+    This format can't read MP3s, it just writes them. Internally, the
     AudioFormatWriter object that is returned writes the incoming audio data
     to a temporary WAV file, and then when the writer is deleted, it invokes
     the LAME executable to convert the data to an MP3, whose data is then
@@ -44,7 +44,7 @@ public:
     /** Creates a LAMEEncoderAudioFormat that expects to find a working LAME
         executable at the location given.
     */
-    LAMEEncoderAudioFormat (const File& lameApplicationToUse);
+    LAMEEncoderAudioFormat (const File& lameExecutableToUse);
     ~LAMEEncoderAudioFormat();
 
     bool canHandleFile (const File&);

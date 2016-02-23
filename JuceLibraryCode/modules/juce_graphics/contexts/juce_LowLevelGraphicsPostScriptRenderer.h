@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -107,11 +107,11 @@ protected:
     OwnedArray <SavedState> stateStack;
 
     void writeClip();
-    void writeColour (const Colour& colour);
-    void writePath (const Path& path) const;
+    void writeColour (Colour colour);
+    void writePath (const Path&) const;
     void writeXY (float x, float y) const;
-    void writeTransform (const AffineTransform& trans) const;
-    void writeImage (const Image& im, int sx, int sy, int maxW, int maxH) const;
+    void writeTransform (const AffineTransform&) const;
+    void writeImage (const Image&, int sx, int sy, int maxW, int maxH) const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LowLevelGraphicsPostScriptRenderer)
 };

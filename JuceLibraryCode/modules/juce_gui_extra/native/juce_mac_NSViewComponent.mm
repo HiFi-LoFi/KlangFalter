@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,24 +22,95 @@
   ==============================================================================
 */
 
+struct NSViewResizeWatcher
+{
+    NSViewResizeWatcher() : callback (nil) {}
+
+    virtual ~NSViewResizeWatcher()
+    {
+        // must call detachViewWatcher() first
+        jassert (callback == nil);
+    }
+
+    void attachViewWatcher (NSView* view)
+    {
+        static ViewFrameChangeCallbackClass cls;
+        callback = [cls.createInstance() init];
+        ViewFrameChangeCallbackClass::setTarget (callback, this);
+
+        [[NSNotificationCenter defaultCenter]  addObserver: callback
+                                                  selector: @selector (frameChanged:)
+                                                      name: NSViewFrameDidChangeNotification
+                                                    object: view];
+    }
+
+    void detachViewWatcher()
+    {
+        if (callback != nil)
+        {
+            [[NSNotificationCenter defaultCenter] removeObserver: callback];
+            [callback release];
+            callback = nil;
+        }
+    }
+
+    virtual void viewResized() = 0;
+
+private:
+    id callback;
+
+    //==============================================================================
+    struct ViewFrameChangeCallbackClass   : public ObjCClass<NSObject>
+    {
+        ViewFrameChangeCallbackClass()  : ObjCClass<NSObject> ("JUCE_NSViewCallback_")
+        {
+            addIvar<NSViewResizeWatcher*> ("target");
+            addMethod (@selector (frameChanged:),  frameChanged, "v@:@");
+            registerClass();
+        }
+
+        static void setTarget (id self, NSViewResizeWatcher* c)
+        {
+            object_setInstanceVariable (self, "target", c);
+        }
+
+    private:
+        static void frameChanged (id self, SEL, NSNotification*)
+        {
+            if (NSViewResizeWatcher* const target = getIvar<NSViewResizeWatcher*> (self, "target"))
+                target->viewResized();
+        }
+
+        JUCE_DECLARE_NON_COPYABLE (ViewFrameChangeCallbackClass)
+    };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NSViewResizeWatcher)
+};
+
+//==============================================================================
 class NSViewAttachment  : public ReferenceCountedObject,
-                          public ComponentMovementWatcher
+                          public ComponentMovementWatcher,
+                          private NSViewResizeWatcher
 {
 public:
     NSViewAttachment (NSView* const v, Component& comp)
         : ComponentMovementWatcher (&comp),
-          view (v),
-          owner (comp),
+          view (v), owner (comp),
           currentPeer (nullptr)
     {
         [view retain];
+        [view setPostsFrameChangedNotifications: YES];
+        updateAlpha();
 
         if (owner.isShowing())
             componentPeerChanged();
+
+        attachViewWatcher (view);
     }
 
     ~NSViewAttachment()
     {
+        detachViewWatcher();
         removeFromParent();
         [view release];
     }
@@ -72,7 +143,6 @@ public:
 
         if (currentPeer != peer)
         {
-            removeFromParent();
             currentPeer = peer;
 
             if (peer != nullptr)
@@ -80,6 +150,10 @@ public:
                 NSView* const peerView = (NSView*) peer->getNativeHandle();
                 [peerView addSubview: view];
                 componentMovedOrResized (false, false);
+            }
+            else
+            {
+                removeFromParent();
             }
         }
 
@@ -89,6 +163,16 @@ public:
     void componentVisibilityChanged() override
     {
         componentPeerChanged();
+    }
+
+    void viewResized() override
+    {
+        owner.childBoundsChanged (nullptr);
+    }
+
+    void updateAlpha()
+    {
+        [view setAlphaValue: (CGFloat) owner.getAlpha()];
     }
 
     NSView* const view;
@@ -124,7 +208,7 @@ void NSViewComponent::setView (void* const view)
 
 void* NSViewComponent::getView() const
 {
-    return attachment != nullptr ? static_cast <NSViewAttachment*> (attachment.get())->view
+    return attachment != nullptr ? static_cast<NSViewAttachment*> (attachment.get())->view
                                  : nullptr;
 }
 
@@ -132,12 +216,18 @@ void NSViewComponent::resizeToFitView()
 {
     if (attachment != nullptr)
     {
-        NSRect r = [static_cast <NSViewAttachment*> (attachment.get())->view frame];
+        NSRect r = [static_cast<NSViewAttachment*> (attachment.get())->view frame];
         setBounds (Rectangle<int> ((int) r.size.width, (int) r.size.height));
     }
 }
 
 void NSViewComponent::paint (Graphics&) {}
+
+void NSViewComponent::alphaChanged()
+{
+    if (attachment != nullptr)
+        (static_cast<NSViewAttachment*> (attachment.get()))->updateAlpha();
+}
 
 ReferenceCountedObject* NSViewComponent::attachViewToComponent (Component& comp, void* const view)
 {

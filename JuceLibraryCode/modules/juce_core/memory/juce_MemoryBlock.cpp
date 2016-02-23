@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -88,14 +88,14 @@ MemoryBlock& MemoryBlock::operator= (const MemoryBlock& other)
 
 #if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
 MemoryBlock::MemoryBlock (MemoryBlock&& other) noexcept
-    : data (static_cast <HeapBlock<char>&&> (other.data)),
+    : data (static_cast<HeapBlock<char>&&> (other.data)),
       size (other.size)
 {
 }
 
 MemoryBlock& MemoryBlock::operator= (MemoryBlock&& other) noexcept
 {
-    data = static_cast <HeapBlock<char>&&> (other.data);
+    data = static_cast<HeapBlock<char>&&> (other.data);
     size = other.size;
     return *this;
 }
@@ -127,8 +127,7 @@ void MemoryBlock::setSize (const size_t newSize, const bool initialiseToZero)
     {
         if (newSize <= 0)
         {
-            data.free();
-            size = 0;
+            reset();
         }
         else
         {
@@ -147,6 +146,12 @@ void MemoryBlock::setSize (const size_t newSize, const bool initialiseToZero)
             size = newSize;
         }
     }
+}
+
+void MemoryBlock::reset()
+{
+    data.free();
+    size = 0;
 }
 
 void MemoryBlock::ensureSize (const size_t minimumSize, const bool initialiseToZero)
@@ -254,7 +259,7 @@ void MemoryBlock::copyTo (void* const dst, int offset, size_t num) const noexcep
 
     if ((size_t) offset + num > size)
     {
-        const size_t newNum = size - (size_t) offset;
+        const size_t newNum = (size_t) size - (size_t) offset;
         zeromem (d + newNum, num - newNum);
         num = newNum;
     }
@@ -265,7 +270,7 @@ void MemoryBlock::copyTo (void* const dst, int offset, size_t num) const noexcep
 
 String MemoryBlock::toString() const
 {
-    return String (CharPointer_UTF8 (data), size);
+    return String::fromUTF8 (data, (int) size);
 }
 
 //==============================================================================
@@ -317,11 +322,11 @@ void MemoryBlock::setBitRange (const size_t bitRangeStart, size_t numBits, int b
 }
 
 //==============================================================================
-void MemoryBlock::loadFromHexString (const String& hex)
+void MemoryBlock::loadFromHexString (StringRef hex)
 {
     ensureSize ((size_t) hex.length() >> 1);
     char* dest = data;
-    String::CharPointerType t (hex.getCharPointer());
+    String::CharPointerType t (hex.text);
 
     for (;;)
     {
@@ -341,7 +346,7 @@ void MemoryBlock::loadFromHexString (const String& hex)
 
                 if (c == 0)
                 {
-                    setSize (static_cast <size_t> (dest - data));
+                    setSize (static_cast<size_t> (dest - data));
                     return;
                 }
             }
@@ -352,7 +357,7 @@ void MemoryBlock::loadFromHexString (const String& hex)
 }
 
 //==============================================================================
-static const char* const base64EncodingTable = ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+";
+static const char base64EncodingTable[] = ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+";
 
 String MemoryBlock::toBase64Encoding() const
 {
@@ -373,37 +378,39 @@ String MemoryBlock::toBase64Encoding() const
     return destString;
 }
 
-bool MemoryBlock::fromBase64Encoding (const String& s)
+static const char base64DecodingTable[] =
 {
-    const int startPos = s.indexOfChar ('.') + 1;
+    63, 0, 0, 0, 0, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+    0, 0, 0, 0, 0, 0, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52
+};
 
-    if (startPos <= 0)
+bool MemoryBlock::fromBase64Encoding (StringRef s)
+{
+    String::CharPointerType dot (CharacterFunctions::find (s.text, (juce_wchar) '.'));
+
+    if (dot.isEmpty())
         return false;
 
-    const int numBytesNeeded = s.substring (0, startPos - 1).getIntValue();
+    const int numBytesNeeded = String (s.text, dot).getIntValue();
 
     setSize ((size_t) numBytesNeeded, true);
 
-    const int numChars = s.length() - startPos;
-
-    String::CharPointerType srcChars (s.getCharPointer());
-    srcChars += startPos;
+    String::CharPointerType srcChars (dot + 1);
     int pos = 0;
 
-    for (int i = 0; i < numChars; ++i)
+    for (;;)
     {
-        const char c = (char) srcChars.getAndAdvance();
+        int c = (int) srcChars.getAndAdvance();
 
-        for (int j = 0; j < 64; ++j)
+        if (c == 0)
+            return true;
+
+        c -= 43;
+        if (isPositiveAndBelow (c, numElementsInArray (base64DecodingTable)))
         {
-            if (base64EncodingTable[j] == c)
-            {
-                setBitRange ((size_t) pos, 6, j);
-                pos += 6;
-                break;
-            }
+            setBitRange ((size_t) pos, 6, base64DecodingTable [c]);
+            pos += 6;
         }
     }
-
-    return true;
 }

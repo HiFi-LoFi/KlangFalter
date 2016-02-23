@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -103,6 +103,9 @@ public:
     /** Returns the currently displayed filename. */
     File getCurrentFile() const;
 
+    /** Returns the raw text that the user has entered. */
+    String getCurrentFileText() const;
+
     /** Changes the current filename.
 
         @param newFile                the new filename to use
@@ -181,6 +184,16 @@ public:
     void setTooltip (const String& newTooltip) override;
 
     //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes. */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual Button* createFilenameComponentBrowseButton (const String& text) = 0;
+        virtual void layoutFilenameComponent (FilenameComponent&, ComboBox* filenameBox, Button* browseButton) =  0;
+    };
+
+    //==============================================================================
     /** @internal */
     void paintOverChildren (Graphics&) override;
     /** @internal */
@@ -195,6 +208,8 @@ public:
     void fileDragEnter (const StringArray&, int, int) override;
     /** @internal */
     void fileDragExit (const StringArray&) override;
+    /** @internal */
+    KeyboardFocusTraverser* createFocusTraverser() override;
 
 private:
     //==============================================================================

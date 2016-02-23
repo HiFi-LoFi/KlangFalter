@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -38,8 +38,6 @@
 
     To be informed when items are selected/deselected, register a ChangeListener with
     this object.
-
-    @see SelectableObject
 */
 template <class SelectableItemType>
 class SelectedItemSet   : public ChangeBroadcaster
@@ -47,6 +45,7 @@ class SelectedItemSet   : public ChangeBroadcaster
 public:
     //==============================================================================
     typedef SelectableItemType ItemType;
+    typedef Array<SelectableItemType> ItemArray;
     typedef PARAMETER_TYPE (SelectableItemType) ParameterType;
 
     //==============================================================================
@@ -56,7 +55,7 @@ public:
     }
 
     /** Creates a set based on an array of items. */
-    explicit SelectedItemSet (const Array <SelectableItemType>& items)
+    explicit SelectedItemSet (const ItemArray& items)
         : selectedItems (items)
     {
     }
@@ -72,8 +71,20 @@ public:
     {
         if (selectedItems != other.selectedItems)
         {
-            selectedItems = other.selectedItems;
             changed();
+
+            for (int i = selectedItems.size(); --i >= 0;)
+                if (! other.isSelected (selectedItems.getReference (i)))
+                    itemDeselected (selectedItems.remove (i));
+
+            for (SelectableItemType* i = other.selectedItems.begin(), *e = other.selectedItems.end(); i != e; ++i)
+            {
+                if (! isSelected (*i))
+                {
+                    selectedItems.add (*i);
+                    itemSelected (*i);
+                }
+            }
         }
 
         return *this;
@@ -102,8 +113,8 @@ public:
         }
         else
         {
-            deselectAll();
             changed();
+            deselectAll();
 
             selectedItems.add (item);
             itemSelected (item);
@@ -247,30 +258,25 @@ public:
     /** Returns the number of currently selected items.
         @see getSelectedItem
     */
-    int getNumSelected() const noexcept
-    {
-        return selectedItems.size();
-    }
+    int getNumSelected() const noexcept                         { return selectedItems.size(); }
 
     /** Returns one of the currently selected items.
-        Returns 0 if the index is out-of-range.
+        If the index is out-of-range, this returns a default-constructed SelectableItemType.
         @see getNumSelected
     */
-    SelectableItemType getSelectedItem (const int index) const noexcept
-    {
-        return selectedItems [index];
-    }
+    SelectableItemType getSelectedItem (const int index) const  { return selectedItems [index]; }
 
     /** True if this item is currently selected. */
-    bool isSelected (ParameterType item) const noexcept
-    {
-        return selectedItems.contains (item);
-    }
+    bool isSelected (ParameterType item) const noexcept         { return selectedItems.contains (item); }
 
-    const Array <SelectableItemType>& getItemArray() const noexcept         { return selectedItems; }
+    /** Provides access to the array of items. */
+    const ItemArray& getItemArray() const noexcept              { return selectedItems; }
 
-    SelectableItemType* begin() const noexcept                              { return selectedItems.begin(); }
-    SelectableItemType* end() const noexcept                                { return selectedItems.end(); }
+    /** Provides iterator access to the array of items. */
+    SelectableItemType* begin() const noexcept                  { return selectedItems.begin(); }
+
+    /** Provides iterator access to the array of items. */
+    SelectableItemType* end() const noexcept                    { return selectedItems.end(); }
 
     //==============================================================================
     /** Can be overridden to do special handling when an item is selected.
@@ -278,17 +284,27 @@ public:
         For example, if the item is an object, you might want to call it and tell
         it that it's being selected.
     */
-    virtual void itemSelected (SelectableItemType item)                     { (void) item; }
+    virtual void itemSelected (SelectableItemType)              {}
 
     /** Can be overridden to do special handling when an item is deselected.
 
         For example, if the item is an object, you might want to call it and tell
         it that it's being deselected.
     */
-    virtual void itemDeselected (SelectableItemType item)                   { (void) item; }
+    virtual void itemDeselected (SelectableItemType)            {}
 
-    /** Used internally, but can be called to force a change message to be sent to the ChangeListeners. */
-    void changed (const bool synchronous = false)
+    /** Used internally, but can be called to force a change message to be sent
+        to the ChangeListeners.
+    */
+    void changed()
+    {
+        sendChangeMessage();
+    }
+
+    /** Used internally, but can be called to force a change message to be sent
+        to the ChangeListeners.
+    */
+    void changed (const bool synchronous)
     {
         if (synchronous)
             sendSynchronousChangeMessage();
@@ -298,9 +314,9 @@ public:
 
 private:
     //==============================================================================
-    Array <SelectableItemType> selectedItems;
+    ItemArray selectedItems;
 
-    JUCE_LEAK_DETECTOR (SelectedItemSet <SelectableItemType>)
+    JUCE_LEAK_DETECTOR (SelectedItemSet<SelectableItemType>)
 };
 
 

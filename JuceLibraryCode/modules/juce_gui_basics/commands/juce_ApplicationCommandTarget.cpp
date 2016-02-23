@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -63,15 +63,14 @@ bool ApplicationCommandTarget::tryToInvoke (const InvocationInfo& info, const bo
             (new CommandMessage (this, info))->post();
             return true;
         }
-        else
-        {
-            const bool success = perform (info);
 
-            jassert (success);  // Hmm.. your target claimed that it could perform this command, but failed to do so.
-                                // If it can't do it at the moment for some reason, it should clear the 'isActive' flag
-                                // when it returns the command's info.
-            return success;
-        }
+        if (perform (info))
+            return true;
+
+        // Hmm.. your target claimed that it could perform this command, but failed to do so.
+        // If it can't do it at the moment for some reason, it should clear the 'isActive' flag
+        // when it returns the command's info.
+        jassertfalse;
     }
 
     return false;
@@ -79,7 +78,7 @@ bool ApplicationCommandTarget::tryToInvoke (const InvocationInfo& info, const bo
 
 ApplicationCommandTarget* ApplicationCommandTarget::findFirstTargetParentComponent()
 {
-    if (Component* const c = dynamic_cast <Component*> (this))
+    if (Component* const c = dynamic_cast<Component*> (this))
         return c->findParentComponentOfClass<ApplicationCommandTarget>();
 
     return nullptr;
@@ -92,7 +91,7 @@ ApplicationCommandTarget* ApplicationCommandTarget::getTargetForCommand (const C
 
     while (target != nullptr)
     {
-        Array <CommandID> commandIDs;
+        Array<CommandID> commandIDs;
         target->getAllCommands (commandIDs);
 
         if (commandIDs.contains (commandID))
@@ -114,7 +113,7 @@ ApplicationCommandTarget* ApplicationCommandTarget::getTargetForCommand (const C
 
         if (target != nullptr)
         {
-            Array <CommandID> commandIDs;
+            Array<CommandID> commandIDs;
             target->getAllCommands (commandIDs);
 
             if (commandIDs.contains (commandID))

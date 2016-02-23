@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -93,7 +93,26 @@ void TabBarButton::calcAreas (Rectangle<int>& extraComp, Rectangle<int>& textAre
     }
 
     if (extraComponent != nullptr)
+    {
         extraComp = lf.getTabButtonExtraComponentBounds (*this, textArea, *extraComponent);
+
+        const TabbedButtonBar::Orientation orientation = owner.getOrientation();
+
+        if (orientation == TabbedButtonBar::TabsAtLeft || orientation == TabbedButtonBar::TabsAtRight)
+        {
+            if (extraComp.getCentreY() > textArea.getCentreY())
+                textArea.setBottom (jmin (textArea.getBottom(), extraComp.getY()));
+            else
+                textArea.setTop (jmax (textArea.getY(), extraComp.getBottom()));
+        }
+        else
+        {
+            if (extraComp.getCentreX() > textArea.getCentreX())
+                textArea.setRight (jmin (textArea.getRight(), extraComp.getX()));
+            else
+                textArea.setLeft (jmax (textArea.getX(), extraComp.getRight()));
+        }
+    }
 }
 
 Rectangle<int> TabBarButton::getTextArea() const
@@ -268,24 +287,30 @@ void TabbedButtonBar::setTabName (const int tabIndex, const String& newName)
     }
 }
 
-void TabbedButtonBar::removeTab (const int tabIndex)
+void TabbedButtonBar::removeTab (const int indexToRemove, const bool animate)
 {
-    const int oldIndex = currentTabIndex;
-    if (tabIndex == currentTabIndex)
-        setCurrentTabIndex (-1);
+    if (isPositiveAndBelow (indexToRemove, tabs.size()))
+    {
+        int oldSelectedIndex = currentTabIndex;
 
-    tabs.remove (tabIndex);
+        if (indexToRemove == currentTabIndex)
+            oldSelectedIndex = -1;
+        else if (indexToRemove < oldSelectedIndex)
+            --oldSelectedIndex;
 
-    setCurrentTabIndex (oldIndex);
-    resized();
+        tabs.remove (indexToRemove);
+
+        setCurrentTabIndex (oldSelectedIndex);
+        updateTabPositions (animate);
+    }
 }
 
-void TabbedButtonBar::moveTab (const int currentIndex, const int newIndex)
+void TabbedButtonBar::moveTab (const int currentIndex, const int newIndex, const bool animate)
 {
     TabInfo* const currentTab = tabs [currentTabIndex];
     tabs.move (currentIndex, newIndex);
     currentTabIndex = tabs.indexOf (currentTab);
-    resized();
+    updateTabPositions (animate);
 }
 
 int TabbedButtonBar::getNumTabs() const
@@ -335,8 +360,10 @@ void TabbedButtonBar::setCurrentTabIndex (int newIndex, const bool sendChangeMes
 
 TabBarButton* TabbedButtonBar::getTabButton (const int index) const
 {
-    TabInfo* const tab = tabs[index];
-    return tab == nullptr ? nullptr : static_cast <TabBarButton*> (tab->button);
+    if (TabInfo* tab = tabs[index])
+        return static_cast<TabBarButton*> (tab->button);
+
+    return nullptr;
 }
 
 int TabbedButtonBar::indexOfTabButton (const TabBarButton* button) const
@@ -346,6 +373,16 @@ int TabbedButtonBar::indexOfTabButton (const TabBarButton* button) const
             return i;
 
     return -1;
+}
+
+Rectangle<int> TabbedButtonBar::getTargetBounds (TabBarButton* button) const
+{
+    if (button == nullptr || indexOfTabButton (button) == -1)
+        return Rectangle<int>();
+
+    ComponentAnimator& animator = Desktop::getInstance().getAnimator();
+
+    return animator.isAnimating (button) ? animator.getComponentDestination (button) : button->getBounds();
 }
 
 void TabbedButtonBar::lookAndFeelChanged()
@@ -360,6 +397,12 @@ void TabbedButtonBar::paint (Graphics& g)
 }
 
 void TabbedButtonBar::resized()
+{
+    updateTabPositions (false);
+}
+
+//==============================================================================
+void TabbedButtonBar::updateTabPositions (bool animate)
 {
     LookAndFeel& lf = getLookAndFeel();
 
@@ -441,6 +484,7 @@ void TabbedButtonBar::resized()
     int pos = 0;
 
     TabBarButton* frontTab = nullptr;
+    ComponentAnimator& animator = Desktop::getInstance().getAnimator();
 
     for (int i = 0; i < tabs.size(); ++i)
     {
@@ -450,10 +494,18 @@ void TabbedButtonBar::resized()
 
             if (i < numVisibleButtons)
             {
-                if (isVertical())
-                    tb->setBounds (0, pos, getWidth(), bestLength);
+                const Rectangle<int> newBounds (isVertical() ? Rectangle<int> (0, pos, getWidth(), bestLength)
+                                                             : Rectangle<int> (pos, 0, bestLength, getHeight()));
+
+                if (animate)
+                {
+                    animator.animateComponent (tb, newBounds, 1.0f, 200, false, 3.0, 0.0);
+                }
                 else
-                    tb->setBounds (pos, 0, bestLength, getHeight());
+                {
+                    animator.cancelAnimation (tb, false);
+                    tb->setBounds (newBounds);
+                }
 
                 tb->toBack();
 
@@ -483,8 +535,10 @@ void TabbedButtonBar::resized()
 //==============================================================================
 Colour TabbedButtonBar::getTabBackgroundColour (const int tabIndex)
 {
-    TabInfo* const tab = tabs [tabIndex];
-    return tab == nullptr ? Colours::white : tab->colour;
+    if (TabInfo* tab = tabs [tabIndex])
+        return tab->colour;
+
+    return Colours::transparentBlack;
 }
 
 void TabbedButtonBar::setTabBackgroundColour (const int tabIndex, Colour newColour)

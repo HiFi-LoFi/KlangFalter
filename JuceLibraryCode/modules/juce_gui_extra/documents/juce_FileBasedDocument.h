@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -100,11 +100,12 @@ public:
         to this new one; if it fails, the document's file is left unchanged, and optionally
         a message box is shown telling the user there was an error.
 
-        @returns true if the new file loaded successfully
+        @returns A result indicating whether the new file loaded successfully, or the error
+                 message if it failed.
         @see loadDocument, loadFromUserSpecifiedFile
     */
-    bool loadFrom (const File& fileToLoadFrom,
-                   bool showMessageOnFailure);
+    Result loadFrom (const File& fileToLoadFrom,
+                     bool showMessageOnFailure);
 
     /** Asks the user for a file and tries to load it.
 
@@ -113,11 +114,11 @@ public:
         for a file. If they pick one, the loadFrom() method is used to
         try to load it, optionally showing a message if it fails.
 
-        @returns    true if a file was loaded; false if the user cancelled or if they
-                    picked a file which failed to load correctly
+        @returns    a result indicating success; This will be a failure message if the user
+                    cancelled or if they picked a file which failed to load correctly
         @see loadFrom
     */
-    bool loadFromUserSpecifiedFile (bool showMessageOnFailure);
+    Result loadFromUserSpecifiedFile (bool showMessageOnFailure);
 
     //==============================================================================
     /** A set of possible outcomes of one of the save() methods

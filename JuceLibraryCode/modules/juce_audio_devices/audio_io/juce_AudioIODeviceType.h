@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -34,7 +34,7 @@
     method. Each of the objects returned can then be used to list the available
     devices of that type. E.g.
     @code
-    OwnedArray <AudioIODeviceType> types;
+    OwnedArray<AudioIODeviceType> types;
     myAudioDeviceManager.createAudioDeviceTypes (types);
 
     for (int i = 0; i < types.size(); ++i)
@@ -118,7 +118,7 @@ public:
     /**
         A class for receiving events when audio devices are inserted or removed.
 
-        You can register a AudioIODeviceType::Listener with an~AudioIODeviceType object
+        You can register an AudioIODeviceType::Listener with an~AudioIODeviceType object
         using the AudioIODeviceType::addListener() method, and it will be called when
         devices of that type are added or removed.
 
@@ -151,7 +151,7 @@ public:
     /** Creates an iOS device type if it's available on this platform, or returns null. */
     static AudioIODeviceType* createAudioIODeviceType_iOSAudio();
     /** Creates a WASAPI device type if it's available on this platform, or returns null. */
-    static AudioIODeviceType* createAudioIODeviceType_WASAPI();
+    static AudioIODeviceType* createAudioIODeviceType_WASAPI (bool exclusiveMode);
     /** Creates a DirectSound device type if it's available on this platform, or returns null. */
     static AudioIODeviceType* createAudioIODeviceType_DirectSound();
     /** Creates an ASIO device type if it's available on this platform, or returns null. */

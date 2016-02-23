@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -34,29 +34,14 @@ CriticalSection::CriticalSection() noexcept
    #if ! JUCE_ANDROID
     pthread_mutexattr_setprotocol (&atts, PTHREAD_PRIO_INHERIT);
    #endif
-    pthread_mutex_init (&internal, &atts);
+    pthread_mutex_init (&lock, &atts);
+    pthread_mutexattr_destroy (&atts);
 }
 
-CriticalSection::~CriticalSection() noexcept
-{
-    pthread_mutex_destroy (&internal);
-}
-
-void CriticalSection::enter() const noexcept
-{
-    pthread_mutex_lock (&internal);
-}
-
-bool CriticalSection::tryEnter() const noexcept
-{
-    return pthread_mutex_trylock (&internal) == 0;
-}
-
-void CriticalSection::exit() const noexcept
-{
-    pthread_mutex_unlock (&internal);
-}
-
+CriticalSection::~CriticalSection() noexcept        { pthread_mutex_destroy (&lock); }
+void CriticalSection::enter() const noexcept        { pthread_mutex_lock (&lock); }
+bool CriticalSection::tryEnter() const noexcept     { return pthread_mutex_trylock (&lock) == 0; }
+void CriticalSection::exit() const noexcept         { pthread_mutex_unlock (&lock); }
 
 //==============================================================================
 WaitableEvent::WaitableEvent (const bool useManualReset) noexcept
@@ -70,6 +55,7 @@ WaitableEvent::WaitableEvent (const bool useManualReset) noexcept
     pthread_mutexattr_setprotocol (&atts, PTHREAD_PRIO_INHERIT);
    #endif
     pthread_mutex_init (&mutex, &atts);
+    pthread_mutexattr_destroy (&atts);
 }
 
 WaitableEvent::~WaitableEvent() noexcept
@@ -129,8 +115,13 @@ bool WaitableEvent::wait (const int timeOutMillisecs) const noexcept
 void WaitableEvent::signal() const noexcept
 {
     pthread_mutex_lock (&mutex);
-    triggered = true;
-    pthread_cond_broadcast (&condition);
+
+    if (! triggered)
+    {
+        triggered = true;
+        pthread_cond_broadcast (&condition);
+    }
+
     pthread_mutex_unlock (&mutex);
 }
 
@@ -158,6 +149,45 @@ void JUCE_CALLTYPE Process::terminate()
     std::_Exit (EXIT_FAILURE);
    #endif
 }
+
+
+#if JUCE_MAC || JUCE_LINUX
+bool Process::setMaxNumberOfFileHandles (int newMaxNumber) noexcept
+{
+    rlimit lim;
+    if (getrlimit (RLIMIT_NOFILE, &lim) == 0)
+    {
+        if (newMaxNumber <= 0 && lim.rlim_cur == RLIM_INFINITY && lim.rlim_max == RLIM_INFINITY)
+            return true;
+
+        if (lim.rlim_cur >= (rlim_t) newMaxNumber)
+            return true;
+    }
+
+    lim.rlim_cur = lim.rlim_max = newMaxNumber <= 0 ? RLIM_INFINITY : (rlim_t) newMaxNumber;
+    return setrlimit (RLIMIT_NOFILE, &lim) == 0;
+}
+
+struct MaxNumFileHandlesInitialiser
+{
+    MaxNumFileHandlesInitialiser() noexcept
+    {
+       #ifndef JUCE_PREFERRED_MAX_FILE_HANDLES
+        enum { JUCE_PREFERRED_MAX_FILE_HANDLES = 8192 };
+       #endif
+
+        // Try to give our app a decent number of file handles by default
+        if (! Process::setMaxNumberOfFileHandles (0))
+        {
+            for (int num = JUCE_PREFERRED_MAX_FILE_HANDLES; num > 256; num -= 1024)
+                if (Process::setMaxNumberOfFileHandles (num))
+                    break;
+        }
+    }
+};
+
+static MaxNumFileHandlesInitialiser maxNumFileHandlesInitialiser;
+#endif
 
 //==============================================================================
 const juce_wchar File::separator = '/';
@@ -233,6 +263,12 @@ namespace
         return statfs (f.getFullPathName().toUTF8(), &result) == 0;
     }
 
+   #if (JUCE_MAC && MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5) || JUCE_IOS
+    static int64 getCreationTime (const juce_statStruct& s) noexcept     { return (int64) s.st_birthtime; }
+   #else
+    static int64 getCreationTime (const juce_statStruct& s) noexcept     { return (int64) s.st_ctime; }
+   #endif
+
     void updateStatInfoForFile (const String& path, bool* const isDir, int64* const fileSize,
                                 Time* const modTime, Time* const creationTime, bool* const isReadOnly)
     {
@@ -242,9 +278,9 @@ namespace
             const bool statOk = juce_stat (path, info);
 
             if (isDir != nullptr)         *isDir        = statOk && ((info.st_mode & S_IFDIR) != 0);
-            if (fileSize != nullptr)      *fileSize     = statOk ? info.st_size : 0;
-            if (modTime != nullptr)       *modTime      = Time (statOk ? (int64) info.st_mtime * 1000 : 0);
-            if (creationTime != nullptr)  *creationTime = Time (statOk ? (int64) info.st_ctime * 1000 : 0);
+            if (fileSize != nullptr)      *fileSize     = statOk ? (int64) info.st_size : 0;
+            if (modTime != nullptr)       *modTime      = Time (statOk ? (int64) info.st_mtime  * 1000 : 0);
+            if (creationTime != nullptr)  *creationTime = Time (statOk ? getCreationTime (info) * 1000 : 0);
         }
 
         if (isReadOnly != nullptr)
@@ -269,8 +305,8 @@ bool File::isDirectory() const
 {
     juce_statStruct info;
 
-    return fullPath.isEmpty()
-            || (juce_stat (fullPath, info) && ((info.st_mode & S_IFDIR) != 0));
+    return fullPath.isNotEmpty()
+             && (juce_stat (fullPath, info) && ((info.st_mode & S_IFDIR) != 0));
 }
 
 bool File::exists() const
@@ -290,6 +326,12 @@ int64 File::getSize() const
     return juce_stat (fullPath, info) ? info.st_size : 0;
 }
 
+uint64 File::getFileIdentifier() const
+{
+    juce_statStruct info;
+    return juce_stat (fullPath, info) ? (uint64) info.st_ino : 0;
+}
+
 //==============================================================================
 bool File::hasWriteAccess() const
 {
@@ -302,21 +344,31 @@ bool File::hasWriteAccess() const
     return false;
 }
 
-bool File::setFileReadOnlyInternal (const bool shouldBeReadOnly) const
+static bool setFileModeFlags (const String& fullPath, mode_t flags, bool shouldSet) noexcept
 {
     juce_statStruct info;
     if (! juce_stat (fullPath, info))
         return false;
 
-    info.st_mode &= 0777;   // Just permissions
+    info.st_mode &= 0777;
 
-    if (shouldBeReadOnly)
-        info.st_mode &= ~(S_IWUSR | S_IWGRP | S_IWOTH);
+    if (shouldSet)
+        info.st_mode |= flags;
     else
-        // Give everybody write permission?
-        info.st_mode |= S_IWUSR | S_IWGRP | S_IWOTH;
+        info.st_mode &= ~flags;
 
     return chmod (fullPath.toUTF8(), info.st_mode) == 0;
+}
+
+bool File::setFileReadOnlyInternal (bool shouldBeReadOnly) const
+{
+    // Hmm.. should we give global write permission or just the current user?
+    return setFileModeFlags (fullPath, S_IWUSR | S_IWGRP | S_IWOTH, ! shouldBeReadOnly);
+}
+
+bool File::setFileExecutableInternal (bool shouldBeExecutable) const
+{
+    return setFileModeFlags (fullPath, S_IXUSR | S_IXGRP | S_IXOTH, shouldBeExecutable);
 }
 
 void File::getFileTimesInternal (int64& modificationTime, int64& accessTime, int64& creationTime) const
@@ -326,11 +378,12 @@ void File::getFileTimesInternal (int64& modificationTime, int64& accessTime, int
     creationTime = 0;
 
     juce_statStruct info;
+
     if (juce_stat (fullPath, info))
     {
-        modificationTime = (int64) info.st_mtime * 1000;
-        accessTime = (int64) info.st_atime * 1000;
-        creationTime = (int64) info.st_ctime * 1000;
+        modificationTime  = (int64) info.st_mtime * 1000;
+        accessTime        = (int64) info.st_atime * 1000;
+        creationTime      = (int64) info.st_ctime * 1000;
     }
 }
 
@@ -352,7 +405,7 @@ bool File::setFileTimesInternal (int64 modificationTime, int64 accessTime, int64
 
 bool File::deleteFile() const
 {
-    if (! exists())
+    if (! exists() && ! isSymbolicLink())
         return true;
 
     if (isDirectory())
@@ -382,7 +435,7 @@ Result File::createDirectoryInternal (const String& fileName) const
     return getResultForReturnValue (mkdir (fileName.toUTF8(), 0777));
 }
 
-//=====================================================================
+//==============================================================================
 int64 juce_fileSetPosition (void* handle, int64 pos)
 {
     if (handle != 0 && lseek (getFD (handle), pos, SEEK_SET) == pos)
@@ -401,13 +454,10 @@ void FileInputStream::openHandle()
         status = getResultForErrno();
 }
 
-void FileInputStream::closeHandle()
+FileInputStream::~FileInputStream()
 {
     if (fileHandle != 0)
-    {
         close (getFD (fileHandle));
-        fileHandle = 0;
-    }
 }
 
 size_t FileInputStream::readInternal (void* const buffer, const size_t numBytes)
@@ -568,16 +618,10 @@ MemoryMappedFile::~MemoryMappedFile()
 }
 
 //==============================================================================
-#if JUCE_PROJUCER_LIVE_BUILD
-extern "C" const char* juce_getCurrentExecutablePath();
-#endif
-
 File juce_getExecutableFile();
 File juce_getExecutableFile()
 {
-   #if JUCE_PROJUCER_LIVE_BUILD
-    return File (juce_getCurrentExecutablePath());
-   #elif JUCE_ANDROID
+   #if JUCE_ANDROID
     return File (android.appFile);
    #else
     struct DLAddrReader
@@ -646,7 +690,7 @@ String File::getVolumeLabel() const
     }
    #endif
 
-    return String::empty;
+    return String();
 }
 
 int File::getVolumeSerialNumber() const
@@ -671,11 +715,12 @@ int File::getVolumeSerialNumber() const
 }
 
 //==============================================================================
+#if ! JUCE_IOS
 void juce_runSystemCommand (const String&);
 void juce_runSystemCommand (const String& command)
 {
     int result = system (command.toUTF8());
-    (void) result;
+    ignoreUnused (result);
 }
 
 String juce_getOutputFromCommand (const String&);
@@ -691,7 +736,7 @@ String juce_getOutputFromCommand (const String& command)
     tempFile.deleteFile();
     return result;
 }
-
+#endif
 
 //==============================================================================
 #if JUCE_IOS
@@ -836,6 +881,7 @@ void InterProcessLock::exit()
 }
 
 //==============================================================================
+#if ! JUCE_ANDROID
 void JUCE_API juce_threadEntryPoint (void*);
 
 extern "C" void* threadEntryProc (void*);
@@ -843,16 +889,6 @@ extern "C" void* threadEntryProc (void* userData)
 {
     JUCE_AUTORELEASEPOOL
     {
-       #if JUCE_ANDROID
-        struct AndroidThreadScope
-        {
-            AndroidThreadScope()   { threadLocalJNIEnvHolder.attach(); }
-            ~AndroidThreadScope()  { threadLocalJNIEnvHolder.detach(); }
-        };
-
-        const AndroidThreadScope androidEnv;
-       #endif
-
         juce_threadEntryPoint (userData);
     }
 
@@ -863,13 +899,25 @@ void Thread::launchThread()
 {
     threadHandle = 0;
     pthread_t handle = 0;
+    pthread_attr_t attr;
+    pthread_attr_t* attrPtr = nullptr;
 
-    if (pthread_create (&handle, 0, threadEntryProc, this) == 0)
+    if (pthread_attr_init (&attr) == 0)
+    {
+        attrPtr = &attr;
+
+        pthread_attr_setstacksize (attrPtr, threadStackSize);
+    }
+
+    if (pthread_create (&handle, attrPtr, threadEntryProc, this) == 0)
     {
         pthread_detach (handle);
         threadHandle = (void*) handle;
         threadId = (ThreadID) threadHandle;
     }
+
+    if (attrPtr != nullptr)
+        pthread_attr_destroy (attrPtr);
 }
 
 void Thread::closeThreadHandle()
@@ -892,7 +940,7 @@ void Thread::killThread()
 
 void JUCE_CALLTYPE Thread::setCurrentThreadName (const String& name)
 {
-   #if JUCE_IOS || (JUCE_MAC && defined (MAC_OS_X_VERSION_10_5) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
+   #if JUCE_IOS || JUCE_MAC
     JUCE_AUTORELEASEPOOL
     {
         [[NSThread currentThread] setName: juceStringToNS (name)];
@@ -926,6 +974,7 @@ bool Thread::setThreadPriority (void* handle, int priority)
     param.sched_priority = ((maxPriority - minPriority) * priority) / 10 + minPriority;
     return pthread_setschedparam ((pthread_t) handle, policy, &param) == 0;
 }
+#endif
 
 Thread::ThreadID JUCE_CALLTYPE Thread::getCurrentThreadId()
 {
@@ -956,22 +1005,22 @@ void JUCE_CALLTYPE Thread::setCurrentThreadAffinityMask (const uint32 affinityMa
         if ((affinityMask & (1 << i)) != 0)
             CPU_SET (i, &affinity);
 
-    /*
-       N.B. If this line causes a compile error, then you've probably not got the latest
-       version of glibc installed.
-
-       If you don't want to update your copy of glibc and don't care about cpu affinities,
-       then you can just disable all this stuff by setting the SUPPORT_AFFINITIES macro to 0.
-    */
+   #if (! JUCE_ANDROID) && ((! JUCE_LINUX) || ((__GLIBC__ * 1000 + __GLIBC_MINOR__) >= 2004))
+    pthread_setaffinity_np (pthread_self(), sizeof (cpu_set_t), &affinity);
+   #else
+    // NB: this call isn't really correct because it sets the affinity of the process,
+    // not the thread. But it's included here as a fallback for people who are using
+    // ridiculously old versions of glibc
     sched_setaffinity (getpid(), sizeof (cpu_set_t), &affinity);
+   #endif
+
     sched_yield();
 
    #else
-    /* affinities aren't supported because either the appropriate header files weren't found,
-       or the SUPPORT_AFFINITIES macro was turned off
-    */
+    // affinities aren't supported because either the appropriate header files weren't found,
+    // or the SUPPORT_AFFINITIES macro was turned off
     jassertfalse;
-    (void) affinityMask;
+    ignoreUnused (affinityMask);
    #endif
 }
 
@@ -1003,9 +1052,16 @@ void* DynamicLibrary::getFunction (const String& functionName) noexcept
 class ChildProcess::ActiveProcess
 {
 public:
-    ActiveProcess (const StringArray& arguments)
+    ActiveProcess (const StringArray& arguments, int streamFlags)
         : childPID (0), pipeHandle (0), readHandle (0)
     {
+        String exe (arguments[0].unquoted());
+
+        // Looks like you're trying to launch a non-existent exe or a folder (perhaps on OSX
+        // you're trying to launch the .app folder rather than the actual binary inside it?)
+        jassert (File::getCurrentWorkingDirectory().getChildFile (exe).existsAsFile()
+                  || ! exe.containsChar (File::separator));
+
         int pipeHandles[2] = { 0 };
 
         if (pipe (pipeHandles) == 0)
@@ -1021,18 +1077,27 @@ public:
             {
                 // we're the child process..
                 close (pipeHandles[0]);   // close the read handle
-                dup2 (pipeHandles[1], 1); // turns the pipe into stdout
-                dup2 (pipeHandles[1], 2); //  + stderr
+
+                if ((streamFlags & wantStdOut) != 0)
+                    dup2 (pipeHandles[1], 1); // turns the pipe into stdout
+                else
+                    close (STDOUT_FILENO);
+
+                if ((streamFlags & wantStdErr) != 0)
+                    dup2 (pipeHandles[1], 2);
+                else
+                    close (STDERR_FILENO);
+
                 close (pipeHandles[1]);
 
                 Array<char*> argv;
                 for (int i = 0; i < arguments.size(); ++i)
                     if (arguments[i].isNotEmpty())
-                        argv.add (arguments[i].toUTF8().getAddress());
+                        argv.add (const_cast<char*> (arguments[i].toRawUTF8()));
 
                 argv.add (nullptr);
 
-                execvp (argv[0], argv.getRawDataPointer());
+                execvp (exe.toRawUTF8(), argv.getRawDataPointer());
                 exit (-1);
             }
             else
@@ -1054,7 +1119,7 @@ public:
             close (pipeHandle);
     }
 
-    bool isRunning() const
+    bool isRunning() const noexcept
     {
         if (childPID != 0)
         {
@@ -1066,7 +1131,7 @@ public:
         return false;
     }
 
-    int read (void* const dest, const int numBytes)
+    int read (void* const dest, const int numBytes) noexcept
     {
         jassert (dest != nullptr);
 
@@ -1083,9 +1148,23 @@ public:
         return 0;
     }
 
-    bool killProcess() const
+    bool killProcess() const noexcept
     {
         return ::kill (childPID, SIGKILL) == 0;
+    }
+
+    uint32 getExitCode() const noexcept
+    {
+        if (childPID != 0)
+        {
+            int childState = 0;
+            const int pid = waitpid (childPID, &childState, WNOHANG);
+
+            if (pid >= 0 && WIFEXITED (childState))
+                return WEXITSTATUS (childState);
+        }
+
+        return 0;
     }
 
     int childPID;
@@ -1097,17 +1176,17 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ActiveProcess)
 };
 
-bool ChildProcess::start (const String& command)
+bool ChildProcess::start (const String& command, int streamFlags)
 {
-    return start (StringArray::fromTokens (command, true));
+    return start (StringArray::fromTokens (command, true), streamFlags);
 }
 
-bool ChildProcess::start (const StringArray& args)
+bool ChildProcess::start (const StringArray& args, int streamFlags)
 {
     if (args.size() == 0)
         return false;
 
-    activeProcess = new ActiveProcess (args);
+    activeProcess = new ActiveProcess (args, streamFlags);
 
     if (activeProcess->childPID == 0)
         activeProcess = nullptr;
@@ -1115,22 +1194,8 @@ bool ChildProcess::start (const StringArray& args)
     return activeProcess != nullptr;
 }
 
-bool ChildProcess::isRunning() const
-{
-    return activeProcess != nullptr && activeProcess->isRunning();
-}
-
-int ChildProcess::readProcessOutput (void* dest, int numBytes)
-{
-    return activeProcess != nullptr ? activeProcess->read (dest, numBytes) : 0;
-}
-
-bool ChildProcess::kill()
-{
-    return activeProcess == nullptr || activeProcess->killProcess();
-}
-
 //==============================================================================
+#if ! JUCE_ANDROID
 struct HighResolutionTimer::Pimpl
 {
     Pimpl (HighResolutionTimer& t)  : owner (t), thread (0), shouldStop (false)
@@ -1144,16 +1209,25 @@ struct HighResolutionTimer::Pimpl
 
     void start (int newPeriod)
     {
-        periodMs = newPeriod;
-
-        if (thread == 0)
+        if (periodMs != newPeriod)
         {
-            shouldStop = false;
+            if (thread != pthread_self())
+            {
+                stop();
 
-            if (pthread_create (&thread, nullptr, timerThread, this) == 0)
-                setThreadToRealtime (thread, (uint64) newPeriod);
+                periodMs = newPeriod;
+                shouldStop = false;
+
+                if (pthread_create (&thread, nullptr, timerThread, this) == 0)
+                    setThreadToRealtime (thread, (uint64) newPeriod);
+                else
+                    jassertfalse;
+            }
             else
-                jassertfalse;
+            {
+                periodMs = newPeriod;
+                shouldStop = false;
+            }
         }
     }
 
@@ -1177,7 +1251,9 @@ private:
 
     static void* timerThread (void* param)
     {
-       #if ! JUCE_ANDROID
+       #if JUCE_ANDROID
+        const AndroidThreadScope androidEnv;
+       #else
         int dummy;
         pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, &dummy);
        #endif
@@ -1188,12 +1264,19 @@ private:
 
     void timerThread()
     {
-        Clock clock (periodMs);
+        int lastPeriod = periodMs;
+        Clock clock (lastPeriod);
 
         while (! shouldStop)
         {
             clock.wait();
             owner.hiResTimerCallback();
+
+            if (lastPeriod != periodMs)
+            {
+                lastPeriod = periodMs;
+                clock = Clock (lastPeriod);
+            }
         }
 
         periodMs = 0;
@@ -1207,7 +1290,7 @@ private:
         {
             mach_timebase_info_data_t timebase;
             (void) mach_timebase_info (&timebase);
-            delta = (((uint64_t) (millis * 1000000.0)) * timebase.numer) / timebase.denom;
+            delta = (((uint64_t) (millis * 1000000.0)) * timebase.denom) / timebase.numer;
             time = mach_absolute_time();
         }
 
@@ -1219,26 +1302,12 @@ private:
 
         uint64_t time, delta;
 
-       #elif JUCE_ANDROID
-        Clock (double millis) noexcept  : delta ((uint64) (millis * 1000000))
-        {
-        }
-
-        void wait() noexcept
-        {
-            struct timespec t;
-            t.tv_sec  = (time_t) (delta / 1000000000);
-            t.tv_nsec = (long)   (delta % 1000000000);
-            nanosleep (&t, nullptr);
-        }
-
-        uint64 delta;
        #else
         Clock (double millis) noexcept  : delta ((uint64) (millis * 1000000))
         {
             struct timespec t;
             clock_gettime (CLOCK_MONOTONIC, &t);
-            time = 1000000000 * (int64) t.tv_sec + t.tv_nsec;
+            time = (uint64) (1000000000 * (int64) t.tv_sec + (int64) t.tv_nsec);
         }
 
         void wait() noexcept
@@ -1271,7 +1340,7 @@ private:
                                   THREAD_TIME_CONSTRAINT_POLICY_COUNT) == KERN_SUCCESS;
 
        #else
-        (void) periodMs;
+        ignoreUnused (periodMs);
         struct sched_param param;
         param.sched_priority = sched_get_priority_max (SCHED_RR);
         return pthread_setschedparam (thread, SCHED_RR, &param) == 0;
@@ -1281,3 +1350,5 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE (Pimpl)
 };
+
+#endif

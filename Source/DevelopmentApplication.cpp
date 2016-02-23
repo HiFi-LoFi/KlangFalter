@@ -83,11 +83,12 @@ public:
 
   virtual void audioDeviceAboutToStart(AudioIODevice* device)
   {
-    _numberBuffers = static_cast<size_t>(device->getNumBufferSizesAvailable());
+    const auto availableBufferSizes = device->getAvailableBufferSizes();
+    _numberBuffers = static_cast<size_t>(availableBufferSizes.size());
     _buffers = new float*[_numberBuffers];
-    for (size_t i=0; i<_numberBuffers; ++i)
+    for (const auto bufferSize : availableBufferSizes)
     {
-      _bufferSize = std::max(_bufferSize, static_cast<size_t>(device->getBufferSizeSamples(static_cast<int>(i))));
+      _bufferSize = std::max(_bufferSize, static_cast<size_t>(bufferSize));
     }
     for (size_t i=0; i<_numberBuffers; ++i)
     {

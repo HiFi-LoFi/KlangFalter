@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -26,34 +26,6 @@
   ==============================================================================
 */
 
-bool File::copyInternal (const File& dest) const
-{
-    FileInputStream in (*this);
-
-    if (dest.deleteFile())
-    {
-        {
-            FileOutputStream out (dest);
-
-            if (out.failedToOpen())
-                return false;
-
-            if (out.writeFromInputStream (in, -1) == getSize())
-                return true;
-        }
-
-        dest.deleteFile();
-    }
-
-    return false;
-}
-
-void File::findFileSystemRoots (Array<File>& destArray)
-{
-    destArray.add (File ("/"));
-}
-
-//==============================================================================
 bool File::isOnCDRomDrive() const
 {
     return false;
@@ -69,51 +41,31 @@ bool File::isOnRemovableDrive() const
     return false;
 }
 
-bool File::isHidden() const
+String File::getVersion() const
 {
-    return getFileName().startsWithChar ('.');
+    return String();
 }
 
-//==============================================================================
-namespace
+static File getSpecialFile (jmethodID type)
 {
-    File juce_readlink (const String& file, const File& defaultFile)
-    {
-        const int size = 8192;
-        HeapBlock<char> buffer;
-        buffer.malloc (size + 4);
-
-        const size_t numBytes = readlink (file.toUTF8(), buffer, size);
-
-        if (numBytes > 0 && numBytes <= size)
-            return File (file).getSiblingFile (String::fromUTF8 (buffer, (int) numBytes));
-
-        return defaultFile;
-    }
+    return File (juceString (LocalRef<jstring> ((jstring) getEnv()->CallStaticObjectMethod (JuceAppActivity, type))));
 }
 
-File File::getLinkedTarget() const
-{
-    return juce_readlink (getFullPathName().toUTF8(), *this);
-}
-
-//==============================================================================
 File File::getSpecialLocation (const SpecialLocationType type)
 {
     switch (type)
     {
         case userHomeDirectory:
-        case userDocumentsDirectory:
-        case userMusicDirectory:
-        case userMoviesDirectory:
-        case userPicturesDirectory:
         case userApplicationDataDirectory:
         case userDesktopDirectory:
+        case commonApplicationDataDirectory:
             return File (android.appDataDir);
 
-        case commonApplicationDataDirectory:
-        case commonDocumentsDirectory:
-            return File (android.appDataDir);
+        case userDocumentsDirectory:
+        case commonDocumentsDirectory:  return getSpecialFile (JuceAppActivity.getDocumentsFolder);
+        case userPicturesDirectory:     return getSpecialFile (JuceAppActivity.getPicturesFolder);
+        case userMusicDirectory:        return getSpecialFile (JuceAppActivity.getMusicFolder);
+        case userMoviesDirectory:       return getSpecialFile (JuceAppActivity.getMoviesFolder);
 
         case globalApplicationsDirectory:
             return File ("/system/app");
@@ -132,104 +84,18 @@ File File::getSpecialLocation (const SpecialLocationType type)
             break;
     }
 
-    return File::nonexistent;
+    return File();
 }
 
-//==============================================================================
-String File::getVersion() const
-{
-    return String::empty;
-}
-
-//==============================================================================
 bool File::moveToTrash() const
 {
     if (! exists())
         return true;
 
     // TODO
-
     return false;
 }
 
-//==============================================================================
-class DirectoryIterator::NativeIterator::Pimpl
-{
-public:
-    Pimpl (const File& directory, const String& wildCard_)
-        : parentDir (File::addTrailingSeparator (directory.getFullPathName())),
-          wildCard (wildCard_),
-          dir (opendir (directory.getFullPathName().toUTF8()))
-    {
-    }
-
-    ~Pimpl()
-    {
-        if (dir != 0)
-            closedir (dir);
-    }
-
-    bool next (String& filenameFound,
-               bool* const isDir, bool* const isHidden, int64* const fileSize,
-               Time* const modTime, Time* const creationTime, bool* const isReadOnly)
-    {
-        if (dir != 0)
-        {
-            const char* wildcardUTF8 = nullptr;
-
-            for (;;)
-            {
-                struct dirent* const de = readdir (dir);
-
-                if (de == nullptr)
-                    break;
-
-                if (wildcardUTF8 == nullptr)
-                    wildcardUTF8 = wildCard.toUTF8();
-
-                if (fnmatch (wildcardUTF8, de->d_name, FNM_CASEFOLD) == 0)
-                {
-                    filenameFound = CharPointer_UTF8 (de->d_name);
-
-                    updateStatInfoForFile (parentDir + filenameFound, isDir, fileSize, modTime, creationTime, isReadOnly);
-
-                    if (isHidden != 0)
-                        *isHidden = filenameFound.startsWithChar ('.');
-
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-private:
-    String parentDir, wildCard;
-    DIR* dir;
-
-    JUCE_DECLARE_NON_COPYABLE (Pimpl)
-};
-
-
-DirectoryIterator::NativeIterator::NativeIterator (const File& directory, const String& wildCard)
-    : pimpl (new DirectoryIterator::NativeIterator::Pimpl (directory, wildCard))
-{
-}
-
-DirectoryIterator::NativeIterator::~NativeIterator()
-{
-}
-
-bool DirectoryIterator::NativeIterator::next (String& filenameFound,
-                                              bool* const isDir, bool* const isHidden, int64* const fileSize,
-                                              Time* const modTime, Time* const creationTime, bool* const isReadOnly)
-{
-    return pimpl->next (filenameFound, isDir, isHidden, fileSize, modTime, creationTime, isReadOnly);
-}
-
-
-//==============================================================================
 JUCE_API bool JUCE_CALLTYPE Process::openDocument (const String& fileName, const String& parameters)
 {
     const LocalRef<jstring> t (javaString (fileName));

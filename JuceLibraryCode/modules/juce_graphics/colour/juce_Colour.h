@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -115,6 +115,19 @@ public:
             float brightness,
             float alpha) noexcept;
 
+    /** Creates a colour using a PixelARGB object. This function assumes that the argb pixel is
+        not premultiplied.
+     */
+    Colour (PixelARGB argb) noexcept;
+
+    /** Creates a colour using a PixelRGB object.
+     */
+    Colour (PixelRGB rgb) noexcept;
+
+    /** Creates a colour using a PixelAlpha object.
+     */
+    Colour (PixelAlpha alpha) noexcept;
+
     /** Creates a colour using floating point hue, saturation and brightness values, and an 8-bit alpha.
 
         The floating point values must be between 0.0 and 1.0.
@@ -139,37 +152,31 @@ public:
 
     //==============================================================================
     /** Returns the red component of this colour.
-
         @returns a value between 0x00 and 0xff.
     */
     uint8 getRed() const noexcept                       { return argb.getRed(); }
 
     /** Returns the green component of this colour.
-
         @returns a value between 0x00 and 0xff.
     */
     uint8 getGreen() const noexcept                     { return argb.getGreen(); }
 
     /** Returns the blue component of this colour.
-
         @returns a value between 0x00 and 0xff.
     */
     uint8 getBlue() const noexcept                      { return argb.getBlue(); }
 
     /** Returns the red component of this colour as a floating point value.
-
         @returns a value between 0.0 and 1.0
     */
     float getFloatRed() const noexcept;
 
     /** Returns the green component of this colour as a floating point value.
-
         @returns a value between 0.0 and 1.0
     */
     float getFloatGreen() const noexcept;
 
     /** Returns the blue component of this colour as a floating point value.
-
         @returns a value between 0.0 and 1.0
     */
     float getFloatBlue() const noexcept;
@@ -217,21 +224,17 @@ public:
     Colour withAlpha (float newAlpha) const noexcept;
 
     /** Returns a colour that's the same colour as this one, but with a modified alpha value.
-
         The new colour's alpha will be this object's alpha multiplied by the value passed-in.
     */
     Colour withMultipliedAlpha (float alphaMultiplier) const noexcept;
 
     //==============================================================================
     /** Returns a colour that is the result of alpha-compositing a new colour over this one.
-
-        If the foreground colour is semi-transparent, it is blended onto this colour
-        accordingly.
+        If the foreground colour is semi-transparent, it is blended onto this colour accordingly.
     */
     Colour overlaidWith (Colour foregroundColour) const noexcept;
 
     /** Returns a colour that lies somewhere between this one and another.
-
         If amountOfOther is zero, the result is 100% this colour, if amountOfOther
         is 1.0, the result is 100% of the other colour.
     */
@@ -253,6 +256,12 @@ public:
     */
     float getBrightness() const noexcept;
 
+    /** Returns a skewed brightness value, adjusted to better reflect the way the human
+        eye responds to different colour channels. This makes it better than getBrightness()
+        for comparing differences in brightness.
+    */
+    float getPerceivedBrightness() const noexcept;
+
     /** Returns the colour's hue, saturation and brightness components all at once.
         The values returned are in the range 0.0 to 1.0
     */
@@ -273,30 +282,25 @@ public:
     Colour withBrightness (float newBrightness) const noexcept;
 
     /** Returns a copy of this colour with it hue rotated.
-
         The new colour's hue is ((this->getHue() + amountToRotate) % 1.0)
-
         @see brighter, darker, withMultipliedBrightness
     */
     Colour withRotatedHue (float amountToRotate) const noexcept;
 
     /** Returns a copy of this colour with its saturation multiplied by the given value.
-
         The new colour's saturation is (this->getSaturation() * multiplier)
         (the result is clipped to legal limits).
     */
     Colour withMultipliedSaturation (float multiplier) const noexcept;
 
     /** Returns a copy of this colour with its brightness multiplied by the given value.
-
-        The new colour's saturation is (this->getBrightness() * multiplier)
+        The new colour's brightness is (this->getBrightness() * multiplier)
         (the result is clipped to legal limits).
     */
     Colour withMultipliedBrightness (float amount) const noexcept;
 
     //==============================================================================
     /** Returns a brighter version of this colour.
-
         @param amountBrighter   how much brighter to make it - a value from 0 to 1.0 where 0 is
                                 unchanged, and higher values make it brighter
         @see withMultipliedBrightness
@@ -304,7 +308,6 @@ public:
     Colour brighter (float amountBrighter = 0.4f) const noexcept;
 
     /** Returns a darker version of this colour.
-
         @param amountDarker     how much darker to make it - a value from 0 to 1.0 where 0 is
                                 unchanged, and higher values make it darker
         @see withMultipliedBrightness
@@ -339,21 +342,18 @@ public:
 
     //==============================================================================
     /** Returns an opaque shade of grey.
-
         @param brightness the level of grey to return - 0 is black, 1.0 is white
     */
     static Colour greyLevel (float brightness) noexcept;
 
     //==============================================================================
     /** Returns a stringified version of this colour.
-
         The string can be turned back into a colour using the fromString() method.
     */
     String toString() const;
 
-    /** Reads the colour from a string that was created with toString().
-    */
-    static Colour fromString (const String& encodedColourString);
+    /** Reads the colour from a string that was created with toString(). */
+    static Colour fromString (StringRef encodedColourString);
 
     /** Returns the colour as a hex string in the form RRGGBB or AARRGGBB. */
     String toDisplayString (bool includeAlphaValue) const;

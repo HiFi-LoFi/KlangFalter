@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -136,7 +136,7 @@ public:
     /** Returns the ID of the item with the given index.
 
         If the index is less than zero or greater than the number of items,
-        this will return 0.
+        this will return nullptr.
 
         @see getNumItems
     */
@@ -145,7 +145,7 @@ public:
     /** Returns the component being used for the item with the given index.
 
         If the index is less than zero or greater than the number of items,
-        this will return 0.
+        this will return nullptr.
 
         @see getNumItems
     */
@@ -268,6 +268,24 @@ public:
                             const String& savedVersion);
 
     //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes. */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void paintToolbarBackground (Graphics&, int width, int height, Toolbar&) = 0;
+
+        virtual Button* createToolbarMissingItemsButton (Toolbar&) = 0;
+
+        virtual void paintToolbarButtonBackground (Graphics&, int width, int height,
+                                                   bool isMouseOver, bool isMouseDown,
+                                                   ToolbarItemComponent&) = 0;
+
+        virtual void paintToolbarButtonLabel (Graphics&, int x, int y, int width, int height,
+                                              const String& text, ToolbarItemComponent&) = 0;
+    };
+
+    //==============================================================================
     /** @internal */
     void paint (Graphics&) override;
     /** @internal */
@@ -296,7 +314,7 @@ private:
     ToolbarItemStyle toolbarStyle;
     class MissingItemsComponent;
     friend class MissingItemsComponent;
-    OwnedArray <ToolbarItemComponent> items;
+    OwnedArray<ToolbarItemComponent> items;
     class Spacer;
     class CustomisationDialog;
 

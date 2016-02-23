@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -120,13 +120,18 @@ namespace FileChooserHelpers
 //==============================================================================
 bool FileChooser::isPlatformDialogAvailable()
 {
+   #if JUCE_DISABLE_NATIVE_FILECHOOSERS
+    return false;
+   #else
     return true;
+   #endif
 }
 
 void FileChooser::showPlatformDialog (Array<File>& results, const String& title_, const File& currentFileOrDirectory,
                                       const String& filter, bool selectsDirectory, bool /*selectsFiles*/,
                                       bool isSaveDialogue, bool warnAboutOverwritingExistingFiles,
-                                      bool selectMultipleFiles, FilePreviewComponent* extraInfoComponent)
+                                      bool selectMultipleFiles, bool /*treatFilePackagesAsDirs*/,
+                                      FilePreviewComponent* extraInfoComponent)
 {
     using namespace FileChooserHelpers;
 
@@ -183,7 +188,7 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
         if (! SHGetPathFromIDListW (list, files))
         {
             files[0] = 0;
-            info.returnedString = String::empty;
+            info.returnedString.clear();
         }
 
         LPMALLOC al;
@@ -198,7 +203,7 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
     }
     else
     {
-        DWORD flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+        DWORD flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY | OFN_ENABLESIZING;
 
         if (warnAboutOverwritingExistingFiles)
             flags |= OFN_OVERWRITEPROMPT;
@@ -220,6 +225,10 @@ void FileChooser::showPlatformDialog (Array<File>& results, const String& title_
         const size_t bytesWritten = filter.copyToUTF16 (filters.getData(), filterSpaceNumChars * sizeof (WCHAR));
         filter.copyToUTF16 (filters + (bytesWritten / sizeof (WCHAR)),
                             ((filterSpaceNumChars - 1) * sizeof (WCHAR) - bytesWritten));
+
+        for (size_t i = 0; i < filterSpaceNumChars; ++i)
+            if (filters[i] == '|')
+                filters[i] = 0;
 
         OPENFILENAMEW of = { 0 };
         String localPath (info.initialPath);

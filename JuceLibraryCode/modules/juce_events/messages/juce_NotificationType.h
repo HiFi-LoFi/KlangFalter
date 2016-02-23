@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -35,7 +35,7 @@ enum NotificationType
     dontSendNotification = 0,   /**< No notification message should be sent. */
     sendNotification = 1,       /**< Requests a notification message, either synchronous or not. */
     sendNotificationSync,       /**< Requests a synchronous notification. */
-    sendNotificationAsync,      /**< Requests a asynchronous notification. */
+    sendNotificationAsync,      /**< Requests an asynchronous notification. */
 };
 
 

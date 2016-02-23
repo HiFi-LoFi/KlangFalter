@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -47,26 +47,32 @@ public:
     /** The set of possible results of the getOperatingSystemType() method. */
     enum OperatingSystemType
     {
-        UnknownOS   = 0,
+        UnknownOS       = 0,
 
-        Linux       = 0x2000,
-        Android     = 0x3000,
-        iOS         = 0x8000,
+        MacOSX          = 0x0100,   /**< To test whether any version of OSX is running,
+                                         you can use the expression ((getOperatingSystemType() & MacOSX) != 0). */
+        Windows         = 0x0200,   /**< To test whether any version of Windows is running,
+                                         you can use the expression ((getOperatingSystemType() & Windows) != 0). */
+        Linux           = 0x0400,
+        Android         = 0x0800,
+        iOS             = 0x1000,
 
-        MacOSX_10_4 = 0x1004,
-        MacOSX_10_5 = 0x1005,
-        MacOSX_10_6 = 0x1006,
-        MacOSX_10_7 = 0x1007,
-        MacOSX_10_8 = 0x1008,
+        MacOSX_10_4     = MacOSX | 4,
+        MacOSX_10_5     = MacOSX | 5,
+        MacOSX_10_6     = MacOSX | 6,
+        MacOSX_10_7     = MacOSX | 7,
+        MacOSX_10_8     = MacOSX | 8,
+        MacOSX_10_9     = MacOSX | 9,
+        MacOSX_10_10    = MacOSX | 10,
+        MacOSX_10_11    = MacOSX | 11,
 
-        Win2000     = 0x4105,
-        WinXP       = 0x4106,
-        WinVista    = 0x4107,
-        Windows7    = 0x4108,
-        Windows8    = 0x4109,
-
-        Windows     = 0x4000,   /**< To test whether any version of Windows is running,
-                                     you can use the expression ((getOperatingSystemType() & Windows) != 0). */
+        Win2000         = Windows | 1,
+        WinXP           = Windows | 2,
+        WinVista        = Windows | 3,
+        Windows7        = Windows | 4,
+        Windows8_0      = Windows | 5,
+        Windows8_1      = Windows | 6,
+        Windows10       = Windows | 7
     };
 
     /** Returns the type of operating system we're running on.
@@ -83,8 +89,7 @@ public:
     */
     static String getOperatingSystemName();
 
-    /** Returns true if the OS is 64-bit, or false for a 32-bit OS.
-    */
+    /** Returns true if the OS is 64-bit, or false for a 32-bit OS. */
     static bool isOperatingSystem64Bit();
 
     /** Returns an environment variable.
@@ -118,9 +123,17 @@ public:
     static String getUserRegion();
 
     /** Returns the user's display language.
-        The return value is a 2 or 3 letter language code (ISO 639-1 or ISO 639-2)
+        The return value is a 2 or 3 letter language code (ISO 639-1 or ISO 639-2).
+        Note that depending on the OS and region, this may also be followed by a dash
+        and a sub-region code, e.g "en-GB"
     */
     static String getDisplayLanguage();
+
+    /** This will attempt to return some kind of string describing the device.
+        If no description is available, it'll just return an empty string. You may
+        want to use this for things like determining the type of phone/iPad, etc.
+    */
+    static String getDeviceDescription();
 
     //==============================================================================
     // CPU and memory information..
@@ -139,11 +152,16 @@ public:
     */
     static String getCpuVendor();
 
-    static bool hasMMX() noexcept;   /**< Returns true if Intel MMX instructions are available. */
-    static bool hasSSE() noexcept;   /**< Returns true if Intel SSE instructions are available. */
-    static bool hasSSE2() noexcept;  /**< Returns true if Intel SSE2 instructions are available. */
-    static bool hasSSE3() noexcept;  /**< Returns true if Intel SSE2 instructions are available. */
-    static bool has3DNow() noexcept; /**< Returns true if AMD 3DNOW instructions are available. */
+    static bool hasMMX() noexcept;    /**< Returns true if Intel MMX instructions are available. */
+    static bool has3DNow() noexcept;  /**< Returns true if AMD 3DNOW instructions are available. */
+    static bool hasSSE() noexcept;    /**< Returns true if Intel SSE instructions are available. */
+    static bool hasSSE2() noexcept;   /**< Returns true if Intel SSE2 instructions are available. */
+    static bool hasSSE3() noexcept;   /**< Returns true if Intel SSE3 instructions are available. */
+    static bool hasSSSE3() noexcept;  /**< Returns true if Intel SSSE3 instructions are available. */
+    static bool hasSSE41() noexcept;  /**< Returns true if Intel SSE4.1 instructions are available. */
+    static bool hasSSE42() noexcept;  /**< Returns true if Intel SSE4.2 instructions are available. */
+    static bool hasAVX() noexcept;    /**< Returns true if Intel AVX instructions are available. */
+    static bool hasAVX2() noexcept;   /**< Returns true if Intel AVX2 instructions are available. */
 
     //==============================================================================
     /** Finds out how much RAM is in the machine.

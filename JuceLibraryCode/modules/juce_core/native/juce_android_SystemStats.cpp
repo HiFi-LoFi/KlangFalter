@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -26,8 +26,7 @@
   ==============================================================================
 */
 
-JNIClassBase::JNIClassBase (const char* classPath_)
-    : classPath (classPath_), classRef (0)
+JNIClassBase::JNIClassBase (const char* cp)   : classPath (cp), classRef (0)
 {
     getClasses().add (this);
 }
@@ -99,24 +98,19 @@ jfieldID JNIClassBase::resolveStaticField (JNIEnv* env, const char* fieldName, c
 }
 
 //==============================================================================
-ThreadLocalJNIEnvHolder threadLocalJNIEnvHolder;
-
-#if JUCE_DEBUG
-static bool systemInitialised = false;
-#endif
+ThreadLocalValue<JNIEnv*> androidJNIEnv;
 
 JNIEnv* getEnv() noexcept
 {
-   #if JUCE_DEBUG
-    if (! systemInitialised)
-    {
-        DBG ("*** Call to getEnv() when system not initialised");
-        jassertfalse;
-        std::exit (EXIT_FAILURE);
-    }
-   #endif
+    JNIEnv* env = androidJNIEnv.get();
+    jassert (env != nullptr);
 
-    return threadLocalJNIEnvHolder.getOrAttach();
+    return env;
+}
+
+void setEnv (JNIEnv* env) noexcept
+{
+    androidJNIEnv.get() = env;
 }
 
 extern "C" jint JNI_OnLoad (JavaVM*, void*)
@@ -129,30 +123,20 @@ AndroidSystem::AndroidSystem() : screenWidth (0), screenHeight (0), dpi (160)
 {
 }
 
-void AndroidSystem::initialise (JNIEnv* env, jobject activity_,
-                                jstring appFile_, jstring appDataDir_)
+void AndroidSystem::initialise (JNIEnv* env, jobject act, jstring file, jstring dataDir)
 {
     screenWidth = screenHeight = 0;
     dpi = 160;
     JNIClassBase::initialiseAllClasses (env);
 
-    threadLocalJNIEnvHolder.initialise (env);
-   #if JUCE_DEBUG
-    systemInitialised = true;
-   #endif
-
-    activity = GlobalRef (activity_);
-    appFile = juceString (env, appFile_);
-    appDataDir = juceString (env, appDataDir_);
+    activity = GlobalRef (act);
+    appFile = juceString (env, file);
+    appDataDir = juceString (env, dataDir);
 }
 
 void AndroidSystem::shutdown (JNIEnv* env)
 {
     activity.clear();
-
-   #if JUCE_DEBUG
-    systemInitialised = false;
-   #endif
 
     JNIClassBase::releaseAllClasses (env);
 }
@@ -162,14 +146,12 @@ AndroidSystem android;
 //==============================================================================
 namespace AndroidStatsHelpers
 {
-    //==============================================================================
     #define JNI_CLASS_MEMBERS(METHOD, STATICMETHOD, FIELD, STATICFIELD) \
      STATICMETHOD (getProperty, "getProperty", "(Ljava/lang/String;)Ljava/lang/String;")
 
     DECLARE_JNI_CLASS (SystemClass, "java/lang/System");
     #undef JNI_CLASS_MEMBERS
 
-    //==============================================================================
     String getSystemProperty (const String& name)
     {
         return juceString (LocalRef<jstring> ((jstring) getEnv()->CallStaticObjectMethod (SystemClass,
@@ -177,12 +159,21 @@ namespace AndroidStatsHelpers
                                                                                           javaString (name).get())));
     }
 
-    //==============================================================================
     String getLocaleValue (bool isRegion)
     {
         return juceString (LocalRef<jstring> ((jstring) getEnv()->CallStaticObjectMethod (JuceAppActivity,
                                                                                           JuceAppActivity.getLocaleValue,
                                                                                           isRegion)));
+    }
+
+    #define JNI_CLASS_MEMBERS(METHOD, STATICMETHOD, FIELD, STATICFIELD)
+    DECLARE_JNI_CLASS (BuildClass, "android/os/Build");
+    #undef JNI_CLASS_MEMBERS
+
+    String getAndroidOsBuildValue (const char* fieldName)
+    {
+        return juceString (LocalRef<jstring> ((jstring) getEnv()->GetStaticObjectField (
+                            BuildClass, getEnv()->GetStaticFieldID (BuildClass, fieldName, "Ljava/lang/String;"))));
     }
 }
 
@@ -195,6 +186,12 @@ SystemStats::OperatingSystemType SystemStats::getOperatingSystemType()
 String SystemStats::getOperatingSystemName()
 {
     return "Android " + AndroidStatsHelpers::getSystemProperty ("os.version");
+}
+
+String SystemStats::getDeviceDescription()
+{
+    return AndroidStatsHelpers::getAndroidOsBuildValue ("MODEL")
+            + "-" + AndroidStatsHelpers::getAndroidOsBuildValue ("SERIAL");
 }
 
 bool SystemStats::isOperatingSystem64Bit()
@@ -236,16 +233,13 @@ int SystemStats::getPageSize()
 //==============================================================================
 String SystemStats::getLogonName()
 {
-    const char* user = getenv ("USER");
+    if (const char* user = getenv ("USER"))
+        return CharPointer_UTF8 (user);
 
-    if (user == 0)
-    {
-        struct passwd* const pw = getpwuid (getuid());
-        if (pw != 0)
-            user = pw->pw_name;
-    }
+    if (struct passwd* const pw = getpwuid (getuid()))
+        return CharPointer_UTF8 (pw->pw_name);
 
-    return CharPointer_UTF8 (user);
+    return String();
 }
 
 String SystemStats::getFullUserName()
@@ -259,18 +253,18 @@ String SystemStats::getComputerName()
     if (gethostname (name, sizeof (name) - 1) == 0)
         return name;
 
-    return String::empty;
+    return String();
 }
 
 
 String SystemStats::getUserLanguage()    { return AndroidStatsHelpers::getLocaleValue (false); }
 String SystemStats::getUserRegion()      { return AndroidStatsHelpers::getLocaleValue (true); }
-String SystemStats::getDisplayLanguage() { return getUserLanguage(); }
+String SystemStats::getDisplayLanguage() { return getUserLanguage() + "-" + getUserRegion(); }
 
 //==============================================================================
 void CPUInformation::initialise() noexcept
 {
-    numCpus = jmax (1, sysconf (_SC_NPROCESSORS_ONLN));
+    numCpus = jmax ((int) 1, (int) sysconf (_SC_NPROCESSORS_ONLN));
 }
 
 //==============================================================================

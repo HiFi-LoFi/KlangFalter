@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -41,7 +41,7 @@ struct FTLibWrapper     : public ReferenceCountedObject
 
     FT_Library library;
 
-    typedef ReferenceCountedObjectPtr <FTLibWrapper> Ptr;
+    typedef ReferenceCountedObjectPtr<FTLibWrapper> Ptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FTLibWrapper)
 };
@@ -56,6 +56,14 @@ struct FTFaceWrapper     : public ReferenceCountedObject
             face = 0;
     }
 
+    FTFaceWrapper (const FTLibWrapper::Ptr& ftLib, const void* data, size_t dataSize, int faceIndex)
+        : face (0), library (ftLib), savedFaceData (data, dataSize)
+    {
+        if (FT_New_Memory_Face (ftLib->library, (const FT_Byte*) savedFaceData.getData(),
+                                (FT_Long) savedFaceData.getSize(), faceIndex, &face) != 0)
+            face = 0;
+    }
+
     ~FTFaceWrapper()
     {
         if (face != 0)
@@ -64,8 +72,9 @@ struct FTFaceWrapper     : public ReferenceCountedObject
 
     FT_Face face;
     FTLibWrapper::Ptr library;
+    MemoryBlock savedFaceData;
 
-    typedef ReferenceCountedObjectPtr <FTFaceWrapper> Ptr;
+    typedef ReferenceCountedObjectPtr<FTFaceWrapper> Ptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FTFaceWrapper)
 };
@@ -106,24 +115,34 @@ public:
     };
 
     //==============================================================================
+    static FTFaceWrapper::Ptr selectUnicodeCharmap (FTFaceWrapper* face)
+    {
+        if (face != nullptr)
+            if (FT_Select_Charmap (face->face, ft_encoding_unicode) != 0)
+                FT_Set_Charmap (face->face, face->face->charmaps[0]);
+
+        return face;
+    }
+
+    FTFaceWrapper::Ptr createFace (const void* data, size_t dataSize, int index)
+    {
+        return selectUnicodeCharmap (new FTFaceWrapper (library, data, dataSize, index));
+    }
+
+    FTFaceWrapper::Ptr createFace (const File& file, int index)
+    {
+        return selectUnicodeCharmap (new FTFaceWrapper (library, file, index));
+    }
+
     FTFaceWrapper::Ptr createFace (const String& fontName, const String& fontStyle)
     {
         const KnownTypeface* ftFace = matchTypeface (fontName, fontStyle);
 
         if (ftFace == nullptr)  ftFace = matchTypeface (fontName, "Regular");
-        if (ftFace == nullptr)  ftFace = matchTypeface (fontName, String::empty);
+        if (ftFace == nullptr)  ftFace = matchTypeface (fontName, String());
 
         if (ftFace != nullptr)
-        {
-            if (FTFaceWrapper::Ptr face = new FTFaceWrapper (library, ftFace->file, ftFace->faceIndex))
-            {
-                // If there isn't a unicode charmap then select the first one.
-                if (FT_Select_Charmap (face->face, ft_encoding_unicode) != 0)
-                    FT_Set_Charmap (face->face, face->face->charmaps[0]);
-
-                return face;
-            }
-        }
+            return createFace (ftFace->file, ftFace->faceIndex);
 
         return nullptr;
     }
@@ -133,23 +152,40 @@ public:
     {
         StringArray s;
 
-        for (int i = 0; i < faces.size(); i++)
+        for (int i = 0; i < faces.size(); ++i)
             s.addIfNotAlreadyThere (faces.getUnchecked(i)->family);
 
         return s;
+    }
+
+    static int indexOfRegularStyle (const StringArray& styles)
+    {
+        int i = styles.indexOf ("Regular", true);
+
+        if (i < 0)
+            for (i = 0; i < styles.size(); ++i)
+                if (! (styles[i].containsIgnoreCase ("Bold") || styles[i].containsIgnoreCase ("Italic")))
+                    break;
+
+        return i;
     }
 
     StringArray findAllTypefaceStyles (const String& family) const
     {
         StringArray s;
 
-        for (int i = 0; i < faces.size(); i++)
+        for (int i = 0; i < faces.size(); ++i)
         {
             const KnownTypeface* const face = faces.getUnchecked(i);
 
             if (face->family == family)
                 s.addIfNotAlreadyThere (face->style);
         }
+
+        // try to get a regular style to be first in the list
+        const int regular = indexOfRegularStyle (s);
+        if (regular > 0)
+            s.strings.swap (0, regular);
 
         return s;
     }
@@ -169,26 +205,26 @@ public:
 
     void getMonospacedNames (StringArray& monoSpaced) const
     {
-        for (int i = 0; i < faces.size(); i++)
+        for (int i = 0; i < faces.size(); ++i)
             if (faces.getUnchecked(i)->isMonospaced)
                 monoSpaced.addIfNotAlreadyThere (faces.getUnchecked(i)->family);
     }
 
     void getSerifNames (StringArray& serif) const
     {
-        for (int i = 0; i < faces.size(); i++)
+        for (int i = 0; i < faces.size(); ++i)
             if (! faces.getUnchecked(i)->isSansSerif)
                 serif.addIfNotAlreadyThere (faces.getUnchecked(i)->family);
     }
 
     void getSansSerifNames (StringArray& sansSerif) const
     {
-        for (int i = 0; i < faces.size(); i++)
+        for (int i = 0; i < faces.size(); ++i)
             if (faces.getUnchecked(i)->isSansSerif)
                 sansSerif.addIfNotAlreadyThere (faces.getUnchecked(i)->family);
     }
 
-    juce_DeclareSingleton_SingleThreaded_Minimal (FTTypefaceList);
+    juce_DeclareSingleton_SingleThreaded_Minimal (FTTypefaceList)
 
 private:
     FTLibWrapper::Ptr library;
@@ -208,7 +244,7 @@ private:
             if (face.face != 0)
             {
                 if (faceIndex == 0)
-                    numFaces = face.face->num_faces;
+                    numFaces = (int) face.face->num_faces;
 
                 if ((face.face->face_flags & FT_FACE_FLAG_SCALABLE) != 0)
                     faces.add (new KnownTypeface (file, faceIndex, face));
@@ -235,7 +271,7 @@ private:
 
     static bool isFaceSansSerif (const String& family)
     {
-        const char* sansNames[] = { "Sans", "Verdana", "Arial", "Ubuntu" };
+        static const char* sansNames[] = { "Sans", "Verdana", "Arial", "Ubuntu" };
 
         for (int i = 0; i < numElementsInArray (sansNames); ++i)
             if (family.containsIgnoreCase (sansNames[i]))
@@ -255,20 +291,27 @@ class FreeTypeTypeface   : public CustomTypeface
 {
 public:
     FreeTypeTypeface (const Font& font)
-        : faceWrapper (FTTypefaceList::getInstance()
-                           ->createFace (font.getTypefaceName(), font.getTypefaceStyle()))
+        : faceWrapper (FTTypefaceList::getInstance()->createFace (font.getTypefaceName(),
+                                                                  font.getTypefaceStyle()))
     {
         if (faceWrapper != nullptr)
-        {
-            setCharacteristics (font.getTypefaceName(),
-                                font.getTypefaceStyle(),
-                                faceWrapper->face->ascender / (float) (faceWrapper->face->ascender - faceWrapper->face->descender),
-                                L' ');
-        }
-        else
-        {
-            DBG ("Failed to create typeface: " << font.toString());
-        }
+            initialiseCharacteristics (font.getTypefaceName(),
+                                       font.getTypefaceStyle());
+    }
+
+    FreeTypeTypeface (const void* data, size_t dataSize)
+        : faceWrapper (FTTypefaceList::getInstance()->createFace (data, dataSize, 0))
+    {
+        if (faceWrapper != nullptr)
+            initialiseCharacteristics (faceWrapper->face->family_name,
+                                       faceWrapper->face->style_name);
+    }
+
+    void initialiseCharacteristics (const String& fontName, const String& fontStyle)
+    {
+        setCharacteristics (fontName, fontStyle,
+                            faceWrapper->face->ascender / (float) (faceWrapper->face->ascender - faceWrapper->face->descender),
+                            L' ');
     }
 
     bool loadGlyphIfPossible (const juce_wchar character)
@@ -276,9 +319,9 @@ public:
         if (faceWrapper != nullptr)
         {
             FT_Face face = faceWrapper->face;
-            const unsigned int glyphIndex = FT_Get_Char_Index (face, character);
+            const unsigned int glyphIndex = FT_Get_Char_Index (face, (FT_ULong) character);
 
-            if (FT_Load_Glyph (face, glyphIndex, FT_LOAD_NO_SCALE | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM) == 0
+            if (FT_Load_Glyph (face, glyphIndex, FT_LOAD_NO_SCALE | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM | FT_LOAD_NO_HINTING) == 0
                   && face->glyph->format == ft_glyph_format_outline)
             {
                 const float scale = 1.0f / (float) (face->ascender - face->descender);
@@ -289,7 +332,7 @@ public:
                     addGlyph (character, destShape, face->glyph->metrics.horiAdvance * scale);
 
                     if ((face->face_flags & FT_FACE_FLAG_KERNING) != 0)
-                        addKerning (face, character, glyphIndex);
+                        addKerning (face, (uint32) character, glyphIndex);
 
                     return true;
                 }
@@ -394,7 +437,7 @@ private:
         const float height = (float) (face->ascender - face->descender);
 
         uint32 rightGlyphIndex;
-        uint32 rightCharCode = FT_Get_First_Char (face, &rightGlyphIndex);
+        FT_ULong rightCharCode = FT_Get_First_Char (face, &rightGlyphIndex);
 
         while (rightGlyphIndex != 0)
         {
@@ -402,7 +445,7 @@ private:
 
             if (FT_Get_Kerning (face, glyphIndex, rightGlyphIndex, ft_kerning_unscaled, &kerning) == 0
                    && kerning.x != 0)
-                addKerningPair (character, rightCharCode, kerning.x / height);
+                addKerningPair ((juce_wchar) character, (juce_wchar) rightCharCode, kerning.x / height);
 
             rightCharCode = FT_Get_Next_Char (face, rightCharCode, &rightGlyphIndex);
         }

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -28,7 +28,7 @@
 #include "../juce_graphics/juce_graphics.h"
 #include "../juce_data_structures/juce_data_structures.h"
 
-//=============================================================================
+//==============================================================================
 /** Config: JUCE_ENABLE_REPAINT_DEBUGGING
     If this option is turned on, each area of the screen that gets repainted will
     flash in a random colour, so that you can see exactly which bits of your
@@ -38,8 +38,20 @@
  #define JUCE_ENABLE_REPAINT_DEBUGGING 0
 #endif
 
+/** JUCE_USE_XRANDR: Enables Xrandr multi-monitor support (Linux only).
+    Unless you specifically want to disable this, it's best to leave this option turned on.
+    Note that your users do not need to have Xrandr installed for your JUCE app to run, as
+    the availability of Xrandr is queried during runtime.
+*/
+#ifndef JUCE_USE_XRANDR
+ #define JUCE_USE_XRANDR 1
+#endif
+
 /** JUCE_USE_XINERAMA: Enables Xinerama multi-monitor support (Linux only).
     Unless you specifically want to disable this, it's best to leave this option turned on.
+    This will be used as a fallback if JUCE_USE_XRANDR not set or libxrandr cannot be found.
+    Note that your users do not need to have Xrandr installed for your JUCE app to run, as
+    the availability of Xinerama is queried during runtime.
 */
 #ifndef JUCE_USE_XINERAMA
  #define JUCE_USE_XINERAMA 1
@@ -68,7 +80,7 @@
  #define JUCE_USE_XCURSOR 1
 #endif
 
-//=============================================================================
+//==============================================================================
 namespace juce
 {
 
@@ -113,6 +125,7 @@ class CaretComponent;
 class BubbleComponent;
 class KeyPressMappingSet;
 class ApplicationCommandManagerListener;
+class DrawableButton;
 
 #include "mouse/juce_MouseCursor.h"
 #include "mouse/juce_MouseListener.h"
@@ -215,9 +228,6 @@ class ApplicationCommandManagerListener;
 #include "windows/juce_ThreadWithProgressWindow.h"
 #include "windows/juce_TooltipWindow.h"
 #include "layout/juce_MultiDocumentPanel.h"
-#include "lookandfeel/juce_LookAndFeel.h"
-#include "filebrowser/juce_FileFilter.h"
-#include "filebrowser/juce_WildcardFileFilter.h"
 #include "filebrowser/juce_FileBrowserListener.h"
 #include "filebrowser/juce_DirectoryContentsList.h"
 #include "filebrowser/juce_DirectoryContentsDisplayComponent.h"
@@ -239,6 +249,10 @@ class ApplicationCommandManagerListener;
 #include "properties/juce_TextPropertyComponent.h"
 #include "application/juce_Application.h"
 #include "misc/juce_BubbleComponent.h"
+#include "lookandfeel/juce_LookAndFeel.h"
+#include "lookandfeel/juce_LookAndFeel_V2.h"
+#include "lookandfeel/juce_LookAndFeel_V1.h"
+#include "lookandfeel/juce_LookAndFeel_V3.h"
 
 }
 

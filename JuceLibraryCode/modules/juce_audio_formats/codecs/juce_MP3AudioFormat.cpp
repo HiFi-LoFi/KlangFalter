@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -25,8 +25,8 @@
 /*
     IMPORTANT DISCLAIMER: By choosing to enable the JUCE_USE_MP3AUDIOFORMAT flag and
     to compile this MP3 code into your software, you do so AT YOUR OWN RISK! By doing so,
-    you are agreeing that Raw Material Software is in no way responsible for any patent,
-    copyright, or other legal issues that you may suffer as a result.
+    you are agreeing that ROLI Ltd. is in no way responsible for any patent, copyright,
+    or other legal issues that you may suffer as a result.
 
     The code in juce_MP3AudioFormat.cpp is NOT guaranteed to be free from infringements of 3rd-party
     intellectual property. If you wish to use it, please seek your own independent advice about the
@@ -426,9 +426,8 @@ struct VBRTagData
 
         if (flags & 4)
         {
-            if (toc != nullptr)
-                for (int i = 0; i < 100; ++i)
-                    toc[i] = data[i];
+            for (int i = 0; i < 100; ++i)
+                toc[i] = data[i];
 
             data += 100;
         }
@@ -516,12 +515,21 @@ struct MP3Frame
               { 0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160 } }
         };
 
-        switch (layer)
+        if (bitrateIndex == 0)
         {
-            case 1: frameSize = (((frameSizes[lsf][0][bitrateIndex] * 12000) / getFrequency() + padding) * 4) - 4; break;
-            case 2: frameSize = (frameSizes[lsf][1][bitrateIndex] * 144000)  / getFrequency() + (padding - 4); break;
-            case 3: frameSize = (bitrateIndex == 0) ? 0 : ((frameSizes[lsf][2][bitrateIndex] * 144000) / (getFrequency() << lsf) + (padding - 4)); break;
-            default: break;
+            jassertfalse; // This means the file is using "free format". Apparently very few decoders
+                          // support this mode, and this one certainly doesn't handle it correctly!
+            frameSize = 0;
+        }
+        else
+        {
+            switch (layer)
+            {
+                case 1: frameSize = (((frameSizes[lsf][0][bitrateIndex] * 12000) / getFrequency() + padding) * 4) - 4; break;
+                case 2: frameSize = (frameSizes[lsf][1][bitrateIndex] * 144000)  / getFrequency() + (padding - 4); break;
+                case 3: frameSize = (bitrateIndex == 0) ? 0 : ((frameSizes[lsf][2][bitrateIndex] * 144000) / (getFrequency() << lsf) + (padding - 4)); break;
+                default: break;
+            }
         }
     }
 
@@ -598,7 +606,7 @@ private:
             float* costab = cosTables[i];
 
             for (int k = 0; k < kr; ++k)
-                costab[k] = (float) (1.0 / (2.0 * cos (double_Pi * (k * 2 + 1) / divv)));
+                costab[k] = (float) (1.0 / (2.0 * std::cos (double_Pi * (k * 2 + 1) / divv)));
         }
 
         for (i = 0, j = 0; i < 256; ++i, ++j, table += 32)
@@ -683,23 +691,23 @@ private:
 
         for (i = 0; i < 18; ++i)
         {
-            win[0][i] = win[1][i] = (float) (0.5 * sin (double_Pi / 72.0 * (2 * i + 1)) / cos (double_Pi * (2 * i + 19) / 72.0));
-            win[0][i + 18] = win[3][i + 18] = (float) (0.5 * sin (double_Pi / 72.0 * (2 * (i + 18) + 1)) / cos (double_Pi * (2 * (i + 18) + 19) / 72.0));
+            win[0][i]      = win[1][i]      = (float) (0.5 * std::sin (double_Pi / 72.0 * (2 * i + 1))        / std::cos (double_Pi * (2 * i + 19)        / 72.0));
+            win[0][i + 18] = win[3][i + 18] = (float) (0.5 * std::sin (double_Pi / 72.0 * (2 * (i + 18) + 1)) / std::cos (double_Pi * (2 * (i + 18) + 19) / 72.0));
         }
 
-        const double piOver72 = double_Pi;
+        const double piOver72 = double_Pi / 72.0;
 
         for (i = 0; i < 6; ++i)
         {
-            win[1][i + 18] = (float) (0.5 / cos (piOver72 * (2 * (i + 18) + 19)));
-            win[3][i + 12] = (float) (0.5 / cos (piOver72 * (2 * (i + 12) + 19)));
-            win[1][i + 24] = (float) (0.5 * sin (double_Pi / 24.0 * (2 * i + 13)) / cos (piOver72 * (2 * (i + 24) + 19)));
+            win[1][i + 18] = (float) (0.5 / std::cos (piOver72 * (2 * (i + 18) + 19)));
+            win[3][i + 12] = (float) (0.5 / std::cos (piOver72 * (2 * (i + 12) + 19)));
+            win[1][i + 24] = (float) (0.5 * std::sin (double_Pi / 24.0 * (2 * i + 13)) / std::cos (piOver72 * (2 * (i + 24) + 19)));
             win[1][i + 30] = win[3][i] = 0;
-            win[3][i + 6]  = (float) (0.5 * sin (double_Pi / 24.0 * (2 * i + 1)) / cos (piOver72 * (2 * (i + 6) + 19)));
+            win[3][i + 6]  = (float) (0.5 * std::sin (double_Pi / 24.0 * (2 * i + 1)) / std::cos (piOver72 * (2 * (i + 6) + 19)));
         }
 
         for (i = 0; i < 12; ++i)
-            win[2][i] = (float) (0.5 * sin (double_Pi / 24.0 * (2 * i + 1)) / cos (double_Pi * (2 * i + 7) / 24.0));
+            win[2][i] = (float) (0.5 * std::sin (double_Pi / 24.0 * (2 * i + 1)) / std::cos (double_Pi * (2 * i + 7) / 24.0));
 
         for (j = 0; j < 4; ++j)
         {
@@ -712,7 +720,7 @@ private:
 
         for (i = 0; i < 16; ++i)
         {
-            const double t = tan (i * double_Pi / 12.0);
+            const double t = std::tan (i * double_Pi / 12.0);
             tan1_1[i] = (float) (t / (1.0 + t));
             tan2_1[i] = (float) (1.0 / (1.0 + t));
             tan1_2[i] = (float) (sqrt2 * t / (1.0 + t));
@@ -1451,7 +1459,7 @@ struct MP3Stream
             bufferPointer = bufferSpace[bufferSpaceIndex] + 512;
             bitIndex = 0;
 
-            if (lastFrameSize == -1)
+            if (lastFrameSize < 0)
                 return 1;
         }
 
@@ -1513,8 +1521,14 @@ struct MP3Stream
             else
             {
                 const int nextFrameOffset = scanForNextFrameHeader (true);
+
+                wasFreeFormat = isFreeFormat;
+
                 if (nextFrameOffset < 0)
+                {
+                    lastFrameSize = frameSize;
                     return result;
+                }
 
                 frameSize = nextFrameOffset + sideInfoSize + dataSize;
                 lastFrameSizeNoPadding = frameSize - frame.padding;
@@ -1599,7 +1613,7 @@ private:
         headerParsed = sideParsed = dataParsed = isFreeFormat = wasFreeFormat = false;
         lastFrameSize = -1;
         needToSyncBitStream = true;
-        frameSize = sideInfoSize = dataSize = frameSize = bitIndex = 0;
+        frameSize = sideInfoSize = dataSize = bitIndex = 0;
         lastFrameSizeNoPadding = bufferSpaceIndex = 0;
         bufferPointer = bufferSpace[bufferSpaceIndex] + 512;
         synthBo = 1;
@@ -2929,14 +2943,13 @@ private:
 
 //==============================================================================
 static const char* const mp3FormatName = "MP3 file";
-static const char* const mp3Extensions[] = { ".mp3", nullptr };
 
 //==============================================================================
 class MP3Reader : public AudioFormatReader
 {
 public:
     MP3Reader (InputStream* const in)
-        : AudioFormatReader (in, TRANS (mp3FormatName)),
+        : AudioFormatReader (in, mp3FormatName),
           stream (*in), currentPosition (0),
           decodedStart (0), decodedEnd (0)
     {
@@ -2953,7 +2966,6 @@ public:
         }
     }
 
-    //==============================================================================
     bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
@@ -3008,7 +3020,7 @@ public:
             }
 
             const int numToCopy = jmin (decodedEnd - decodedStart, numSamples);
-            float* const* const dst = reinterpret_cast <float**> (destSamples);
+            float* const* const dst = reinterpret_cast<float**> (destSamples);
             memcpy (dst[0] + startOffsetInDestBuffer, decoded0 + decodedStart, sizeof (float) * (size_t) numToCopy);
 
             if (numDestChannels > 1 && dst[1] != nullptr)
@@ -3097,7 +3109,14 @@ private:
             const int64 streamSize = stream.stream.getTotalLength();
 
             if (streamSize > 0)
-                numFrames = (streamSize - streamStartPos) / (stream.frame.frameSize);
+            {
+                const int bytesPerFrame = stream.frame.frameSize + 4;
+
+                if (bytesPerFrame == 417 || bytesPerFrame == 418)
+                    numFrames = roundToInt ((streamSize - streamStartPos) / 417.95918); // more accurate for 128k
+                else
+                    numFrames = (streamSize - streamStartPos) / bytesPerFrame;
+            }
         }
 
         return numFrames * 1152;
@@ -3109,10 +3128,7 @@ private:
 }
 
 //==============================================================================
-MP3AudioFormat::MP3AudioFormat()
-    : AudioFormat (MP3Decoder::mp3FormatName, StringArray (MP3Decoder::mp3Extensions))
-{}
-
+MP3AudioFormat::MP3AudioFormat()  : AudioFormat (MP3Decoder::mp3FormatName, ".mp3") {}
 MP3AudioFormat::~MP3AudioFormat() {}
 
 Array<int> MP3AudioFormat::getPossibleSampleRates() { return Array<int>(); }

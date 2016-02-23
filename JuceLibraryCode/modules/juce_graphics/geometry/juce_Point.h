@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -58,6 +58,9 @@ public:
     /** Returns true if the point is (0, 0). */
     bool isOrigin() const noexcept                                  { return x == ValueType() && y == ValueType(); }
 
+    /** Returns true if the coordinates are finite values. */
+    inline bool isFinite() const noexcept                           { return juce_isfinite(x) && juce_isfinite(y); }
+
     /** Returns the point's x coordinate. */
     inline ValueType getX() const noexcept                          { return x; }
 
@@ -99,30 +102,34 @@ public:
     Point& operator-= (Point other) noexcept                        { x -= other.x; y -= other.y; return *this; }
 
     /** Multiplies two points together */
-    Point operator* (Point other) const noexcept                    { return Point (x * other.x, y * other.y); }
+    template <typename OtherType>
+    Point operator* (Point<OtherType> other) const noexcept         { return Point ((ValueType) (x * other.x), (ValueType) (y * other.y)); }
 
     /** Multiplies another point's coordinates to this one */
-    Point& operator*= (Point other) noexcept                        { x *= other.x; y *= other.y; return *this; }
+    template <typename OtherType>
+    Point& operator*= (Point<OtherType> other) noexcept             { *this = *this * other; return *this; }
 
-    /** Divides one points from another */
-    Point operator/ (Point other) const noexcept                    { return Point (x / other.x, y / other.y); }
+    /** Divides one point by another */
+    template <typename OtherType>
+    Point operator/ (Point<OtherType> other) const noexcept         { return Point ((ValueType) (x / other.x), (ValueType) (y / other.y)); }
 
-    /** Divides another point's coordinates to this one */
-    Point& operator/= (Point other) noexcept                        { x /= other.x; y /= other.y; return *this; }
+    /** Divides this point's coordinates by another */
+    template <typename OtherType>
+    Point& operator/= (Point<OtherType> other) noexcept             { *this = *this / other; return *this; }
 
-    /** Returns a point whose coordinates are multiplied by a given value. */
+    /** Returns a point whose coordinates are multiplied by a given scalar value. */
     template <typename FloatType>
     Point operator* (FloatType multiplier) const noexcept           { return Point ((ValueType) (x * multiplier), (ValueType) (y * multiplier)); }
 
-    /** Returns a point whose coordinates are divided by a given value. */
+    /** Returns a point whose coordinates are divided by a given scalar value. */
     template <typename FloatType>
     Point operator/ (FloatType divisor) const noexcept              { return Point ((ValueType) (x / divisor), (ValueType) (y / divisor)); }
 
-    /** Multiplies the point's coordinates by a value. */
+    /** Multiplies the point's coordinates by a scalar value. */
     template <typename FloatType>
     Point& operator*= (FloatType multiplier) noexcept               { x = (ValueType) (x * multiplier); y = (ValueType) (y * multiplier); return *this; }
 
-    /** Divides the point's coordinates by a value. */
+    /** Divides the point's coordinates by a scalar value. */
     template <typename FloatType>
     Point& operator/= (FloatType divisor) noexcept                  { x = (ValueType) (x / divisor); y = (ValueType) (y / divisor); return *this; }
 
@@ -140,14 +147,23 @@ public:
     /** Returns the straight-line distance between this point and another one. */
     ValueType getDistanceFrom (Point other) const noexcept          { return juce_hypot (x - other.x, y - other.y); }
 
+    /** Returns the square of the straight-line distance between this point and the origin. */
+    ValueType getDistanceSquaredFromOrigin() const noexcept         { return x * x + y * y; }
+
+    /** Returns the square of the straight-line distance between this point and another one. */
+    ValueType getDistanceSquaredFrom (Point other) const noexcept   { return (*this - other).getDistanceSquaredFromOrigin(); }
+
     /** Returns the angle from this point to another one.
 
-        The return value is the number of radians clockwise from the 12 o'clock direction,
-        where this point is the centre and the other point is on the circumference.
+        Taking this point to be the centre of a circle, and the other point being a position on
+        the circumference, the return value is the number of radians clockwise from the 12 o'clock
+        direction.
+        So 12 o'clock = 0, 3 o'clock = Pi/2, 6 o'clock = Pi, 9 o'clock = -Pi/2
     */
     FloatType getAngleToPoint (Point other) const noexcept
     {
-        return static_cast<FloatType> (std::atan2 (other.x - x, y - other.y));
+        return static_cast<FloatType> (std::atan2 (static_cast<FloatType> (other.x - x),
+                                                   static_cast<FloatType> (y - other.y)));
     }
 
     /** Returns the point that would be reached by rotating this point clockwise
@@ -165,8 +181,8 @@ public:
     */
     Point<FloatType> getPointOnCircumference (float radius, float angle) const noexcept
     {
-        return Point<FloatType> (static_cast <FloatType> (x + radius * std::sin (angle)),
-                                 static_cast <FloatType> (y - radius * std::cos (angle)));
+        return Point<FloatType> (static_cast<FloatType> (x + radius * std::sin (angle)),
+                                 static_cast<FloatType> (y - radius * std::cos (angle)));
     }
 
     /** Taking this point to be the centre of an ellipse, this returns a point on its circumference.
@@ -176,8 +192,8 @@ public:
     */
     Point<FloatType> getPointOnCircumference (float radiusX, float radiusY, float angle) const noexcept
     {
-        return Point<FloatType> (static_cast <FloatType> (x + radiusX * std::sin (angle)),
-                                 static_cast <FloatType> (y - radiusY * std::cos (angle)));
+        return Point<FloatType> (static_cast<FloatType> (x + radiusX * std::sin (angle)),
+                                 static_cast<FloatType> (y - radiusY * std::cos (angle)));
     }
 
     /** Returns the dot-product of two points (x1 * x2 + y1 * y2). */
@@ -200,13 +216,16 @@ public:
 
     //==============================================================================
     /** Casts this point to a Point<int> object. */
-    Point<int> toInt() const noexcept                             { return Point<int> (static_cast <int> (x), static_cast<int> (y)); }
+    Point<int> toInt() const noexcept                             { return Point<int> (static_cast<int> (x), static_cast<int> (y)); }
 
     /** Casts this point to a Point<float> object. */
-    Point<float> toFloat() const noexcept                         { return Point<float> (static_cast <float> (x), static_cast<float> (y)); }
+    Point<float> toFloat() const noexcept                         { return Point<float> (static_cast<float> (x), static_cast<float> (y)); }
 
     /** Casts this point to a Point<double> object. */
-    Point<double> toDouble() const noexcept                       { return Point<double> (static_cast <double> (x), static_cast<double> (y)); }
+    Point<double> toDouble() const noexcept                       { return Point<double> (static_cast<double> (x), static_cast<double> (y)); }
+
+    /** Casts this point to a Point<int> object using roundToInt() to convert the values. */
+    Point<int> roundToInt() const noexcept                        { return Point<int> (juce::roundToInt (x), juce::roundToInt (y)); }
 
     /** Returns the point as a string in the form "x, y". */
     String toString() const                                       { return String (x) + ", " + String (y); }
@@ -215,6 +234,10 @@ public:
     ValueType x; /**< The point's X coordinate. */
     ValueType y; /**< The point's Y coordinate. */
 };
+
+/** Multiplies the point's coordinates by a scalar value. */
+template <typename ValueType>
+Point<ValueType> operator* (ValueType value, Point<ValueType> p) noexcept       { return p * value; }
 
 
 #endif   // JUCE_POINT_H_INCLUDED

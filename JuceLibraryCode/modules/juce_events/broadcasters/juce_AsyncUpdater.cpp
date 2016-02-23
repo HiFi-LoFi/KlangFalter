@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -33,10 +33,8 @@ public:
             owner.handleAsyncUpdate();
     }
 
-    Atomic<int> shouldDeliver;
-
-private:
     AsyncUpdater& owner;
+    Atomic<int> shouldDeliver;
 
     JUCE_DECLARE_NON_COPYABLE (AsyncUpdaterMessage)
 };
@@ -44,7 +42,7 @@ private:
 //==============================================================================
 AsyncUpdater::AsyncUpdater()
 {
-    message = new AsyncUpdaterMessage (*this);
+    activeMessage = new AsyncUpdaterMessage (*this);
 }
 
 AsyncUpdater::~AsyncUpdater()
@@ -53,20 +51,28 @@ AsyncUpdater::~AsyncUpdater()
     // pending on the main event thread - that's pretty dodgy threading, as the callback could
     // happen after this destructor has finished. You should either use a MessageManagerLock while
     // deleting this object, or find some other way to avoid such a race condition.
-    jassert ((! isUpdatePending()) || MessageManager::getInstance()->currentThreadHasLockedMessageManager());
+    jassert ((! isUpdatePending())
+              || MessageManager::getInstanceWithoutCreating() == nullptr
+              || MessageManager::getInstanceWithoutCreating()->currentThreadHasLockedMessageManager());
 
-    message->shouldDeliver.set (0);
+    activeMessage->shouldDeliver.set (0);
 }
 
 void AsyncUpdater::triggerAsyncUpdate()
 {
-    if (message->shouldDeliver.compareAndSetBool (1, 0))
-        message->post();
+    // If you're calling this before (or after) the MessageManager is
+    // running, then you're not going to get any callbacks!
+    jassert (MessageManager::getInstanceWithoutCreating() != nullptr);
+
+    if (activeMessage->shouldDeliver.compareAndSetBool (1, 0))
+        if (! activeMessage->post())
+            cancelPendingUpdate(); // if the message queue fails, this avoids getting
+                                   // trapped waiting for the message to arrive
 }
 
 void AsyncUpdater::cancelPendingUpdate() noexcept
 {
-    message->shouldDeliver.set (0);
+    activeMessage->shouldDeliver.set (0);
 }
 
 void AsyncUpdater::handleUpdateNowIfNeeded()
@@ -74,11 +80,11 @@ void AsyncUpdater::handleUpdateNowIfNeeded()
     // This can only be called by the event thread.
     jassert (MessageManager::getInstance()->currentThreadHasLockedMessageManager());
 
-    if (message->shouldDeliver.exchange (0) != 0)
+    if (activeMessage->shouldDeliver.exchange (0) != 0)
         handleAsyncUpdate();
 }
 
 bool AsyncUpdater::isUpdatePending() const noexcept
 {
-    return message->shouldDeliver.value != 0;
+    return activeMessage->shouldDeliver.value != 0;
 }

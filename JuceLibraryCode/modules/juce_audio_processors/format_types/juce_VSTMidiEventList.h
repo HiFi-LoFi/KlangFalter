@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,11 +22,10 @@
   ==============================================================================
 */
 
-#ifdef __aeffect__
+#ifdef __aeffect__ // NB: this must come first, *before* the header-guard.
 
 #ifndef JUCE_VSTMIDIEVENTLIST_H_INCLUDED
 #define JUCE_VSTMIDIEVENTLIST_H_INCLUDED
-
 
 //==============================================================================
 /** Holds a set of VSTMidiEvent objects and makes it easy to add
@@ -161,7 +160,7 @@ public:
     }
 
     //==============================================================================
-    HeapBlock <VstEvents> events;
+    HeapBlock<VstEvents> events;
 
 private:
     int numEventsUsed, numEventsAllocated;
@@ -184,6 +183,5 @@ private:
     }
 };
 
-
 #endif   // JUCE_VSTMIDIEVENTLIST_H_INCLUDED
-#endif
+#endif   // JUCE_VSTMIDIEVENTLIST_H_INCLUDED

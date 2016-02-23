@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,142 +22,361 @@
   ==============================================================================
 */
 
-class iOSAudioIODevice  : public AudioIODevice
+class iOSAudioIODevice;
+
+static const char* const iOSAudioDeviceName = "iOS Audio";
+
+//==============================================================================
+struct AudioSessionHolder
 {
-public:
-    iOSAudioIODevice (const String& deviceName)
-        : AudioIODevice (deviceName, "Audio"),
-          actualBufferSize (0),
-          isRunning (false),
-          audioUnit (0),
-          callback (nullptr),
-          floatData (1, 2)
+    AudioSessionHolder();
+    ~AudioSessionHolder();
+
+    void handleStatusChange (bool enabled, const char* reason) const;
+    void handleRouteChange (const char* reason) const;
+
+    Array<iOSAudioIODevice*> activeDevices;
+
+    id nativeSession;
+};
+
+static const char* getRoutingChangeReason (AVAudioSessionRouteChangeReason reason) noexcept
+{
+    switch (reason)
     {
-        getSessionHolder().activeDevices.add (this);
-
-        numInputChannels = 2;
-        numOutputChannels = 2;
-        preferredBufferSize = 0;
-
-        updateDeviceInfo();
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:         return "New device available";
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:       return "Old device unavailable";
+        case AVAudioSessionRouteChangeReasonCategoryChange:             return "Category change";
+        case AVAudioSessionRouteChangeReasonOverride:                   return "Override";
+        case AVAudioSessionRouteChangeReasonWakeFromSleep:              return "Wake from sleep";
+        case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory: return "No suitable route for category";
+        case AVAudioSessionRouteChangeReasonRouteConfigurationChange:   return "Route configuration change";
+        case AVAudioSessionRouteChangeReasonUnknown:
+        default:                                                        return "Unknown";
     }
+}
 
-    ~iOSAudioIODevice()
+bool getNotificationValueForKey (NSNotification* notification, NSString* key, NSUInteger& value) noexcept
+{
+    if (notification != nil)
     {
-        getSessionHolder().activeDevices.removeFirstMatchingValue (this);
-        close();
-    }
-
-    StringArray getOutputChannelNames()
-    {
-        StringArray s;
-        s.add ("Left");
-        s.add ("Right");
-        return s;
-    }
-
-    StringArray getInputChannelNames()
-    {
-        StringArray s;
-        if (audioInputIsAvailable)
+        if (NSDictionary* userInfo = [notification userInfo])
         {
-            s.add ("Left");
-            s.add ("Right");
-        }
-        return s;
-    }
-
-    int getNumSampleRates()                 { return 1; }
-    double getSampleRate (int index)        { return sampleRate; }
-
-    int getNumBufferSizesAvailable()        { return 6; }
-    int getBufferSizeSamples (int index)    { return 1 << (jlimit (0, 5, index) + 6); }
-    int getDefaultBufferSize()              { return 1024; }
-
-    String open (const BigInteger& inputChannels,
-                 const BigInteger& outputChannels,
-                 double sampleRate,
-                 int bufferSize)
-    {
-        close();
-
-        lastError = String::empty;
-        preferredBufferSize = (bufferSize <= 0) ? getDefaultBufferSize() : bufferSize;
-
-        //  xxx set up channel mapping
-
-        activeOutputChans = outputChannels;
-        activeOutputChans.setRange (2, activeOutputChans.getHighestBit(), false);
-        numOutputChannels = activeOutputChans.countNumberOfSetBits();
-        monoOutputChannelNumber = activeOutputChans.findNextSetBit (0);
-
-        activeInputChans = inputChannels;
-        activeInputChans.setRange (2, activeInputChans.getHighestBit(), false);
-        numInputChannels = activeInputChans.countNumberOfSetBits();
-        monoInputChannelNumber = activeInputChans.findNextSetBit (0);
-
-        AudioSessionSetActive (true);
-
-        UInt32 audioCategory = (numInputChannels > 0 && audioInputIsAvailable) ? kAudioSessionCategory_PlayAndRecord
-                                                                               : kAudioSessionCategory_MediaPlayback;
-
-        AudioSessionSetProperty (kAudioSessionProperty_AudioCategory, sizeof (audioCategory), &audioCategory);
-
-        if (audioCategory == kAudioSessionCategory_PlayAndRecord)
-        {
-            // (note: mustn't set this until after the audio category property has been set)
-            UInt32 allowBluetoothInput = 1;
-            AudioSessionSetProperty (kAudioSessionProperty_OverrideCategoryEnableBluetoothInput,
-                                     sizeof (allowBluetoothInput), &allowBluetoothInput);
-        }
-
-        AudioSessionAddPropertyListener (kAudioSessionProperty_AudioRouteChange, routingChangedStatic, this);
-
-        fixAudioRouteIfSetToReceiver();
-        updateDeviceInfo();
-
-        Float32 bufferDuration = preferredBufferSize / sampleRate;
-        AudioSessionSetProperty (kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof (bufferDuration), &bufferDuration);
-        actualBufferSize = preferredBufferSize;
-
-        prepareFloatBuffers (actualBufferSize);
-
-        isRunning = true;
-        routingChanged (nullptr);  // creates and starts the AU
-
-        lastError = audioUnit != 0 ? "" : "Couldn't open the device";
-        return lastError;
-    }
-
-    void close()
-    {
-        if (isRunning)
-        {
-            isRunning = false;
-            AudioSessionRemovePropertyListenerWithUserData (kAudioSessionProperty_AudioRouteChange, routingChangedStatic, this);
-            AudioSessionSetActive (false);
-
-            if (audioUnit != 0)
+            if (NSNumber* number = [userInfo objectForKey: key])
             {
-                AudioComponentInstanceDispose (audioUnit);
-                audioUnit = 0;
+                value = [number unsignedIntegerValue];
+                return true;
             }
         }
     }
 
-    bool isOpen()                       { return isRunning; }
+    jassertfalse;
+    return false;
+}
 
-    int getCurrentBufferSizeSamples()   { return actualBufferSize; }
-    double getCurrentSampleRate()       { return sampleRate; }
-    int getCurrentBitDepth()            { return 16; }
+} // juce namespace
 
-    BigInteger getActiveOutputChannels() const    { return activeOutputChans; }
-    BigInteger getActiveInputChannels() const     { return activeInputChans; }
+//==============================================================================
+@interface iOSAudioSessionNative  : NSObject
+{
+@private
+    juce::AudioSessionHolder* audioSessionHolder;
+};
 
-    int getOutputLatencyInSamples()               { return 0; } //xxx
-    int getInputLatencyInSamples()                { return 0; } //xxx
+- (id) init: (juce::AudioSessionHolder*) holder;
+- (void) dealloc;
 
-    void start (AudioIODeviceCallback* newCallback)
+- (void) audioSessionDidChangeInterruptionType: (NSNotification*) notification;
+- (void) handleMediaServicesReset;
+- (void) handleMediaServicesLost;
+- (void) handleRouteChange: (NSNotification*) notification;
+@end
+
+@implementation iOSAudioSessionNative
+
+- (id) init: (juce::AudioSessionHolder*) holder
+{
+    self = [super init];
+
+    if (self != nil)
+    {
+        audioSessionHolder = holder;
+
+        auto session = [AVAudioSession sharedInstance];
+        auto centre = [NSNotificationCenter defaultCenter];
+
+        [centre addObserver: self
+                   selector: @selector (audioSessionDidChangeInterruptionType:)
+                       name: AVAudioSessionInterruptionNotification
+                     object: session];
+
+        [centre addObserver: self
+                   selector: @selector (handleMediaServicesLost)
+                       name: AVAudioSessionMediaServicesWereLostNotification
+                     object: session];
+
+        [centre addObserver: self
+                   selector: @selector (handleMediaServicesReset)
+                       name: AVAudioSessionMediaServicesWereResetNotification
+                     object: session];
+
+        [centre addObserver: self
+                   selector: @selector (handleRouteChange:)
+                       name: AVAudioSessionRouteChangeNotification
+                     object: session];
+    }
+    else
+    {
+        jassertfalse;
+    }
+
+    return self;
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [super dealloc];
+}
+
+- (void) audioSessionDidChangeInterruptionType: (NSNotification*) notification
+{
+    NSUInteger value;
+
+    if (juce::getNotificationValueForKey (notification, AVAudioSessionInterruptionTypeKey, value))
+    {
+        switch ((AVAudioSessionInterruptionType) value)
+        {
+            case AVAudioSessionInterruptionTypeBegan:
+                audioSessionHolder->handleStatusChange (false, "AVAudioSessionInterruptionTypeBegan");
+                break;
+
+            case AVAudioSessionInterruptionTypeEnded:
+                audioSessionHolder->handleStatusChange (true, "AVAudioSessionInterruptionTypeEnded");
+                break;
+
+            // No default so the code doesn't compile if this enum is extended.
+        }
+    }
+}
+
+- (void) handleMediaServicesReset
+{
+    audioSessionHolder->handleStatusChange (true, "AVAudioSessionMediaServicesWereResetNotification");
+}
+
+- (void) handleMediaServicesLost
+{
+    audioSessionHolder->handleStatusChange (false, "AVAudioSessionMediaServicesWereLostNotification");
+}
+
+- (void) handleRouteChange: (NSNotification*) notification
+{
+    NSUInteger value;
+
+    if (juce::getNotificationValueForKey (notification, AVAudioSessionRouteChangeReasonKey, value))
+        audioSessionHolder->handleRouteChange (juce::getRoutingChangeReason ((AVAudioSessionRouteChangeReason) value));
+}
+
+@end
+
+//==============================================================================
+namespace juce {
+
+#ifndef JUCE_IOS_AUDIO_LOGGING
+ #define JUCE_IOS_AUDIO_LOGGING 0
+#endif
+
+#if JUCE_IOS_AUDIO_LOGGING
+ #define JUCE_IOS_AUDIO_LOG(x)  DBG(x)
+#else
+ #define JUCE_IOS_AUDIO_LOG(x)
+#endif
+
+static void logNSError (NSError* e)
+{
+    if (e != nil)
+    {
+        JUCE_IOS_AUDIO_LOG ("iOS Audio error: " << [e.localizedDescription UTF8String]);
+        jassertfalse;
+    }
+}
+
+#define JUCE_NSERROR_CHECK(X)     { NSError* error = nil; X; logNSError (error); }
+
+
+//==============================================================================
+class iOSAudioIODevice  : public AudioIODevice
+{
+public:
+    iOSAudioIODevice (const String& deviceName)
+        : AudioIODevice (deviceName, iOSAudioDeviceName)
+    {
+        sessionHolder->activeDevices.add (this);
+        updateSampleRateAndAudioInput();
+    }
+
+    ~iOSAudioIODevice()
+    {
+        sessionHolder->activeDevices.removeFirstMatchingValue (this);
+        close();
+    }
+
+    StringArray getOutputChannelNames() override
+    {
+        return { "Left", "Right" };
+    }
+
+    StringArray getInputChannelNames() override
+    {
+        if (audioInputIsAvailable)
+            return { "Left", "Right" };
+
+        return {};
+    }
+
+    static void setAudioSessionActive (bool enabled)
+    {
+        JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setActive: enabled
+                                                                 error: &error]);
+    }
+
+    static double trySampleRate (double rate)
+    {
+        auto session = [AVAudioSession sharedInstance];
+        JUCE_NSERROR_CHECK ([session setPreferredSampleRate: rate
+                                                      error: &error]);
+        return session.sampleRate;
+    }
+
+    Array<double> getAvailableSampleRates() override
+    {
+        Array<double> rates;
+
+        // Important: the supported audio sample rates change on the iPhone 6S
+        // depending on whether the headphones are plugged in or not!
+        setAudioSessionActive (true);
+
+        const double lowestRate = trySampleRate (4000);
+        const double highestRate = trySampleRate (192000);
+
+        for (double rate = lowestRate; rate <= highestRate; rate += 1000)
+        {
+            const double supportedRate = trySampleRate (rate);
+
+            rates.addIfNotAlreadyThere (supportedRate);
+            rate = jmax (rate, supportedRate);
+        }
+
+        for (auto r : rates)
+        {
+            ignoreUnused (r);
+            JUCE_IOS_AUDIO_LOG ("available rate = " + String (r, 0) + "Hz");
+        }
+
+        return rates;
+    }
+
+    Array<int> getAvailableBufferSizes() override
+    {
+        Array<int> r;
+
+        for (int i = 6; i < 12; ++i)
+            r.add (1 << i);
+
+        return r;
+    }
+
+    int getDefaultBufferSize() override         { return 256; }
+
+    String open (const BigInteger& inputChannelsWanted,
+                 const BigInteger& outputChannelsWanted,
+                 double targetSampleRate, int bufferSize) override
+    {
+        close();
+
+        lastError.clear();
+        preferredBufferSize = bufferSize <= 0 ? getDefaultBufferSize()
+                                              : bufferSize;
+
+        //  xxx set up channel mapping
+
+        activeOutputChans = outputChannelsWanted;
+        activeOutputChans.setRange (2, activeOutputChans.getHighestBit(), false);
+        numOutputChannels = activeOutputChans.countNumberOfSetBits();
+        monoOutputChannelNumber = activeOutputChans.findNextSetBit (0);
+
+        activeInputChans = inputChannelsWanted;
+        activeInputChans.setRange (2, activeInputChans.getHighestBit(), false);
+        numInputChannels = activeInputChans.countNumberOfSetBits();
+        monoInputChannelNumber = activeInputChans.findNextSetBit (0);
+
+        setAudioSessionActive (true);
+
+        // Set the session category & options:
+        auto session = [AVAudioSession sharedInstance];
+
+        const bool useInputs = (numInputChannels > 0 && audioInputIsAvailable);
+
+        NSString* category = (useInputs ? AVAudioSessionCategoryPlayAndRecord : AVAudioSessionCategoryPlayback);
+
+        NSUInteger options = AVAudioSessionCategoryOptionMixWithOthers; // Alternatively AVAudioSessionCategoryOptionDuckOthers
+        if (useInputs) // These options are only valid for category = PlayAndRecord
+            options |= (AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetooth);
+
+        JUCE_NSERROR_CHECK ([session setCategory: category
+                                     withOptions: options
+                                           error: &error]);
+
+        fixAudioRouteIfSetToReceiver();
+
+        // Set the sample rate
+        trySampleRate (targetSampleRate);
+        updateSampleRateAndAudioInput();
+        updateCurrentBufferSize();
+
+        prepareFloatBuffers (actualBufferSize);
+
+        isRunning = true;
+        handleRouteChange ("Started AudioUnit");
+
+        lastError = (audioUnit != 0 ? "" : "Couldn't open the device");
+
+        setAudioSessionActive (true);
+
+        return lastError;
+    }
+
+    void close() override
+    {
+        if (isRunning)
+        {
+            isRunning = false;
+
+            if (audioUnit != 0)
+            {
+                AudioOutputUnitStart (audioUnit);
+                AudioComponentInstanceDispose (audioUnit);
+                audioUnit = 0;
+            }
+
+            setAudioSessionActive (false);
+        }
+    }
+
+    bool isOpen() override                      { return isRunning; }
+
+    int getCurrentBufferSizeSamples() override  { return actualBufferSize; }
+    double getCurrentSampleRate() override      { return sampleRate; }
+    int getCurrentBitDepth() override           { return 16; }
+
+    BigInteger getActiveOutputChannels() const override    { return activeOutputChans; }
+    BigInteger getActiveInputChannels() const override     { return activeInputChans; }
+
+    int getOutputLatencyInSamples() override    { return roundToInt (getCurrentSampleRate() * [AVAudioSession sharedInstance].outputLatency); }
+    int getInputLatencyInSamples()  override    { return roundToInt (getCurrentSampleRate() * [AVAudioSession sharedInstance].inputLatency); }
+
+    void start (AudioIODeviceCallback* newCallback) override
     {
         if (isRunning && callback != newCallback)
         {
@@ -169,7 +388,7 @@ public:
         }
     }
 
-    void stop()
+    void stop() override
     {
         if (isRunning)
         {
@@ -186,22 +405,87 @@ public:
         }
     }
 
-    bool isPlaying()            { return isRunning && callback != nullptr; }
-    String getLastError()       { return lastError; }
+    bool isPlaying() override            { return isRunning && callback != nullptr; }
+    String getLastError() override       { return lastError; }
+
+    bool setAudioPreprocessingEnabled (bool enable) override
+    {
+        auto session = [AVAudioSession sharedInstance];
+
+        NSString* mode = (enable ? AVAudioSessionModeMeasurement
+                                 : AVAudioSessionModeDefault);
+
+        JUCE_NSERROR_CHECK ([session setMode: mode
+                                       error: &error]);
+
+        return session.mode == mode;
+    }
+
+    void invokeAudioDeviceErrorCallback (const String& reason)
+    {
+        const ScopedLock sl (callbackLock);
+
+        if (callback != nullptr)
+            callback->audioDeviceError (reason);
+    }
+
+    void handleStatusChange (bool enabled, const char* reason)
+    {
+        JUCE_IOS_AUDIO_LOG ("handleStatusChange: enabled: " << (int) enabled << ", reason: " << reason);
+
+        isRunning = enabled;
+        setAudioSessionActive (enabled);
+
+        if (enabled)
+            AudioOutputUnitStart (audioUnit);
+        else
+            AudioOutputUnitStop (audioUnit);
+
+        if (! enabled)
+            invokeAudioDeviceErrorCallback (reason);
+    }
+
+    void handleRouteChange (const char* reason)
+    {
+        JUCE_IOS_AUDIO_LOG ("handleRouteChange: reason: " << reason);
+
+        fixAudioRouteIfSetToReceiver();
+
+        if (isRunning)
+        {
+            invokeAudioDeviceErrorCallback (reason);
+            updateSampleRateAndAudioInput();
+            updateCurrentBufferSize();
+            createAudioUnit();
+
+            setAudioSessionActive (true);
+
+            if (audioUnit != 0)
+            {
+                UInt32 formatSize = sizeof (format);
+                AudioUnitGetProperty (audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &format, &formatSize);
+                AudioOutputUnitStart (audioUnit);
+            }
+
+            if (callback != nullptr)
+                callback->audioDeviceAboutToStart (this);
+        }
+    }
 
 private:
-    //==================================================================================================
+    //==============================================================================
+    SharedResourcePointer<AudioSessionHolder> sessionHolder;
     CriticalSection callbackLock;
-    Float64 sampleRate;
-    int numInputChannels, numOutputChannels;
-    int preferredBufferSize, actualBufferSize;
-    bool isRunning;
+    NSTimeInterval sampleRate = 0;
+    int numInputChannels = 2, numOutputChannels = 2;
+    int preferredBufferSize = 0, actualBufferSize = 0;
+    bool isRunning = false;
     String lastError;
 
     AudioStreamBasicDescription format;
-    AudioUnit audioUnit;
-    UInt32 audioInputIsAvailable;
-    AudioIODeviceCallback* callback;
+    AudioUnit audioUnit {};
+    bool audioInputIsAvailable = false;
+    AudioIODeviceCallback* callback = nullptr;
     BigInteger activeOutputChans, activeInputChans;
 
     AudioSampleBuffer floatData;
@@ -218,14 +502,14 @@ private:
             zeromem (outputChannels, sizeof (outputChannels));
 
             for (int i = 0; i < numInputChannels; ++i)
-                inputChannels[i] = floatData.getSampleData (i);
+                inputChannels[i] = floatData.getWritePointer (i);
 
             for (int i = 0; i < numOutputChannels; ++i)
-                outputChannels[i] = floatData.getSampleData (i + numInputChannels);
+                outputChannels[i] = floatData.getWritePointer (i + numInputChannels);
         }
     }
 
-    //==================================================================================================
+    //==============================================================================
     OSStatus process (AudioUnitRenderActionFlags* flags, const AudioTimeStamp* time,
                       const UInt32 numFrames, AudioBufferList* data)
     {
@@ -238,8 +522,8 @@ private:
 
         if (callback != nullptr)
         {
-            // This shouldn't ever get triggered, but please let me know if it does!
-            jassert (numFrames <= floatData.getNumSamples());
+            if ((int) numFrames > floatData.getNumSamples())
+                prepareFloatBuffers ((int) numFrames);
 
             if (audioInputIsAvailable && numInputChannels > 0)
             {
@@ -274,7 +558,7 @@ private:
             callback->audioDeviceIOCallback ((const float**) inputChannels, numInputChannels,
                                              outputChannels, numOutputChannels, (int) numFrames);
 
-            short* shortData = (short*) data->mBuffers[0].mData;
+            short* const shortData = (short*) data->mBuffers[0].mData;
             int n = 0;
 
             if (numOutputChannels >= 2)
@@ -307,126 +591,44 @@ private:
         return err;
     }
 
-    void updateDeviceInfo()
+    void updateSampleRateAndAudioInput()
     {
-        UInt32 size = sizeof (sampleRate);
-        AudioSessionGetProperty (kAudioSessionProperty_CurrentHardwareSampleRate, &size, &sampleRate);
+        auto session = [AVAudioSession sharedInstance];
+        sampleRate = session.sampleRate;
+        audioInputIsAvailable = session.isInputAvailable;
+        actualBufferSize = roundToInt (sampleRate * session.IOBufferDuration);
 
-        size = sizeof (audioInputIsAvailable);
-        AudioSessionGetProperty (kAudioSessionProperty_AudioInputAvailable, &size, &audioInputIsAvailable);
+        JUCE_IOS_AUDIO_LOG ("AVAudioSession: sampleRate: " << sampleRate
+                             << "Hz, audioInputAvailable: " << (int) audioInputIsAvailable);
     }
 
-    void routingChanged (const void* propertyValue)
+    void updateCurrentBufferSize()
     {
-        if (! isRunning)
-            return;
+        NSTimeInterval bufferDuration = sampleRate > 0 ? (NSTimeInterval) ((preferredBufferSize + 1) / sampleRate) : 0.0;
 
-        if (propertyValue != nullptr)
-        {
-            CFDictionaryRef routeChangeDictionary = (CFDictionaryRef) propertyValue;
-            CFNumberRef routeChangeReasonRef = (CFNumberRef) CFDictionaryGetValue (routeChangeDictionary,
-                                                                                   CFSTR (kAudioSession_AudioRouteChangeKey_Reason));
-
-            SInt32 routeChangeReason;
-            CFNumberGetValue (routeChangeReasonRef, kCFNumberSInt32Type, &routeChangeReason);
-
-            if (routeChangeReason == kAudioSessionRouteChangeReason_OldDeviceUnavailable)
-            {
-                const ScopedLock sl (callbackLock);
-
-                if (callback != nullptr)
-                    callback->audioDeviceError ("Old device unavailable");
-            }
-        }
-
-        updateDeviceInfo();
-        createAudioUnit();
-
-        AudioSessionSetActive (true);
-
-        if (audioUnit != 0)
-        {
-            UInt32 formatSize = sizeof (format);
-            AudioUnitGetProperty (audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &format, &formatSize);
-
-            Float32 bufferDuration = preferredBufferSize / sampleRate;
-            UInt32 bufferDurationSize = sizeof (bufferDuration);
-            AudioSessionGetProperty (kAudioSessionProperty_CurrentHardwareIOBufferDuration, &bufferDurationSize, &bufferDuration);
-            actualBufferSize = (int) (sampleRate * bufferDuration + 0.5);
-
-            AudioOutputUnitStart (audioUnit);
-        }
+        JUCE_NSERROR_CHECK ([[AVAudioSession sharedInstance] setPreferredIOBufferDuration: bufferDuration
+                                                                                    error: &error]);
+        updateSampleRateAndAudioInput();
     }
 
-    //==================================================================================================
-    struct AudioSessionHolder
-    {
-        AudioSessionHolder()
-        {
-            AudioSessionInitialize (0, 0, interruptionListenerCallback, this);
-        }
-
-        static void interruptionListenerCallback (void* client, UInt32 interruptionType)
-        {
-            const Array <iOSAudioIODevice*>& activeDevices = static_cast <AudioSessionHolder*> (client)->activeDevices;
-
-            for (int i = activeDevices.size(); --i >= 0;)
-                activeDevices.getUnchecked(i)->interruptionListener (interruptionType);
-        }
-
-        Array <iOSAudioIODevice*> activeDevices;
-    };
-
-    static AudioSessionHolder& getSessionHolder()
-    {
-        static AudioSessionHolder audioSessionHolder;
-        return audioSessionHolder;
-    }
-
-    void interruptionListener (const UInt32 interruptionType)
-    {
-        if (interruptionType == kAudioSessionBeginInterruption)
-        {
-            isRunning = false;
-            AudioOutputUnitStop (audioUnit);
-            AudioSessionSetActive (false);
-
-            const ScopedLock sl (callbackLock);
-
-            if (callback != nullptr)
-                callback->audioDeviceError ("iOS audio session interruption");
-        }
-
-        if (interruptionType == kAudioSessionEndInterruption)
-        {
-            isRunning = true;
-            AudioSessionSetActive (true);
-            AudioOutputUnitStart (audioUnit);
-        }
-    }
-
-    //==================================================================================================
+    //==============================================================================
     static OSStatus processStatic (void* client, AudioUnitRenderActionFlags* flags, const AudioTimeStamp* time,
                                    UInt32 /*busNumber*/, UInt32 numFrames, AudioBufferList* data)
     {
-        return static_cast <iOSAudioIODevice*> (client)->process (flags, time, numFrames, data);
+
+        return static_cast<iOSAudioIODevice*> (client)->process (flags, time, numFrames, data);
     }
 
-    static void routingChangedStatic (void* client, AudioSessionPropertyID, UInt32 /*inDataSize*/, const void* propertyValue)
-    {
-        static_cast <iOSAudioIODevice*> (client)->routingChanged (propertyValue);
-    }
-
-    //==================================================================================================
+    //==============================================================================
     void resetFormat (const int numChannels) noexcept
     {
         zerostruct (format);
         format.mFormatID = kAudioFormatLinearPCM;
         format.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked | kAudioFormatFlagsNativeEndian;
         format.mBitsPerChannel = 8 * sizeof (short);
-        format.mChannelsPerFrame = numChannels;
+        format.mChannelsPerFrame = (UInt32) numChannels;
         format.mFramesPerPacket = 1;
-        format.mBytesPerFrame = format.mBytesPerPacket = numChannels * sizeof (short);
+        format.mBytesPerFrame = format.mBytesPerPacket = (UInt32) numChannels * sizeof (short);
     }
 
     bool createAudioUnit()
@@ -485,21 +687,25 @@ private:
     // to make it loud. Needed because by default when using an input + output, the output is kept quiet.
     static void fixAudioRouteIfSetToReceiver()
     {
-        CFStringRef audioRoute = 0;
-        UInt32 propertySize = sizeof (audioRoute);
-        if (AudioSessionGetProperty (kAudioSessionProperty_AudioRoute, &propertySize, &audioRoute) == noErr)
+        auto session = [AVAudioSession sharedInstance];
+        auto route = session.currentRoute;
+
+        for (AVAudioSessionPortDescription* port in route.inputs)
         {
-            NSString* route = (NSString*) audioRoute;
+            ignoreUnused (port);
+            JUCE_IOS_AUDIO_LOG ("AVAudioSession: input: " << [port.description UTF8String]);
+        }
 
-            //DBG ("audio route: " + nsStringToJuce (route));
+        for (AVAudioSessionPortDescription* port in route.outputs)
+        {
+            JUCE_IOS_AUDIO_LOG ("AVAudioSession: output: " << [port.description UTF8String]);
 
-            if ([route hasPrefix: @"Receiver"])
+            if ([port.portName isEqualToString: @"Receiver"])
             {
-                UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;
-                AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute, sizeof (audioRouteOverride), &audioRouteOverride);
+                JUCE_NSERROR_CHECK ([session overrideOutputAudioPort: AVAudioSessionPortOverrideSpeaker
+                                                               error: &error]);
+                setAudioSessionActive (true);
             }
-
-            CFRelease (audioRoute);
         }
     }
 
@@ -511,35 +717,18 @@ private:
 class iOSAudioIODeviceType  : public AudioIODeviceType
 {
 public:
-    iOSAudioIODeviceType()  : AudioIODeviceType ("iOS Audio")
-    {
-    }
+    iOSAudioIODeviceType()  : AudioIODeviceType (iOSAudioDeviceName) {}
 
     void scanForDevices() {}
+    StringArray getDeviceNames (bool /*wantInputNames*/) const       { return StringArray (iOSAudioDeviceName); }
+    int getDefaultDeviceIndex (bool /*forInput*/) const              { return 0; }
+    int getIndexOfDevice (AudioIODevice* d, bool /*asInput*/) const  { return d != nullptr ? 0 : -1; }
+    bool hasSeparateInputsAndOutputs() const                         { return false; }
 
-    StringArray getDeviceNames (bool wantInputNames) const
-    {
-        return StringArray ("iOS Audio");
-    }
-
-    int getDefaultDeviceIndex (bool forInput) const
-    {
-        return 0;
-    }
-
-    int getIndexOfDevice (AudioIODevice* device, bool asInput) const
-    {
-        return device != nullptr ? 0 : -1;
-    }
-
-    bool hasSeparateInputsAndOutputs() const    { return false; }
-
-    AudioIODevice* createDevice (const String& outputDeviceName,
-                                 const String& inputDeviceName)
+    AudioIODevice* createDevice (const String& outputDeviceName, const String& inputDeviceName)
     {
         if (outputDeviceName.isNotEmpty() || inputDeviceName.isNotEmpty())
-            return new iOSAudioIODevice (outputDeviceName.isNotEmpty() ? outputDeviceName
-                                                                       : inputDeviceName);
+            return new iOSAudioIODevice (outputDeviceName.isNotEmpty() ? outputDeviceName : inputDeviceName);
 
         return nullptr;
     }
@@ -553,3 +742,21 @@ AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_iOSAudio()
 {
     return new iOSAudioIODeviceType();
 }
+
+//==============================================================================
+AudioSessionHolder::AudioSessionHolder()    { nativeSession = [[iOSAudioSessionNative alloc] init: this]; }
+AudioSessionHolder::~AudioSessionHolder()   { [nativeSession release]; }
+
+void AudioSessionHolder::handleStatusChange (bool enabled, const char* reason) const
+{
+    for (auto device: activeDevices)
+        device->handleStatusChange (enabled, reason);
+}
+
+void AudioSessionHolder::handleRouteChange (const char* reason) const
+{
+    for (auto device: activeDevices)
+        device->handleRouteChange (reason);
+}
+
+#undef JUCE_NSERROR_CHECK

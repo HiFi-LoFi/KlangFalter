@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -42,7 +42,6 @@ public:
 
     //==============================================================================
     /** Returns the name of this format.
-
         e.g. "WAV file" or "AIFF file"
     */
     const String& getFormatName() const;
@@ -120,7 +119,7 @@ public:
         should then be deleted by the caller.
 
         If the stream can't be created for some reason (e.g. the parameters passed in
-        here aren't suitable), this will return 0.
+        here aren't suitable), this will return nullptr.
 
         @param streamToWriteTo      the stream that the data will go to - this will be
                                     deleted by the AudioFormatWriter object when it's no longer
@@ -157,11 +156,17 @@ protected:
     /** Creates an AudioFormat object.
 
         @param formatName       this sets the value that will be returned by getFormatName()
-        @param fileExtensions   a zero-terminated list of file extensions - this is what will
-                                be returned by getFileExtension()
+        @param fileExtensions   an array of file extensions - these will be returned by getFileExtensions()
     */
-    AudioFormat (const String& formatName,
-                 const StringArray& fileExtensions);
+    AudioFormat (String formatName, StringArray fileExtensions);
+
+    /** Creates an AudioFormat object.
+
+        @param formatName       this sets the value that will be returned by getFormatName()
+        @param fileExtensions   a whitespace-separated list of file extensions - these will
+                                be returned by getFileExtensions()
+    */
+    AudioFormat (StringRef formatName, StringRef fileExtensions);
 
 private:
     //==============================================================================

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -208,7 +208,7 @@ private:
     The template parameter specifies the class of the object you want to point to - the easiest
     way to make a class reference-countable is to simply make it inherit from ReferenceCountedObject
     or SingleThreadedReferenceCountedObject, but if you need to, you can roll your own reference-countable
-    class by implementing a set of mathods called incReferenceCount(), decReferenceCount(), and
+    class by implementing a set of methods called incReferenceCount(), decReferenceCount(), and
     decReferenceCountWithoutDeleting(). See ReferenceCountedObject for examples of how these methods
     should behave.
 
@@ -260,7 +260,7 @@ public:
     */
     template <class Convertible>
     ReferenceCountedObjectPtr (const ReferenceCountedObjectPtr<Convertible>& other) noexcept
-        : referencedObject (static_cast <ReferencedType*> (other.get()))
+        : referencedObject (static_cast<ReferencedType*> (other.get()))
     {
         incIfNotNull (referencedObject);
     }
@@ -329,17 +329,17 @@ public:
 
     //==============================================================================
     /** Returns the object that this pointer references.
-        The pointer returned may be zero, of course.
+        The pointer returned may be null, of course.
     */
     operator ReferencedType*() const noexcept       { return referencedObject; }
 
     /** Returns the object that this pointer references.
-        The pointer returned may be zero, of course.
+        The pointer returned may be null, of course.
     */
     ReferencedType* get() const noexcept            { return referencedObject; }
 
     /** Returns the object that this pointer references.
-        The pointer returned may be zero, of course.
+        The pointer returned may be null, of course.
     */
     ReferencedType* getObject() const noexcept      { return referencedObject; }
 

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,16 +22,15 @@
   ==============================================================================
 */
 
-Label::Label (const String& name,
-              const String& labelText)
+Label::Label (const String& name, const String& labelText)
     : Component (name),
       textValue (labelText),
       lastTextValue (labelText),
       font (15.0f),
       justification (Justification::centredLeft),
-      horizontalBorderSize (5),
-      verticalBorderSize (1),
-      minimumHorizontalScale (0.7f),
+      border (1, 5, 1, 5),
+      minimumHorizontalScale (0.0f),
+      keyboardType (TextEditor::textKeyboard),
       editSingleClick (false),
       editDoubleClick (false),
       lossOfFocusDiscardsChanges (false)
@@ -124,12 +123,11 @@ void Label::setJustificationType (Justification newJustification)
     }
 }
 
-void Label::setBorderSize (int h, int v)
+void Label::setBorderSize (BorderSize<int> newBorder)
 {
-    if (horizontalBorderSize != h || verticalBorderSize != v)
+    if (border != newBorder)
     {
-        horizontalBorderSize = h;
-        verticalBorderSize = v;
+        border = newBorder;
         repaint();
     }
 }
@@ -164,7 +162,8 @@ void Label::componentMovedOrResized (Component& component, bool /*wasMoved*/, bo
 
     if (leftOfOwnerComp)
     {
-        setSize (jmin (f.getStringWidth (textValue.toString()) + 8, component.getX()),
+        setSize (jmin (roundToInt (f.getStringWidthFloat (textValue.toString()) + 0.5f) + getBorderSize().getLeftAndRight(),
+                       component.getX()),
                  component.getHeight());
 
         setTopRightPosition (component.getX(), component.getY());
@@ -172,7 +171,7 @@ void Label::componentMovedOrResized (Component& component, bool /*wasMoved*/, bo
     else
     {
         setSize (component.getWidth(),
-                 8 + roundToInt (f.getHeight()));
+                 getBorderSize().getTopAndBottom() + 6 + roundToInt (f.getHeight() + 0.5f));
 
         setTopLeftPosition (component.getX(), component.getY() - getHeight());
     }
@@ -192,12 +191,20 @@ void Label::componentVisibilityChanged (Component& component)
 //==============================================================================
 void Label::textWasEdited() {}
 void Label::textWasChanged() {}
-void Label::editorShown (TextEditor*) {}
 
-void Label::editorAboutToBeHidden (TextEditor*)
+void Label::editorShown (TextEditor* textEditor)
+{
+    Component::BailOutChecker checker (this);
+    listeners.callChecked (checker, &LabelListener::editorShown, this, *textEditor);
+}
+
+void Label::editorAboutToBeHidden (TextEditor* textEditor)
 {
     if (ComponentPeer* const peer = getPeer())
         peer->dismissPendingTextInput();
+
+    Component::BailOutChecker checker (this);
+    listeners.callChecked (checker, &LabelListener::editorHidden, this, *textEditor);
 }
 
 void Label::showEditor()
@@ -206,6 +213,7 @@ void Label::showEditor()
     {
         addAndMakeVisible (editor = createEditorComponent());
         editor->setText (getText(), false);
+        editor->setKeyboardType (keyboardType);
         editor->addListener (this);
         editor->grabKeyboardFocus();
 
@@ -287,11 +295,22 @@ bool Label::isBeingEdited() const noexcept
     return editor != nullptr;
 }
 
+static void copyColourIfSpecified (Label& l, TextEditor& ed, int colourID, int targetColourID)
+{
+    if (l.isColourSpecified (colourID) || l.getLookAndFeel().isColourSpecified (colourID))
+        ed.setColour (targetColourID, l.findColour (colourID));
+}
+
 TextEditor* Label::createEditorComponent()
 {
     TextEditor* const ed = new TextEditor (getName());
     ed->applyFontToAllText (getLookAndFeel().getLabelFont (*this));
     copyAllExplicitColoursTo (*ed);
+
+    copyColourIfSpecified (*this, *ed, textWhenEditingColourId, TextEditor::textColourId);
+    copyColourIfSpecified (*this, *ed, backgroundWhenEditingColourId, TextEditor::backgroundColourId);
+    copyColourIfSpecified (*this, *ed, outlineWhenEditingColourId, TextEditor::focusedOutlineColourId);
+
     return ed;
 }
 
@@ -309,9 +328,9 @@ void Label::paint (Graphics& g)
 void Label::mouseUp (const MouseEvent& e)
 {
     if (editSingleClick
-         && e.mouseWasClicked()
+         && isEnabled()
          && contains (e.getPosition())
-         && ! e.mods.isPopupMenu())
+         && ! (e.mouseWasDraggedSinceMouseDown() || e.mods.isPopupMenu()))
     {
         showEditor();
     }
@@ -319,19 +338,23 @@ void Label::mouseUp (const MouseEvent& e)
 
 void Label::mouseDoubleClick (const MouseEvent& e)
 {
-    if (editDoubleClick && ! e.mods.isPopupMenu())
+    if (editDoubleClick
+         && isEnabled()
+         && ! e.mods.isPopupMenu())
         showEditor();
 }
 
 void Label::resized()
 {
     if (editor != nullptr)
-        editor->setBoundsInset (BorderSize<int> (0));
+        editor->setBounds (getLocalBounds());
 }
 
 void Label::focusGained (FocusChangeType cause)
 {
-    if (editSingleClick && cause == focusChangedByTabKey)
+    if (editSingleClick
+         && isEnabled()
+         && cause == focusChangedByTabKey)
         showEditor();
 }
 
@@ -367,7 +390,7 @@ public:
 
     static Component* getComp (Component* current)
     {
-        return dynamic_cast <TextEditor*> (current) != nullptr
+        return dynamic_cast<TextEditor*> (current) != nullptr
                  ? current->getParentComponent() : current;
     }
 };
@@ -436,7 +459,7 @@ void Label::textEditorEscapeKeyPressed (TextEditor& ed)
     if (editor != nullptr)
     {
         jassert (&ed == editor);
-        (void) ed;
+        ignoreUnused (ed);
 
         editor->setText (textValue.toString(), false);
         hideEditor (true);

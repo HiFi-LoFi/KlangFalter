@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -59,14 +59,14 @@ public:
     FillType (const Image& image, const AffineTransform& transform) noexcept;
 
     /** Creates a copy of another FillType. */
-    FillType (const FillType& other);
+    FillType (const FillType&);
 
     /** Makes a copy of another FillType. */
-    FillType& operator= (const FillType& other);
+    FillType& operator= (const FillType&);
 
    #if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
-    FillType (FillType&& other) noexcept;
-    FillType& operator= (FillType&& other) noexcept;
+    FillType (FillType&&) noexcept;
+    FillType& operator= (FillType&&) noexcept;
    #endif
 
     /** Destructor. */
@@ -126,7 +126,7 @@ public:
         If a gradient is active, the overall opacity with which it should be applied
         is indicated by the alpha channel of the colour variable.
     */
-    ScopedPointer <ColourGradient> gradient;
+    ScopedPointer<ColourGradient> gradient;
 
     /** The image that should be used for tiling.
         If an image fill is active, the overall opacity with which it should be applied
@@ -138,8 +138,8 @@ public:
     AffineTransform transform;
 
     //==============================================================================
-    bool operator== (const FillType& other) const;
-    bool operator!= (const FillType& other) const;
+    bool operator== (const FillType&) const;
+    bool operator!= (const FillType&) const;
 
 private:
     JUCE_LEAK_DETECTOR (FillType)

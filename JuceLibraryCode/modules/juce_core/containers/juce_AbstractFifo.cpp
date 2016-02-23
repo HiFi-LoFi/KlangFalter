@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -35,7 +35,7 @@ AbstractFifo::AbstractFifo (const int capacity) noexcept
 AbstractFifo::~AbstractFifo() {}
 
 int AbstractFifo::getTotalSize() const noexcept           { return bufferSize; }
-int AbstractFifo::getFreeSpace() const noexcept           { return bufferSize - getNumReady(); }
+int AbstractFifo::getFreeSpace() const noexcept           { return bufferSize - getNumReady() - 1; }
 
 int AbstractFifo::getNumReady() const noexcept
 {
@@ -141,8 +141,8 @@ public:
     class WriteThread  : public Thread
     {
     public:
-        WriteThread (AbstractFifo& fifo_, int* buffer_)
-            : Thread ("fifo writer"), fifo (fifo_), buffer (buffer_)
+        WriteThread (AbstractFifo& f, int* b, Random rng)
+            : Thread ("fifo writer"), fifo (f), buffer (b), random (rng)
         {
             startThread();
         }
@@ -155,11 +155,10 @@ public:
         void run()
         {
             int n = 0;
-            Random r;
 
             while (! threadShouldExit())
             {
-                int num = r.nextInt (2000) + 1;
+                int num = random.nextInt (2000) + 1;
 
                 int start1, size1, start2, size2;
                 fifo.prepareToWrite (num, start1, size1, start2, size2);
@@ -181,19 +180,21 @@ public:
     private:
         AbstractFifo& fifo;
         int* buffer;
+        Random random;
     };
 
-    void runTest()
+    void runTest() override
     {
         beginTest ("AbstractFifo");
 
         int buffer [5000];
         AbstractFifo fifo (numElementsInArray (buffer));
 
-        WriteThread writer (fifo, buffer);
+        WriteThread writer (fifo, buffer, getRandom());
 
         int n = 0;
-        Random r;
+        Random r = getRandom();
+        r.combineSeed (12345);
 
         for (int count = 100000; --count >= 0;)
         {

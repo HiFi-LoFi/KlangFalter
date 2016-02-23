@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2013.08.31"
-              bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="3.1.0"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="guiapp" version="2013.08.31"
+              bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="4.1.0"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
               pluginManufacturerCode="HiLo" pluginCode="HLKF" pluginChannelConfigs="{1, 1}, {2, 2}, {1, 2}"
@@ -9,27 +9,33 @@
               pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="KlangFalterAU" pluginAUViewClass="KlangFalterAU_V1"
               pluginRTASCategory="" companyName="HiFi-LoFi" aaxIdentifier="com.hifi-lofi.KlangFalter"
-              pluginAAXCategory="AAX_ePlugInCategory_Dynamics" buildAAX="0">
+              pluginAAXCategory="AAX_ePlugInCategory_Dynamics" buildAAX="0"
+              buildVST3="0" pluginIsMidiEffectPlugin="0" includeBinaryInAppConfig="1">
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" juceFolder="../Juce/modules"
-               extraCompilerFlags="" extraFrameworks="Accelerate" extraDefs="AUDIOFFT_APPLE_ACCELERATE=1">
+    <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" extraCompilerFlags=""
+               extraFrameworks="Accelerate" extraDefs="BLA_AUDIOFFT_APPLE_ACCELERATE=1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="KlangFalter"
-                       osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
                        defines=""/>
         <CONFIGURATION name="Release" isDebug="1" optimisation="3" targetName="KlangFalter"
-                       osxSDK="default" osxCompatibility="10.5 SDK" osxArchitecture="default"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"
                        defines=""/>
       </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+      </MODULEPATHS>
     </XCODE_MAC>
-    <VS2010 targetFolder="Builds/VisualStudio2010" libraryType="1" juceFolder="..\Juce\modules">
-      <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
-                       isDebug="1" optimisation="1" targetName="KlangFalter"/>
-        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"
-                       isDebug="1" optimisation="3" targetName="KlangFalter"/>
-      </CONFIGURATIONS>
-    </VS2010>
   </EXPORTFORMATS>
   <MAINGROUP id="tWkHhV" name="KlangFalter">
     <GROUP id="{25281D04-97AD-E16A-DD2E-04A6860714ED}" name="FFTConvolver">
@@ -116,19 +122,17 @@
     <FILE id="snyExm" name="StereoWidth.h" compile="0" resource="0" file="Source/StereoWidth.h"/>
   </MAINGROUP>
   <MODULES>
-    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_gui_audio" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
   </MODULES>
   <JUCEOPTIONS/>
 </JUCERPROJECT>

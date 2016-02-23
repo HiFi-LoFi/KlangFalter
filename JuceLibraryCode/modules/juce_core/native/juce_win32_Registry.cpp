@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -70,7 +70,7 @@ struct RegistryKeyWrapper
 
         return key.key != 0
                 && RegSetValueEx (key.key, key.wideCharValueName, 0, type,
-                                  reinterpret_cast <const BYTE*> (data),
+                                  reinterpret_cast<const BYTE*> (data),
                                   (DWORD) dataSize) == ERROR_SUCCESS;
     }
 
@@ -107,7 +107,7 @@ struct RegistryKeyWrapper
         MemoryBlock buffer;
         switch (getBinaryValue (regValuePath, buffer, wow64Flags))
         {
-            case REG_SZ:    return static_cast <const WCHAR*> (buffer.getData());
+            case REG_SZ:    return static_cast<const WCHAR*> (buffer.getData());
             case REG_DWORD: return String ((int) *reinterpret_cast<const DWORD*> (buffer.getData()));
             default:        break;
         }
@@ -144,48 +144,48 @@ struct RegistryKeyWrapper
     JUCE_DECLARE_NON_COPYABLE (RegistryKeyWrapper)
 };
 
-uint32 WindowsRegistry::getBinaryValue (const String& regValuePath, MemoryBlock& result, WoW64Mode mode)
+uint32 JUCE_CALLTYPE WindowsRegistry::getBinaryValue (const String& regValuePath, MemoryBlock& result, WoW64Mode mode)
 {
     return RegistryKeyWrapper::getBinaryValue (regValuePath, result, (DWORD) mode);
 }
 
-String WindowsRegistry::getValue (const String& regValuePath, const String& defaultValue, WoW64Mode mode)
+String JUCE_CALLTYPE WindowsRegistry::getValue (const String& regValuePath, const String& defaultValue, WoW64Mode mode)
 {
     return RegistryKeyWrapper::getValue (regValuePath, defaultValue, (DWORD) mode);
 }
 
-bool WindowsRegistry::setValue (const String& regValuePath, const String& value, WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::setValue (const String& regValuePath, const String& value, WoW64Mode mode)
 {
     return RegistryKeyWrapper::setValue (regValuePath, REG_SZ, value.toWideCharPointer(),
                                          CharPointer_UTF16::getBytesRequiredFor (value.getCharPointer()), mode);
 }
 
-bool WindowsRegistry::setValue (const String& regValuePath, const uint32 value, WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::setValue (const String& regValuePath, const uint32 value, WoW64Mode mode)
 {
     return RegistryKeyWrapper::setValue (regValuePath, REG_DWORD, &value, sizeof (value), (DWORD) mode);
 }
 
-bool WindowsRegistry::setValue (const String& regValuePath, const uint64 value, WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::setValue (const String& regValuePath, const uint64 value, WoW64Mode mode)
 {
     return RegistryKeyWrapper::setValue (regValuePath, REG_QWORD, &value, sizeof (value), (DWORD) mode);
 }
 
-bool WindowsRegistry::setValue (const String& regValuePath, const MemoryBlock& value, WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::setValue (const String& regValuePath, const MemoryBlock& value, WoW64Mode mode)
 {
     return RegistryKeyWrapper::setValue (regValuePath, REG_BINARY, value.getData(), value.getSize(), (DWORD) mode);
 }
 
-bool WindowsRegistry::valueExists (const String& regValuePath, WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::valueExists (const String& regValuePath, WoW64Mode mode)
 {
     return RegistryKeyWrapper::valueExists (regValuePath, (DWORD) mode);
 }
 
-bool WindowsRegistry::keyExists (const String& regValuePath, WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::keyExists (const String& regValuePath, WoW64Mode mode)
 {
     return RegistryKeyWrapper::keyExists (regValuePath, (DWORD) mode);
 }
 
-void WindowsRegistry::deleteValue (const String& regValuePath, WoW64Mode mode)
+void JUCE_CALLTYPE WindowsRegistry::deleteValue (const String& regValuePath, WoW64Mode mode)
 {
     const RegistryKeyWrapper key (regValuePath, true, (DWORD) mode);
 
@@ -193,7 +193,7 @@ void WindowsRegistry::deleteValue (const String& regValuePath, WoW64Mode mode)
         RegDeleteValue (key.key, key.wideCharValueName);
 }
 
-void WindowsRegistry::deleteKey (const String& regKeyPath, WoW64Mode mode)
+void JUCE_CALLTYPE WindowsRegistry::deleteKey (const String& regKeyPath, WoW64Mode mode)
 {
     const RegistryKeyWrapper key (regKeyPath, true, (DWORD) mode);
 
@@ -201,13 +201,13 @@ void WindowsRegistry::deleteKey (const String& regKeyPath, WoW64Mode mode)
         RegDeleteKey (key.key, key.wideCharValueName);
 }
 
-bool WindowsRegistry::registerFileAssociation (const String& fileExtension,
-                                               const String& symbolicDescription,
-                                               const String& fullDescription,
-                                               const File& targetExecutable,
-                                               const int iconResourceNumber,
-                                               const bool registerForCurrentUserOnly,
-                                               WoW64Mode mode)
+bool JUCE_CALLTYPE WindowsRegistry::registerFileAssociation (const String& fileExtension,
+                                                             const String& symbolicDescription,
+                                                             const String& fullDescription,
+                                                             const File& targetExecutable,
+                                                             const int iconResourceNumber,
+                                                             const bool registerForCurrentUserOnly,
+                                                             WoW64Mode mode)
 {
     const char* const root = registerForCurrentUserOnly ? "HKEY_CURRENT_USER\\Software\\Classes\\"
                                                         : "HKEY_CLASSES_ROOT\\";
@@ -218,7 +218,7 @@ bool WindowsRegistry::registerFileAssociation (const String& fileExtension,
         && setValue (key + "\\shell\\open\\command\\", targetExecutable.getFullPathName() + " \"%1\"", mode)
         && (iconResourceNumber == 0
               || setValue (key + "\\DefaultIcon\\",
-                           targetExecutable.getFullPathName() + "," + String (-iconResourceNumber)));
+                           targetExecutable.getFullPathName() + "," + String (iconResourceNumber)));
 }
 
 // These methods are deprecated:

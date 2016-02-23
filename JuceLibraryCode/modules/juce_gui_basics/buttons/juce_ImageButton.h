@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -123,6 +123,17 @@ public:
         return the 'over' image or normal image, depending on what's available.
     */
     Image getDownImage() const;
+
+    //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes. */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void drawImageButton (Graphics&, Image*,
+                                      int imageX, int imageY, int imageW, int imageH,
+                                      const Colour& overlayColour, float imageOpacity, ImageButton&) = 0;
+    };
 
 protected:
     //==============================================================================

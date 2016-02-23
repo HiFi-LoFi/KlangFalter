@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -31,11 +31,8 @@ GroupComponent::GroupComponent (const String& name,
     setInterceptsMouseClicks  (false, true);
 }
 
-GroupComponent::~GroupComponent()
-{
-}
+GroupComponent::~GroupComponent() {}
 
-//==============================================================================
 void GroupComponent::setText (const String& newText)
 {
     if (text != newText)
@@ -50,7 +47,6 @@ String GroupComponent::getText() const
     return text;
 }
 
-//==============================================================================
 void GroupComponent::setTextLabelPosition (Justification newJustification)
 {
     if (justification != newJustification)
@@ -62,18 +58,9 @@ void GroupComponent::setTextLabelPosition (Justification newJustification)
 
 void GroupComponent::paint (Graphics& g)
 {
-    getLookAndFeel()
-        .drawGroupComponentOutline (g, getWidth(), getHeight(),
-                                    text, justification,
-                                    *this);
+    getLookAndFeel().drawGroupComponentOutline (g, getWidth(), getHeight(),
+                                                text, justification, *this);
 }
 
-void GroupComponent::enablementChanged()
-{
-    repaint();
-}
-
-void GroupComponent::colourChanged()
-{
-    repaint();
-}
+void GroupComponent::enablementChanged()    { repaint(); }
+void GroupComponent::colourChanged()        { repaint(); }

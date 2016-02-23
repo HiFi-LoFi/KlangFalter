@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -30,23 +30,23 @@ FileSearchPathListComponent::FileSearchPathListComponent()
       downButton (String::empty, DrawableButton::ImageOnButtonBackground)
 {
     listBox.setModel (this);
-    addAndMakeVisible (&listBox);
+    addAndMakeVisible (listBox);
     listBox.setColour (ListBox::backgroundColourId, Colours::black.withAlpha (0.02f));
     listBox.setColour (ListBox::outlineColourId, Colours::black.withAlpha (0.1f));
     listBox.setOutlineThickness (1);
 
-    addAndMakeVisible (&addButton);
+    addAndMakeVisible (addButton);
     addButton.addListener (this);
     addButton.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight | Button::ConnectedOnBottom | Button::ConnectedOnTop);
 
-    addAndMakeVisible (&removeButton);
+    addAndMakeVisible (removeButton);
     removeButton.addListener (this);
     removeButton.setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight | Button::ConnectedOnBottom | Button::ConnectedOnTop);
 
-    addAndMakeVisible (&changeButton);
+    addAndMakeVisible (changeButton);
     changeButton.addListener (this);
 
-    addAndMakeVisible (&upButton);
+    addAndMakeVisible (upButton);
     upButton.addListener (this);
 
     {
@@ -59,7 +59,7 @@ FileSearchPathListComponent::FileSearchPathListComponent()
         upButton.setImages (&arrowImage);
     }
 
-    addAndMakeVisible (&downButton);
+    addAndMakeVisible (downButton);
     downButton.addListener (this);
 
     {
@@ -152,6 +152,8 @@ void FileSearchPathListComponent::returnKeyPressed (int row)
         path.add (chooser.getResult(), row);
         changed();
     }
+   #else
+    ignoreUnused (row);
    #endif
 }
 

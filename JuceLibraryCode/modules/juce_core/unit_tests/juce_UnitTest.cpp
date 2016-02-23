@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -26,8 +26,8 @@
   ==============================================================================
 */
 
-UnitTest::UnitTest (const String& name_)
-    : name (name_), runner (nullptr)
+UnitTest::UnitTest (const String& nm)
+    : name (nm), runner (nullptr)
 {
     getAllTests().add (this);
 }
@@ -46,10 +46,10 @@ Array<UnitTest*>& UnitTest::getAllTests()
 void UnitTest::initialise()  {}
 void UnitTest::shutdown()   {}
 
-void UnitTest::performTest (UnitTestRunner* const runner_)
+void UnitTest::performTest (UnitTestRunner* const newRunner)
 {
-    jassert (runner_ != nullptr);
-    runner = runner_;
+    jassert (newRunner != nullptr);
+    runner = newRunner;
 
     initialise();
     runTest();
@@ -58,20 +58,37 @@ void UnitTest::performTest (UnitTestRunner* const runner_)
 
 void UnitTest::logMessage (const String& message)
 {
+    // This method's only valid while the test is being run!
+    jassert (runner != nullptr);
+
     runner->logMessage (message);
 }
 
 void UnitTest::beginTest (const String& testName)
 {
+    // This method's only valid while the test is being run!
+    jassert (runner != nullptr);
+
     runner->beginNewTest (this, testName);
 }
 
 void UnitTest::expect (const bool result, const String& failureMessage)
 {
+    // This method's only valid while the test is being run!
+    jassert (runner != nullptr);
+
     if (result)
         runner->addPass();
     else
         runner->addFail (failureMessage);
+}
+
+Random UnitTest::getRandom() const
+{
+    // This method's only valid while the test is being run!
+    jassert (runner != nullptr);
+
+    return runner->randomForTest;
 }
 
 //==============================================================================
@@ -110,16 +127,25 @@ void UnitTestRunner::resultsUpdated()
 {
 }
 
-void UnitTestRunner::runTests (const Array<UnitTest*>& tests)
+void UnitTestRunner::runTests (const Array<UnitTest*>& tests, int64 randomSeed)
 {
     results.clear();
     resultsUpdated();
+
+    if (randomSeed == 0)
+        randomSeed = Random().nextInt (0x7ffffff);
+
+    randomForTest = Random (randomSeed);
+    logMessage ("Random seed: 0x" + String::toHexString (randomSeed));
 
     for (int i = 0; i < tests.size(); ++i)
     {
         if (shouldAbortTests())
             break;
 
+       #if JUCE_EXCEPTIONS_DISABLED
+        tests.getUnchecked(i)->performTest (this);
+       #else
         try
         {
             tests.getUnchecked(i)->performTest (this);
@@ -128,14 +154,15 @@ void UnitTestRunner::runTests (const Array<UnitTest*>& tests)
         {
             addFail ("An unhandled exception was thrown!");
         }
+       #endif
     }
 
     endTest();
 }
 
-void UnitTestRunner::runAllTests()
+void UnitTestRunner::runAllTests (int64 randomSeed)
 {
-    runTests (UnitTest::getAllTests());
+    runTests (UnitTest::getAllTests(), randomSeed);
 }
 
 void UnitTestRunner::logMessage (const String& message)
@@ -178,9 +205,9 @@ void UnitTestRunner::endTest()
             m << r->failures << (r->failures == 1 ? " test" : " tests")
               << " failed, out of a total of " << (r->passes + r->failures);
 
-            logMessage (String::empty);
+            logMessage (String());
             logMessage (m);
-            logMessage (String::empty);
+            logMessage (String());
         }
         else
         {

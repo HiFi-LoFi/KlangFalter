@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -63,7 +63,7 @@ public:
         @see drawWithin
     */
     void draw (Graphics& g, float opacity,
-               const AffineTransform& transform = AffineTransform::identity) const;
+               const AffineTransform& transform = AffineTransform()) const;
 
     /** Renders the Drawable at a given offset within the Graphics context.
 
@@ -142,7 +142,7 @@ public:
         into a Drawable tree.
 
         The object returned must be deleted by the caller. If something goes wrong
-        while parsing, it may return 0.
+        while parsing, it may return nullptr.
 
         SVG is a pretty large and complex spec, and this doesn't aim to be a full
         implementation, but it can return the basic vector objects.
@@ -174,6 +174,11 @@ public:
         into account any transforms that may be applied to the component.
     */
     virtual Rectangle<float> getDrawableBounds() const = 0;
+
+    /** Recursively replaces a colour that might be used for filling or stroking.
+        return true if any instances of this colour were found.
+    */
+    virtual bool replaceColour (Colour originalColour, Colour replacementColour);
 
     //==============================================================================
     /** Internal class used to manage ValueTrees that represent Drawables. */
@@ -222,14 +227,15 @@ protected:
               owner (c)
         {}
 
-        bool registerCoordinates()      { return owner.registerCoordinates (*this); }
-        void applyToComponentBounds()
+        bool registerCoordinates() override      { return owner.registerCoordinates (*this); }
+
+        void applyToComponentBounds() override
         {
             ComponentScope scope (getComponent());
             owner.recalculateCoordinates (&scope);
         }
 
-        void applyNewBounds (const Rectangle<int>&)
+        void applyNewBounds (const Rectangle<int>&) override
         {
             jassertfalse; // drawables can't be resized directly!
         }

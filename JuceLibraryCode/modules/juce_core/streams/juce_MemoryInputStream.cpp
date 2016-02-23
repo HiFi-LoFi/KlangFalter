@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -60,20 +60,25 @@ MemoryInputStream::~MemoryInputStream()
 
 int64 MemoryInputStream::getTotalLength()
 {
-    return dataSize;
+    return (int64) dataSize;
 }
 
 int MemoryInputStream::read (void* const buffer, const int howMany)
 {
     jassert (buffer != nullptr && howMany >= 0);
 
-    const int num = jmin (howMany, (int) (dataSize - position));
-    if (num <= 0)
+    if (howMany <= 0 || position >= dataSize)
         return 0;
 
-    memcpy (buffer, addBytesToPointer (data, position), (size_t) num);
-    position += (unsigned int) num;
-    return num;
+    const size_t num = jmin ((size_t) howMany, dataSize - position);
+
+    if (num > 0)
+    {
+        memcpy (buffer, addBytesToPointer (data, position), num);
+        position += num;
+    }
+
+    return (int) num;
 }
 
 bool MemoryInputStream::isExhausted()
@@ -89,7 +94,7 @@ bool MemoryInputStream::setPosition (const int64 pos)
 
 int64 MemoryInputStream::getPosition()
 {
-    return position;
+    return (int64) position;
 }
 
 
@@ -101,15 +106,15 @@ class MemoryStreamTests  : public UnitTest
 public:
     MemoryStreamTests() : UnitTest ("MemoryInputStream & MemoryOutputStream") {}
 
-    void runTest()
+    void runTest() override
     {
         beginTest ("Basics");
-        Random r;
+        Random r = getRandom();
 
         int randomInt = r.nextInt();
         int64 randomInt64 = r.nextInt64();
         double randomDouble = r.nextDouble();
-        String randomString (createRandomWideCharString());
+        String randomString (createRandomWideCharString (r));
 
         MemoryOutputStream mo;
         mo.writeInt (randomInt);
@@ -132,10 +137,9 @@ public:
         expect (mi.readDoubleBigEndian() == randomDouble);
     }
 
-    static String createRandomWideCharString()
+    static String createRandomWideCharString (Random& r)
     {
         juce_wchar buffer [50] = { 0 };
-        Random r;
 
         for (int i = 0; i < numElementsInArray (buffer) - 1; ++i)
         {

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -47,8 +47,7 @@
     Typically, you'll probably want to create a static instance of a ThreadLocalValue
     object, or hold one within a singleton.
 
-    The templated class for your value could be a primitive type, or any class that
-    has a default constructor and copy operator.
+    The templated class for your value must be a primitive type, or a simple POD struct.
 
     When a thread no longer needs to use its value, it can call releaseCurrentThreadStorage()
     to allow the storage to be re-used by another thread. If a thread exits without calling

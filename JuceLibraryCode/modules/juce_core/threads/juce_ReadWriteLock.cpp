@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -105,18 +105,8 @@ void ReadWriteLock::enterWrite() const noexcept
     const Thread::ThreadID threadId = Thread::getCurrentThreadId();
     const SpinLock::ScopedLockType sl (accessLock);
 
-    for (;;)
+    while (! tryEnterWriteInternal (threadId))
     {
-        if (readerThreads.size() + numWriters == 0
-             || threadId == writerThreadId
-             || (readerThreads.size() == 1
-                  && readerThreads.getReference(0).threadID == threadId))
-        {
-            writerThreadId = threadId;
-            ++numWriters;
-            break;
-        }
-
         ++numWaitingWriters;
         accessLock.exit();
         waitEvent.wait (100);
@@ -127,13 +117,15 @@ void ReadWriteLock::enterWrite() const noexcept
 
 bool ReadWriteLock::tryEnterWrite() const noexcept
 {
-    const Thread::ThreadID threadId = Thread::getCurrentThreadId();
     const SpinLock::ScopedLockType sl (accessLock);
+    return tryEnterWriteInternal (Thread::getCurrentThreadId());
+}
 
+bool ReadWriteLock::tryEnterWriteInternal (Thread::ThreadID threadId) const noexcept
+{
     if (readerThreads.size() + numWriters == 0
          || threadId == writerThreadId
-         || (readerThreads.size() == 1
-              && readerThreads.getReference(0).threadID == threadId))
+         || (readerThreads.size() == 1 && readerThreads.getReference(0).threadID == threadId))
     {
         writerThreadId = threadId;
         ++numWriters;

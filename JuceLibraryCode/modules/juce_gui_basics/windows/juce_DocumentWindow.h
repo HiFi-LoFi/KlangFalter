@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -100,7 +100,7 @@ public:
         (This is overridden from Component::setName() to cause a repaint, as
         the name is what gets drawn across the window's title bar).
     */
-    void setName (const String& newName);
+    void setName (const String& newName) override;
 
     /** Sets an icon to show in the title bar, next to the title.
 
@@ -224,6 +224,30 @@ public:
     };
 
     //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes to provide
+        window drawing functionality.
+    */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void drawDocumentWindowTitleBar (DocumentWindow&,
+                                                 Graphics&, int w, int h,
+                                                 int titleSpaceX, int titleSpaceW,
+                                                 const Image* icon,
+                                                 bool drawTitleTextOnLeft) = 0;
+
+        virtual Button* createDocumentWindowButton (int buttonType) = 0;
+
+        virtual void positionDocumentWindowButtons (DocumentWindow&,
+                                                    int titleBarX, int titleBarY, int titleBarW, int titleBarH,
+                                                    Button* minimiseButton,
+                                                    Button* maximiseButton,
+                                                    Button* closeButton,
+                                                    bool positionTitleBarButtonsOnLeft) = 0;
+    };
+
+    //==============================================================================
    #ifndef DOXYGEN
     /** @internal */
     void paint (Graphics&) override;
@@ -253,9 +277,9 @@ private:
     //==============================================================================
     int titleBarHeight, menuBarHeight, requiredButtons;
     bool positionTitleBarButtonsOnLeft, drawTitleTextCentred;
-    ScopedPointer <Button> titleBarButtons [3];
+    ScopedPointer<Button> titleBarButtons [3];
     Image titleBarIcon;
-    ScopedPointer <Component> menuBar;
+    ScopedPointer<Component> menuBar;
     MenuBarModel* menuBarModel;
 
     class ButtonListenerProxy;

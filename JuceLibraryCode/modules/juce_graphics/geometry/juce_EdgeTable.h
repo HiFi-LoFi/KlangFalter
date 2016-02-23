@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -62,10 +62,10 @@ public:
     explicit EdgeTable (const Rectangle<float>& rectangleToAdd);
 
     /** Creates a copy of another edge table. */
-    EdgeTable (const EdgeTable& other);
+    EdgeTable (const EdgeTable&);
 
     /** Copies from another edge table. */
-    EdgeTable& operator= (const EdgeTable& other);
+    EdgeTable& operator= (const EdgeTable&);
 
     /** Destructor. */
     ~EdgeTable();
@@ -73,11 +73,14 @@ public:
     //==============================================================================
     void clipToRectangle (const Rectangle<int>& r);
     void excludeRectangle (const Rectangle<int>& r);
-    void clipToEdgeTable (const EdgeTable& other);
+    void clipToEdgeTable (const EdgeTable&);
     void clipLineToMask (int x, int y, const uint8* mask, int maskStride, int numPixels);
     bool isEmpty() noexcept;
     const Rectangle<int>& getMaximumBounds() const noexcept      { return bounds; }
     void translate (float dx, int dy) noexcept;
+
+    /** Scales all the alpha-levels in the table by the given multiplier. */
+    void multiplyLevels (float factor);
 
     /** Reduces the amount of space the table has allocated.
 
@@ -198,7 +201,7 @@ private:
     HeapBlock<int> table;
     Rectangle<int> bounds;
     int maxEdgesPerLine, lineStrideElements;
-    bool needToCheckEmptinesss;
+    bool needToCheckEmptiness;
 
     void allocate();
     void clearLineSizes() noexcept;

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -50,7 +50,7 @@ TemporaryFile::TemporaryFile (const File& target, const int optionFlags)
       targetFile (target)
 {
     // If you use this constructor, you need to give it a valid target file!
-    jassert (targetFile != File::nonexistent);
+    jassert (targetFile != File());
 }
 
 TemporaryFile::TemporaryFile (const File& target, const File& temporary)
@@ -79,7 +79,7 @@ bool TemporaryFile::overwriteTargetFileWithTemporary() const
 {
     // This method only works if you created this object with the constructor
     // that takes a target file!
-    jassert (targetFile != File::nonexistent);
+    jassert (targetFile != File());
 
     if (temporaryFile.exists())
     {

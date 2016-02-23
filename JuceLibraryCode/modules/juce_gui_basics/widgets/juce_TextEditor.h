@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -51,7 +51,7 @@ public:
                                     for a black splodge (not all fonts include this, though), or 0x2022,
                                     which is a bullet (probably the best choice for linux).
     */
-    explicit TextEditor (const String& componentName = String::empty,
+    explicit TextEditor (const String& componentName = String(),
                          juce_wchar passwordCharacter = 0);
 
     /** Destructor. */
@@ -123,7 +123,7 @@ public:
     void setReadOnly (bool shouldBeReadOnly);
 
     /** Returns true if the editor is in read-only mode. */
-    bool isReadOnly() const;
+    bool isReadOnly() const noexcept;
 
     //==============================================================================
     /** Makes the caret visible or invisible.
@@ -135,7 +135,7 @@ public:
     /** Returns true if the caret is enabled.
         @see setCaretVisible
     */
-    bool isCaretVisible() const noexcept                            { return caret != nullptr; }
+    bool isCaretVisible() const noexcept                            { return caretVisible && ! isReadOnly(); }
 
     //==============================================================================
     /** Enables/disables a vertical scrollbar.
@@ -194,6 +194,8 @@ public:
 
         These constants can be used either via the Component::setColour(), or LookAndFeel::setColour()
         methods.
+
+        NB: You can also set the caret colour using CaretComponent::caretColourId
 
         @see Component::setColour, Component::findColour, LookAndFeel::setColour, LookAndFeel::findColour
     */
@@ -326,7 +328,7 @@ public:
         @param newText                  the text to add
         @param sendTextChangeMessage    if true, this will cause a change message to
                                         be sent to all the listeners.
-        @see insertText
+        @see insertTextAtCaret
     */
     void setText (const String& newText,
                   bool sendTextChangeMessage = true);
@@ -345,7 +347,7 @@ public:
         this string, otherwise it will be inserted.
 
         To delete a section of text, you can use setHighlightedRegion() to
-        highlight it, and call insertTextAtCursor (String::empty).
+        highlight it, and call insertTextAtCaret (String()).
 
         @see setCaretPosition, getCaretPosition, setHighlightedRegion
     */
@@ -552,11 +554,11 @@ public:
         */
         LengthAndCharacterRestriction (int maxNumChars, const String& allowedCharacters);
 
+        String filterNewText (TextEditor&, const String&) override;
+
     private:
         String allowedCharacters;
         int maxLength;
-
-        String filterNewText (TextEditor&, const String&) override;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LengthAndCharacterRestriction)
     };
@@ -568,6 +570,9 @@ public:
     */
     void setInputFilter (InputFilter* newFilter, bool takeOwnership);
 
+    /** Returns the current InputFilter, as set by setInputFilter(). */
+    InputFilter* getInputFilter() const noexcept                { return inputFilter; }
+
     /** Sets limits on the characters that can be entered.
         This is just a shortcut that passes an instance of the LengthAndCharacterRestriction
         class to setInputFilter().
@@ -578,7 +583,23 @@ public:
                                     this string are allowed to be entered into the editor.
     */
     void setInputRestrictions (int maxTextLength,
-                               const String& allowedCharacters = String::empty);
+                               const String& allowedCharacters = String());
+
+    void setKeyboardType (VirtualKeyboardType type) noexcept    { keyboardType = type; }
+
+    //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes to provide
+        TextEditor drawing functionality.
+    */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void fillTextEditorBackground (Graphics&, int width, int height, TextEditor&) = 0;
+        virtual void drawTextEditorOutline (Graphics&, int width, int height, TextEditor&) = 0;
+
+        virtual CaretComponent* createCaretComponent (Component* keyFocusOwner) = 0;
+    };
 
     //==============================================================================
     /** @internal */
@@ -614,7 +635,9 @@ public:
     /** @internal */
     bool isTextInputActive() const override;
     /** @internal */
-    void setTemporaryUnderlining (const Array <Range<int> >&) override;
+    void setTemporaryUnderlining (const Array<Range<int> >&) override;
+    /** @internal */
+    VirtualKeyboardType getKeyboardType() override    { return keyboardType; }
 
 protected:
     //==============================================================================
@@ -643,23 +666,24 @@ private:
     friend class InsertAction;
     friend class RemoveAction;
 
-    ScopedPointer <Viewport> viewport;
+    ScopedPointer<Viewport> viewport;
     TextHolderComponent* textHolder;
     BorderSize<int> borderSize;
 
-    bool readOnly                   : 1;
-    bool multiline                  : 1;
-    bool wordWrap                   : 1;
-    bool returnKeyStartsNewLine     : 1;
-    bool popupMenuEnabled           : 1;
-    bool selectAllTextWhenFocused   : 1;
-    bool scrollbarVisible           : 1;
-    bool wasFocused                 : 1;
-    bool keepCaretOnScreen          : 1;
-    bool tabKeyUsed                 : 1;
-    bool menuActive                 : 1;
-    bool valueTextNeedsUpdating     : 1;
-    bool consumeEscAndReturnKeys    : 1;
+    bool readOnly;
+    bool caretVisible;
+    bool multiline;
+    bool wordWrap;
+    bool returnKeyStartsNewLine;
+    bool popupMenuEnabled;
+    bool selectAllTextWhenFocused;
+    bool scrollbarVisible;
+    bool wasFocused;
+    bool keepCaretOnScreen;
+    bool tabKeyUsed;
+    bool menuActive;
+    bool valueTextNeedsUpdating;
+    bool consumeEscAndReturnKeys;
 
     UndoManager undoManager;
     ScopedPointer<CaretComponent> caret;
@@ -669,12 +693,13 @@ private:
     Font currentFont;
     mutable int totalNumChars;
     int caretPosition;
-    Array <UniformTextSection*> sections;
+    OwnedArray<UniformTextSection> sections;
     String textToShowWhenEmpty;
     Colour colourForTextWhenEmpty;
     juce_wchar passwordCharacter;
     OptionalScopedPointer<InputFilter> inputFilter;
     Value textValue;
+    VirtualKeyboardType keyboardType;
 
     enum
     {
@@ -683,17 +708,18 @@ private:
         draggingSelectionEnd
     } dragType;
 
-    ListenerList <Listener> listeners;
-    Array <Range<int> > underlinedSections;
+    ListenerList<Listener> listeners;
+    Array<Range<int> > underlinedSections;
 
     void moveCaret (int newCaretPos);
     void moveCaretTo (int newPosition, bool isSelecting);
+    void recreateCaret();
     void handleCommandMessage (int) override;
     void coalesceSimilarSections();
     void splitSection (int sectionIndex, int charToSplitAt);
     void clearInternal (UndoManager*);
     void insert (const String&, int insertIndex, const Font&, const Colour, UndoManager*, int newCaretPos);
-    void reinsert (int insertIndex, const Array <UniformTextSection*>&);
+    void reinsert (int insertIndex, const OwnedArray<UniformTextSection>&);
     void remove (Range<int> range, UndoManager*, int caretPositionToMoveTo);
     void getCharPosition (int index, float& x, float& y, float& lineHeight) const;
     void updateCaretPosition();

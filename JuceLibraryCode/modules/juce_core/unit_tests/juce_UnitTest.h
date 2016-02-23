@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -44,7 +44,7 @@ class UnitTestRunner;
     public:
         MyTest()  : UnitTest ("Foobar testing") {}
 
-        void runTest()
+        void runTest() override
         {
             beginTest ("Part 1");
 
@@ -136,13 +136,13 @@ public:
         If testResult is true, a pass is logged; if it's false, a failure is logged.
         If the failure message is specified, it will be written to the log if the test fails.
     */
-    void expect (bool testResult, const String& failureMessage = String::empty);
+    void expect (bool testResult, const String& failureMessage = String());
 
     /** Compares two values, and if they don't match, prints out a message containing the
         expected and actual result values.
     */
     template <class ValueType>
-    void expectEquals (ValueType actual, ValueType expected, String failureMessage = String::empty)
+    void expectEquals (ValueType actual, ValueType expected, String failureMessage = String())
     {
         const bool result = (actual == expected);
 
@@ -158,10 +158,67 @@ public:
     }
 
     //==============================================================================
+    /** Checks that the result of an expression does not throw an exception. */
+    #define expectDoesNotThrow(expr)         \
+        try                                  \
+        {                                    \
+            (expr);                          \
+            expect (true);                   \
+        }                                    \
+        catch (...)                          \
+        {                                    \
+            expect (false, "Expected: does not throw an exception, Actual: throws."); \
+        }
+
+    /** Checks that the result of an expression throws an exception. */
+    #define expectThrows(expr)               \
+        try                                  \
+        {                                    \
+            (expr);                          \
+            expect (false, "Expected: throws an exception, Actual: does not throw."); \
+        }                                    \
+        catch (...)                          \
+        {                                    \
+            expect (true);                   \
+        }
+
+    /** Checks that the result of an expression throws an exception of a certain type. */
+    #define expectThrowsType(expr, type)     \
+        try                                  \
+        {                                    \
+            (expr);                          \
+            expect (false, "Expected: throws an exception of type " #type ", Actual: does not throw."); \
+        }                                    \
+        catch (type&)                        \
+        {                                    \
+            expect (true);                   \
+        }                                    \
+        catch (...)                          \
+        {                                    \
+            expect (false, "Expected: throws an exception of type " #type ", Actual: throws another type."); \
+        }
+
+    //==============================================================================
     /** Writes a message to the test log.
         This can only be called from within your runTest() method.
     */
     void logMessage (const String& message);
+
+    /** Returns a shared RNG that all unit tests should use.
+        If a test needs random numbers, it's important that when an error is found, the
+        exact circumstances can be re-created in order to re-test the problem, by
+        repeating the test with the same random seed value.
+        To make this possible, the UnitTestRunner class creates a master seed value
+        for the run, writes this number to the log, and then this method returns a
+        Random object based on that seed. All tests should only use this method to
+        create any Random objects that they need.
+
+        Note that this method will return an identical object each time it's called
+        for a given run, so if you need several different Random objects, the best
+        way to do that is to call Random::combineSeed() on the result to permute it
+        with a constant value.
+    */
+    Random getRandom() const;
 
 private:
     //==============================================================================
@@ -198,13 +255,19 @@ public:
 
         The tests are performed in order, and the results are logged. To run all the
         registered UnitTest objects that exist, use runAllTests().
+
+        If you want to run the tests with a predetermined seed, you can pass that into
+        the randomSeed argument, or pass 0 to have a randomly-generated seed chosen.
     */
-    void runTests (const Array<UnitTest*>& tests);
+    void runTests (const Array<UnitTest*>& tests, int64 randomSeed = 0);
 
     /** Runs all the UnitTest objects that currently exist.
         This calls runTests() for all the objects listed in UnitTest::getAllTests().
+
+        If you want to run the tests with a predetermined seed, you can pass that into
+        the randomSeed argument, or pass 0 to have a randomly-generated seed chosen.
     */
-    void runAllTests();
+    void runAllTests (int64 randomSeed = 0);
 
     /** Sets a flag to indicate whether an assertion should be triggered if a test fails.
         This is true by default.
@@ -274,6 +337,7 @@ private:
     String currentSubCategory;
     OwnedArray <TestResult, CriticalSection> results;
     bool assertOnFailure, logPasses;
+    Random randomForTest;
 
     void beginNewTest (UnitTest* test, const String& subCategory);
     void endTest();

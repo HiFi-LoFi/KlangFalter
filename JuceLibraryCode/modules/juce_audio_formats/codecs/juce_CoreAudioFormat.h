@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -50,6 +50,8 @@ public:
     static const char* const tempo;
     /** Metadata property name used when reading a caf file time signature information. */
     static const char* const timeSig;
+    /** Metadata property name used when reading a caf file time signature information. */
+    static const char* const keySig;
 
     //==============================================================================
     Array<int> getPossibleSampleRates() override;

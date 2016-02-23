@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -126,6 +126,9 @@ public:
     /** Returns the length of the line. */
     ValueType getLength() const noexcept                                    { return start.getDistanceFrom (end); }
 
+    /** Returns the length of the line. */
+    ValueType getLengthSquared() const noexcept                             { return start.getDistanceSquaredFrom (end); }
+
     /** Returns true if the line's start and end x coordinates are the same. */
     bool isVertical() const noexcept                                        { return start.x == end.x; }
 
@@ -155,6 +158,18 @@ public:
     //==============================================================================
     /** Finds the intersection between two lines.
 
+        @param line     the line to intersect with
+        @returns        the point at which the lines intersect, even if this lies beyond the end of the lines
+    */
+    Point<ValueType> getIntersection (const Line& line) const noexcept
+    {
+        Point<ValueType> p;
+        findIntersection (start, end, line.start, line.end, p);
+        return p;
+    }
+
+    /** Finds the intersection between two lines.
+
         @param line             the other line
         @param intersection     the position of the point where the lines meet (or
                                 where they would meet if they were infinitely long)
@@ -170,16 +185,11 @@ public:
         return findIntersection (start, end, line.start, line.end, intersection);
     }
 
-    /** Finds the intersection between two lines.
-
-        @param line     the line to intersect with
-        @returns        the point at which the lines intersect, even if this lies beyond the end of the lines
-    */
-    Point<ValueType> getIntersection (const Line& line) const noexcept
+    /** Returns true if this line intersects another. */
+    bool intersects (const Line& other) const noexcept
     {
-        Point<ValueType> p;
-        findIntersection (start, end, line.start, line.end, p);
-        return p;
+        Point<ValueType> ignored;
+        return findIntersection (start, end, other.start, other.end, ignored);
     }
 
     //==============================================================================
@@ -217,8 +227,8 @@ public:
         if (length <= 0)
             return start;
 
-        return Point<ValueType> (start.x + static_cast <ValueType> ((delta.x * distanceFromStart - delta.y * perpendicularDistance) / length),
-                                 start.y + static_cast <ValueType> ((delta.y * distanceFromStart + delta.x * perpendicularDistance) / length));
+        return Point<ValueType> (start.x + static_cast<ValueType> ((delta.x * distanceFromStart - delta.y * perpendicularDistance) / length),
+                                 start.y + static_cast<ValueType> ((delta.y * distanceFromStart + delta.x * perpendicularDistance) / length));
     }
 
     /** Returns the location of the point which is a given distance along this line
@@ -260,7 +270,7 @@ public:
 
             if (prop >= 0 && prop <= 1.0)
             {
-                pointOnLine = start + delta * static_cast <ValueType> (prop);
+                pointOnLine = start + delta * static_cast<ValueType> (prop);
                 return targetPoint.getDistanceFrom (pointOnLine);
             }
         }
@@ -294,9 +304,9 @@ public:
         const double length = delta.x * delta.x + delta.y * delta.y;
 
         return length <= 0 ? 0
-                           : jlimit (ValueType(), static_cast <ValueType> (1),
-                                     static_cast <ValueType> ((((point.x - start.x) * delta.x
-                                                              + (point.y - start.y) * delta.y) / length)));
+                           : jlimit (ValueType(), static_cast<ValueType> (1),
+                                     static_cast<ValueType> ((((point.x - start.x) * delta.x
+                                                             + (point.y - start.y) * delta.y) / length)));
     }
 
     /** Finds the point on this line which is nearest to a given point.
@@ -368,40 +378,40 @@ private:
                 {
                     const ValueType along = (p1.y - p3.y) / d2.y;
                     intersection = p1.withX (p3.x + along * d2.x);
-                    return along >= 0 && along <= static_cast <ValueType> (1);
+                    return along >= 0 && along <= static_cast<ValueType> (1);
                 }
                 else if (d2.y == 0 && d1.y != 0)
                 {
                     const ValueType along = (p3.y - p1.y) / d1.y;
                     intersection = p3.withX (p1.x + along * d1.x);
-                    return along >= 0 && along <= static_cast <ValueType> (1);
+                    return along >= 0 && along <= static_cast<ValueType> (1);
                 }
                 else if (d1.x == 0 && d2.x != 0)
                 {
                     const ValueType along = (p1.x - p3.x) / d2.x;
                     intersection = p1.withY (p3.y + along * d2.y);
-                    return along >= 0 && along <= static_cast <ValueType> (1);
+                    return along >= 0 && along <= static_cast<ValueType> (1);
                 }
                 else if (d2.x == 0 && d1.x != 0)
                 {
                     const ValueType along = (p3.x - p1.x) / d1.x;
                     intersection = p3.withY (p1.y + along * d1.y);
-                    return along >= 0 && along <= static_cast <ValueType> (1);
+                    return along >= 0 && along <= static_cast<ValueType> (1);
                 }
             }
 
-            intersection = (p2 + p3) / static_cast <ValueType> (2);
+            intersection = (p2 + p3) / static_cast<ValueType> (2);
             return false;
         }
 
         const ValueType along1 = ((p1.y - p3.y) * d2.x - (p1.x - p3.x) * d2.y) / divisor;
         intersection = p1 + d1 * along1;
 
-        if (along1 < 0 || along1 > static_cast <ValueType> (1))
+        if (along1 < 0 || along1 > static_cast<ValueType> (1))
             return false;
 
         const ValueType along2 = ((p1.y - p3.y) * d1.x - (p1.x - p3.x) * d1.y) / divisor;
-        return along2 >= 0 && along2 <= static_cast <ValueType> (1);
+        return along2 >= 0 && along2 <= static_cast<ValueType> (1);
     }
 };
 

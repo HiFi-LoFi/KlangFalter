@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -93,15 +93,15 @@ public:
             This will copy the position, but the new object will not be set to maintain its position,
             even if the source object was set to do so.
         */
-        Position (const Position& other) noexcept;
+        Position (const Position&) noexcept;
 
         /** Destructor. */
         ~Position();
 
-        Position& operator= (const Position& other);
+        Position& operator= (const Position&);
 
-        bool operator== (const Position& other) const noexcept;
-        bool operator!= (const Position& other) const noexcept;
+        bool operator== (const Position&) const noexcept;
+        bool operator!= (const Position&) const noexcept;
 
         /** Points this object at a new position within the document.
 
@@ -125,7 +125,7 @@ public:
             Lines are numbered from zero, and if the line or index are beyond the bounds of the document,
             they will be adjusted to keep them within its limits.
         */
-        void setLineAndIndex (int newLine, int newIndexInLine);
+        void setLineAndIndex (int newLineNumber, int newIndexInLine);
 
         /** Returns the line number of this position.
             The first line in the document is numbered zero, not one!
@@ -257,7 +257,7 @@ public:
         The string must be either "\n", "\r\n", or (rarely) "\r".
         @see getNewLineCharacters
     */
-    void setNewLineCharacters (const String& newLine) noexcept;
+    void setNewLineCharacters (const String& newLineCharacters) noexcept;
 
     //==============================================================================
     /** Begins a new undo transaction.
@@ -355,8 +355,8 @@ public:
     {
     public:
         Iterator (const CodeDocument& document) noexcept;
-        Iterator (const Iterator& other) noexcept;
-        Iterator& operator= (const Iterator& other) noexcept;
+        Iterator (const Iterator&) noexcept;
+        Iterator& operator= (const Iterator&) noexcept;
         ~Iterator() noexcept;
 
         /** Reads the next character and returns it.

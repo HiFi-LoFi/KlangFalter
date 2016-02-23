@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -79,10 +79,16 @@ void ComponentMovementWatcher::componentMovedOrResized (Component&, bool wasMove
     {
         if (wasMoved)
         {
-            const Point<int> pos (component->getTopLevelComponent()->getLocalPoint (component, Point<int>()));
+            Point<int> newPos;
+            Component* const top = component->getTopLevelComponent();
 
-            wasMoved = lastBounds.getPosition() != pos;
-            lastBounds.setPosition (pos);
+            if (top != component)
+                newPos = top->getLocalPoint (component, Point<int>());
+            else
+                newPos = top->getPosition();
+
+            wasMoved = lastBounds.getPosition() != newPos;
+            lastBounds.setPosition (newPos);
         }
 
         wasResized = (lastBounds.getWidth() != component->getWidth() || lastBounds.getHeight() != component->getHeight());

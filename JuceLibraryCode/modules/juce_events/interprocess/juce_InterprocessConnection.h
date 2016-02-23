@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -47,7 +47,7 @@ class MemoryBlock;
 
     @see InterprocessConnectionServer, Socket, NamedPipe
 */
-class JUCE_API  InterprocessConnection    : private Thread
+class JUCE_API  InterprocessConnection
 {
 public:
     //==============================================================================
@@ -71,7 +71,7 @@ public:
                             uint32 magicMessageHeaderNumber = 0xf2b49e2c);
 
     /** Destructor. */
-    ~InterprocessConnection();
+    virtual ~InterprocessConnection();
 
     //==============================================================================
     /** Tries to connect this object to a socket.
@@ -108,13 +108,14 @@ public:
         This creates a pipe with the given name, so that other processes can use
         connectToPipe() to connect to the other end.
 
-        @param pipeName     the name to use for the pipe - this should be unique to your app
+        @param pipeName       the name to use for the pipe - this should be unique to your app
         @param pipeReceiveMessageTimeoutMs  a timeout length to be used when reading or writing
-                                            to the pipe, or -1 for an infinite timeout.
+                                            to the pipe, or -1 for an infinite timeout
+        @param mustNotExist   if set to true, the method will fail if the pipe already exists
         @returns true if the pipe was created, or false if it fails (e.g. if another process is
-                 already using using the pipe).
+                 already using using the pipe)
     */
-    bool createPipe (const String& pipeName, int pipeReceiveMessageTimeoutMs);
+    bool createPipe (const String& pipeName, int pipeReceiveMessageTimeoutMs, bool mustNotExist = false);
 
     /** Disconnects and closes any currently-open sockets or pipes. */
     void disconnect();
@@ -180,8 +181,8 @@ private:
     WeakReference<InterprocessConnection>::Master masterReference;
     friend class WeakReference<InterprocessConnection>;
     CriticalSection pipeAndSocketLock;
-    ScopedPointer <StreamingSocket> socket;
-    ScopedPointer <NamedPipe> pipe;
+    ScopedPointer<StreamingSocket> socket;
+    ScopedPointer<NamedPipe> pipe;
     bool callbackConnectionState;
     const bool useMessageThread;
     const uint32 magicMessageHeader;
@@ -190,11 +191,18 @@ private:
     friend class InterprocessConnectionServer;
     void initialiseWithSocket (StreamingSocket*);
     void initialiseWithPipe (NamedPipe*);
+    void deletePipeAndSocket();
     void connectionMadeInt();
     void connectionLostInt();
     void deliverDataInt (const MemoryBlock&);
     bool readNextMessageInt();
-    void run() override;
+
+    struct ConnectionThread;
+    friend struct ConnectionThread;
+    friend struct ContainerDeletePolicy<ConnectionThread>;
+    ScopedPointer<ConnectionThread> thread;
+    void runThread();
+    int writeData (void*, int);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InterprocessConnection)
 };

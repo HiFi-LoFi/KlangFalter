@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -80,6 +80,16 @@ public:
     {
         outlineColourId     = 0x1005400,    /**< The colour to use for drawing the line around the edge. */
         textColourId        = 0x1005410     /**< The colour to use to draw the text label. */
+    };
+
+    //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes. */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void drawGroupComponentOutline (Graphics&, int w, int h, const String& text,
+                                                const Justification&, GroupComponent&) = 0;
     };
 
     //==============================================================================

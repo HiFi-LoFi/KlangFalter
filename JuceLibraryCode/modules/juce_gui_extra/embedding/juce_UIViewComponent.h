@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -32,7 +32,7 @@
     An iOS-specific class that can create and embed an UIView inside itself.
 
     To use it, create one of these, put it in place and make sure it's visible in a
-    window, then use setView() to assign an NSView to it. The view will then be
+    window, then use setView() to assign a UIView to it. The view will then be
     moved and resized to follow the movements of this component.
 
     Of course, since the view is a native object, it'll obliterate any

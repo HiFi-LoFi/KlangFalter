@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -101,13 +101,12 @@ namespace FileHelpers
     }
 
    #if JUCE_IOS
-    String getIOSSystemLocation (NSSearchPathDirectory type)
+    static String getIOSSystemLocation (NSSearchPathDirectory type)
     {
         return nsStringToJuce ([NSSearchPathForDirectoriesInDomains (type, NSUserDomainMask, YES)
                                 objectAtIndex: 0]);
     }
-   #endif
-
+   #else
     static bool launchExecutable (const String& pathAndArguments)
     {
         const char* const argv[4] = { "/bin/sh", "-c", pathAndArguments.toUTF8(), 0 };
@@ -128,18 +127,19 @@ namespace FileHelpers
 
         return true;
     }
+   #endif
 }
 
 bool File::isOnCDRomDrive() const
 {
-    const char* const cdTypes[] = { "cd9660", "cdfs", "cddafs", "udf", 0 };
+    static const char* const cdTypes[] = { "cd9660", "cdfs", "cddafs", "udf", nullptr };
 
     return FileHelpers::isFileOnDriveType (*this, cdTypes);
 }
 
 bool File::isOnHardDisk() const
 {
-    const char* const nonHDTypes[] = { "nfs", "smbfs", "ramfs", 0 };
+    static const char* const nonHDTypes[] = { "nfs", "smbfs", "ramfs", nullptr };
 
     return ! (isOnCDRomDrive() || FileHelpers::isFileOnDriveType (*this, nonHDTypes));
 }
@@ -205,7 +205,7 @@ File File::getSpecialLocation (const SpecialLocationType type)
             {
                 File tmp ("~/Library/Caches/" + juce_getExecutableFile().getFileNameWithoutExtension());
                 tmp.createDirectory();
-                return tmp.getFullPathName();
+                return File (tmp.getFullPathName());
             }
           #endif
             case userMusicDirectory:                resultPath = "~/Music"; break;
@@ -245,7 +245,7 @@ File File::getSpecialLocation (const SpecialLocationType type)
                 buffer.calloc (size + 8);
 
                 _NSGetExecutablePath (buffer.getData(), &size);
-                return String::fromUTF8 (buffer, (int) size);
+                return File (String::fromUTF8 (buffer, (int) size));
             }
 
             default:
@@ -257,7 +257,7 @@ File File::getSpecialLocation (const SpecialLocationType type)
             return File (resultPath.convertToPrecomposedUnicode());
     }
 
-    return File::nonexistent;
+    return File();
 }
 
 //==============================================================================
@@ -271,21 +271,24 @@ String File::getVersion() const
                     return nsStringToJuce (name);
     }
 
-    return String::empty;
+    return String();
 }
 
 //==============================================================================
+static NSString* getFileLink (const String& path)
+{
+    return [[NSFileManager defaultManager] destinationOfSymbolicLinkAtPath: juceStringToNS (path) error: nil];
+}
+
+bool File::isSymbolicLink() const
+{
+    return getFileLink (fullPath) != nil;
+}
+
 File File::getLinkedTarget() const
 {
-   #if JUCE_IOS || (defined (MAC_OS_X_VERSION_10_5) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
-    NSString* dest = [[NSFileManager defaultManager] destinationOfSymbolicLinkAtPath: juceStringToNS (getFullPathName()) error: nil];
-   #else
-    // (the cast here avoids a deprecation warning)
-    NSString* dest = [((id) [NSFileManager defaultManager]) pathContentOfSymbolicLinkAtPath: juceStringToNS (getFullPathName())];
-   #endif
-
-    if (dest != nil)
-        return File (nsStringToJuce (dest));
+    if (NSString* dest = getFileLink (fullPath))
+        return getSiblingFile (nsStringToJuce (dest));
 
     return *this;
 }
@@ -301,14 +304,11 @@ bool File::moveToTrash() const
    #else
     JUCE_AUTORELEASEPOOL
     {
-        NSString* p = juceStringToNS (getFullPathName());
+        NSURL* url = [NSURL fileURLWithPath: juceStringToNS (getFullPathName())];
 
-        return [[NSWorkspace sharedWorkspace]
-                    performFileOperation: NSWorkspaceRecycleOperation
-                                  source: [p stringByDeletingLastPathComponent]
-                             destination: nsEmptyString()
-                                   files: [NSArray arrayWithObject: [p lastPathComponent]]
-                                     tag: nil ];
+        [[NSWorkspace sharedWorkspace] recycleURLs: [NSArray arrayWithObject: url]
+                                 completionHandler: nil];
+        return true;
     }
    #endif
 }
@@ -348,7 +348,7 @@ public:
                     return false;
 
                 [enumerator skipDescendents];
-                filenameFound = nsStringToJuce (file);
+                filenameFound = nsStringToJuce (file).convertToPrecomposedUnicode();
 
                 if (wildcardUTF8 == nullptr)
                     wildcardUTF8 = wildCard.toUTF8();
@@ -396,9 +396,15 @@ bool JUCE_CALLTYPE Process::openDocument (const String& fileName, const String& 
 {
     JUCE_AUTORELEASEPOOL
     {
-        NSURL* filenameAsURL = [NSURL URLWithString: juceStringToNS (fileName)];
+        NSString* fileNameAsNS (juceStringToNS (fileName));
+
+        NSURL* filenameAsURL ([NSURL URLWithString: fileNameAsNS]);
+
+        if (filenameAsURL == nil)
+            filenameAsURL = [NSURL fileURLWithPath: fileNameAsNS];
 
       #if JUCE_IOS
+        ignoreUnused (parameters);
         return [[UIApplication sharedApplication] openURL: filenameAsURL];
       #else
         NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
@@ -451,13 +457,7 @@ OSType File::getMacOSType() const
 {
     JUCE_AUTORELEASEPOOL
     {
-       #if JUCE_IOS || (defined (MAC_OS_X_VERSION_10_5) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
         NSDictionary* fileDict = [[NSFileManager defaultManager] attributesOfItemAtPath: juceStringToNS (getFullPathName()) error: nil];
-       #else
-        // (the cast here avoids a deprecation warning)
-        NSDictionary* fileDict = [((id) [NSFileManager defaultManager]) fileAttributesAtPath: juceStringToNS (getFullPathName()) traverseLink: NO];
-       #endif
-
         return [fileDict fileHFSTypeCode];
     }
 }

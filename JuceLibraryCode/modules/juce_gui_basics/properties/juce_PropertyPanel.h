@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -45,6 +45,9 @@ public:
     /** Creates an empty property panel. */
     PropertyPanel();
 
+    /** Creates an empty property panel. */
+    PropertyPanel (const String& name);
+
     /** Destructor. */
     ~PropertyPanel();
 
@@ -60,12 +63,13 @@ public:
         These properties are added without them being inside a named section. If you
         want them to be kept together in a collapsible section, use addSection() instead.
     */
-    void addProperties (const Array <PropertyComponent*>& newPropertyComponents);
+    void addProperties (const Array<PropertyComponent*>& newPropertyComponents);
 
     /** Adds a set of properties to the panel.
 
-        These properties are added at the bottom of the list, under a section heading with
-        a plus/minus button that allows it to be opened and closed.
+        These properties are added under a section heading with a plus/minus button that
+        allows it to be opened and closed. If indexToInsertAt is < 0 then it will be added
+        at the end of the list, or before the given index if the index is non-zero.
 
         The components in the list will be owned by this object and will be automatically
         deleted later on when no longer needed.
@@ -73,8 +77,9 @@ public:
         To add properies without them being in a section, use addProperties().
     */
     void addSection (const String& sectionTitle,
-                     const Array <PropertyComponent*>& newPropertyComponents,
-                     bool shouldSectionInitiallyBeOpen = true);
+                     const Array<PropertyComponent*>& newPropertyComponents,
+                     bool shouldSectionInitiallyBeOpen = true,
+                     int indexToInsertAt = -1);
 
     /** Calls the refresh() method of all PropertyComponents in the panel */
     void refreshAll() const;
@@ -108,6 +113,11 @@ public:
     */
     void setSectionEnabled (int sectionIndex, bool shouldBeEnabled);
 
+    /** Remove one of the sections using the section index.
+        The index is from 0 up to the number of items returned by getSectionNames().
+    */
+    void removeSection (int sectionIndex);
+
     //==============================================================================
     /** Saves the current state of open/closed sections so it can be restored later.
 
@@ -137,7 +147,7 @@ public:
     /** Returns the message that is displayed when there are no properties.
         @see setMessageWhenEmpty
     */
-    const String& getMessageWhenEmpty() const;
+    const String& getMessageWhenEmpty() const noexcept;
 
     //==============================================================================
     /** @internal */
@@ -146,13 +156,13 @@ public:
     void resized() override;
 
 private:
-    class SectionComponent;
-
     Viewport viewport;
-    class PropertyHolderComponent;
+    struct SectionComponent;
+    struct PropertyHolderComponent;
     PropertyHolderComponent* propertyHolderComponent;
     String messageWhenEmpty;
 
+    void init();
     void updatePropHolderLayout() const;
     void updatePropHolderLayout (int width) const;
 

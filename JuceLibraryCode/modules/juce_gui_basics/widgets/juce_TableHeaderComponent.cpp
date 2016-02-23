@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -440,12 +440,12 @@ String TableHeaderComponent::toString() const
         e->setAttribute ("width", ci->width);
     }
 
-    return doc.createDocument (String::empty, true, false);
+    return doc.createDocument ("", true, false);
 }
 
 void TableHeaderComponent::restoreFromString (const String& storedVersion)
 {
-    ScopedPointer <XmlElement> storedXml (XmlDocument::parse (storedVersion));
+    ScopedPointer<XmlElement> storedXml (XmlDocument::parse (storedVersion));
     int index = 0;
 
     if (storedXml != nullptr && storedXml->hasTagName ("TABLELAYOUT"))
@@ -590,7 +590,8 @@ void TableHeaderComponent::mouseDrag (const MouseEvent& e)
 {
     if (columnIdBeingResized == 0
          && columnIdBeingDragged == 0
-         && ! (e.mouseWasClicked() || e.mods.isPopupMenu()))
+         && e.mouseWasDraggedSinceMouseDown()
+         && ! e.mods.isPopupMenu())
     {
         dragOverlayComp = nullptr;
 
@@ -599,6 +600,7 @@ void TableHeaderComponent::mouseDrag (const MouseEvent& e)
         if (columnIdBeingResized != 0)
         {
             const ColumnInfo* const ci = getInfoForId (columnIdBeingResized);
+            jassert (ci != nullptr);
             initialColumnWidth = ci->width;
         }
         else
@@ -623,7 +625,7 @@ void TableHeaderComponent::mouseDrag (const MouseEvent& e)
                         minWidthOnRight += columns.getUnchecked (i)->minimumWidth;
 
                 const Rectangle<int> currentPos (getColumnPosition (getIndexOfColumnId (columnIdBeingResized, true)));
-                w = jmax (ci->minimumWidth, jmin (w, getWidth() - minWidthOnRight - currentPos.getX()));
+                w = jmax (ci->minimumWidth, jmin (w, lastDeliberateWidth - minWidthOnRight - currentPos.getX()));
             }
 
             setColumnWidth (columnIdBeingResized, w);
@@ -767,7 +769,7 @@ void TableHeaderComponent::mouseUp (const MouseEvent& e)
 
     updateColumnUnderMouse (e);
 
-    if (columnIdUnderMouse != 0 && e.mouseWasClicked() && ! e.mods.isPopupMenu())
+    if (columnIdUnderMouse != 0 && ! (e.mouseWasDraggedSinceMouseDown() || e.mods.isPopupMenu()))
         columnClicked (columnIdUnderMouse, e.mods);
 
     dragOverlayComp = nullptr;

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,9 +22,13 @@
   ==============================================================================
 */
 
-AudioFormat::AudioFormat (const String& name, const StringArray& extensions)
-  : formatName (name),
-    fileExtensions (extensions)
+AudioFormat::AudioFormat (String name, StringArray extensions)
+   : formatName (name), fileExtensions (extensions)
+{
+}
+
+AudioFormat::AudioFormat (StringRef name, StringRef extensions)
+   : formatName (name.text), fileExtensions (StringArray::fromTokens (extensions, false))
 {
 }
 
@@ -32,7 +36,6 @@ AudioFormat::~AudioFormat()
 {
 }
 
-//==============================================================================
 bool AudioFormat::canHandleFile (const File& f)
 {
     for (int i = 0; i < fileExtensions.size(); ++i)

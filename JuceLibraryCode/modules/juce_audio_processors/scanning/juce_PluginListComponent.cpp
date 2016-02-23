@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,10 +22,108 @@
   ==============================================================================
 */
 
-PluginListComponent::PluginListComponent (AudioPluginFormatManager& manager,
-                                          KnownPluginList& listToEdit,
-                                          const File& deadMansPedal,
-                                          PropertiesFile* const props)
+class PluginListComponent::TableModel  : public TableListBoxModel
+{
+public:
+    TableModel (PluginListComponent& c, KnownPluginList& l)  : owner (c), list (l) {}
+
+    int getNumRows() override
+    {
+        return list.getNumTypes() + list.getBlacklistedFiles().size();
+    }
+
+    void paintRowBackground (Graphics& g, int /*rowNumber*/, int /*width*/, int /*height*/, bool rowIsSelected) override
+    {
+        if (rowIsSelected)
+            g.fillAll (owner.findColour (TextEditor::highlightColourId));
+    }
+
+    enum
+    {
+        nameCol = 1,
+        typeCol = 2,
+        categoryCol = 3,
+        manufacturerCol = 4,
+        descCol = 5
+    };
+
+    void paintCell (Graphics& g, int row, int columnId, int width, int height, bool /*rowIsSelected*/) override
+    {
+        String text;
+        bool isBlacklisted = row >= list.getNumTypes();
+
+        if (isBlacklisted)
+        {
+            if (columnId == nameCol)
+                text = list.getBlacklistedFiles() [row - list.getNumTypes()];
+            else if (columnId == descCol)
+                text = TRANS("Deactivated after failing to initialise correctly");
+        }
+        else if (const PluginDescription* const desc = list.getType (row))
+        {
+            switch (columnId)
+            {
+                case nameCol:         text = desc->name; break;
+                case typeCol:         text = desc->pluginFormatName; break;
+                case categoryCol:     text = desc->category.isNotEmpty() ? desc->category : "-"; break;
+                case manufacturerCol: text = desc->manufacturerName; break;
+                case descCol:         text = getPluginDescription (*desc); break;
+
+                default: jassertfalse; break;
+            }
+        }
+
+        if (text.isNotEmpty())
+        {
+            g.setColour (isBlacklisted ? Colours::red
+                                       : columnId == nameCol ? Colours::black
+                                                             : Colours::grey);
+            g.setFont (Font (height * 0.7f, Font::bold));
+            g.drawFittedText (text, 4, 0, width - 6, height, Justification::centredLeft, 1, 0.9f);
+        }
+    }
+
+    void deleteKeyPressed (int) override
+    {
+        owner.removeSelectedPlugins();
+    }
+
+    void sortOrderChanged (int newSortColumnId, bool isForwards) override
+    {
+        switch (newSortColumnId)
+        {
+            case nameCol:         list.sort (KnownPluginList::sortAlphabetically, isForwards); break;
+            case typeCol:         list.sort (KnownPluginList::sortByFormat, isForwards); break;
+            case categoryCol:     list.sort (KnownPluginList::sortByCategory, isForwards); break;
+            case manufacturerCol: list.sort (KnownPluginList::sortByManufacturer, isForwards); break;
+            case descCol:         break;
+
+            default: jassertfalse; break;
+        }
+    }
+
+    static String getPluginDescription (const PluginDescription& desc)
+    {
+        StringArray items;
+
+        if (desc.descriptiveName != desc.name)
+            items.add (desc.descriptiveName);
+
+        items.add (desc.version);
+
+        items.removeEmptyStrings();
+        return items.joinIntoString (" - ");
+    }
+
+    PluginListComponent& owner;
+    KnownPluginList& list;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TableModel)
+};
+
+//==============================================================================
+PluginListComponent::PluginListComponent (AudioPluginFormatManager& manager, KnownPluginList& listToEdit,
+                                          const File& deadMansPedal, PropertiesFile* const props)
     : formatManager (manager),
       list (listToEdit),
       deadMansPedalFile (deadMansPedal),
@@ -33,16 +131,30 @@ PluginListComponent::PluginListComponent (AudioPluginFormatManager& manager,
       propertiesToUse (props),
       numThreads (0)
 {
-    listBox.setModel (this);
-    addAndMakeVisible (&listBox);
+    tableModel = new TableModel (*this, listToEdit);
 
-    addAndMakeVisible (&optionsButton);
+    TableHeaderComponent& header = table.getHeader();
+
+    header.addColumn (TRANS("Name"),         TableModel::nameCol,         200, 100, 700, TableHeaderComponent::defaultFlags | TableHeaderComponent::sortedForwards);
+    header.addColumn (TRANS("Format"),       TableModel::typeCol,         80, 80, 80,    TableHeaderComponent::notResizable);
+    header.addColumn (TRANS("Category"),     TableModel::categoryCol,     100, 100, 200);
+    header.addColumn (TRANS("Manufacturer"), TableModel::manufacturerCol, 200, 100, 300);
+    header.addColumn (TRANS("Description"),  TableModel::descCol,         300, 100, 500, TableHeaderComponent::notSortable);
+
+    table.setHeaderHeight (22);
+    table.setRowHeight (20);
+    table.setModel (tableModel);
+    table.setMultipleSelectionEnabled (true);
+    addAndMakeVisible (table);
+
+    addAndMakeVisible (optionsButton);
     optionsButton.addListener (this);
     optionsButton.setTriggeredOnMouseDown (true);
 
     setSize (400, 600);
     list.addChangeListener (this);
     updateList();
+    table.getHeader().reSortTable();
 
     PluginDirectoryScanner::applyBlacklistingsFromDeadMansPedal (list, deadMansPedalFile);
     deadMansPedalFile.deleteFile();
@@ -59,6 +171,12 @@ void PluginListComponent::setOptionsButtonText (const String& newText)
     resized();
 }
 
+void PluginListComponent::setScanDialogText (const String& title, const String& content)
+{
+    dialogTitle = title;
+    dialogText = content;
+}
+
 void PluginListComponent::setNumberOfThreadsForScanning (int num)
 {
     numThreads = num;
@@ -66,101 +184,50 @@ void PluginListComponent::setNumberOfThreadsForScanning (int num)
 
 void PluginListComponent::resized()
 {
-    listBox.setBounds (0, 0, getWidth(), getHeight() - 30);
+    Rectangle<int> r (getLocalBounds().reduced (2));
+
+    optionsButton.setBounds (r.removeFromBottom (24));
     optionsButton.changeWidthToFitText (24);
-    optionsButton.setTopLeftPosition (0, getHeight() - 28);
+
+    r.removeFromBottom (3);
+    table.setBounds (r);
 }
 
 void PluginListComponent::changeListenerCallback (ChangeBroadcaster*)
 {
+    table.getHeader().reSortTable();
     updateList();
 }
 
 void PluginListComponent::updateList()
 {
-    listBox.updateContent();
-    listBox.repaint();
+    table.updateContent();
+    table.repaint();
 }
 
-int PluginListComponent::getNumRows()
+void PluginListComponent::removeSelectedPlugins()
 {
-    return list.getNumTypes() + list.getBlacklistedFiles().size();
-}
+    const SparseSet<int> selected (table.getSelectedRows());
 
-void PluginListComponent::paintListBoxItem (int row, Graphics& g, int width, int height, bool rowIsSelected)
-{
-    if (rowIsSelected)
-        g.fillAll (findColour (TextEditor::highlightColourId));
-
-    String name, desc;
-    bool isBlacklisted = false;
-
-    if (row >= list.getNumTypes())
-    {
-        isBlacklisted = true;
-        name = list.getBlacklistedFiles() [row - list.getNumTypes()];
-        desc = TRANS("Deactivated after failing to initialise correctly");
-    }
-    else if (const PluginDescription* const pd = list.getType (row))
-    {
-        name = pd->name;
-
-        desc << pd->pluginFormatName
-             << (pd->isInstrument ? " instrument" : " effect")
-             << " - " << pd->numInputChannels  << (pd->numInputChannels  == 1 ? " in"  : " ins")
-             << " / " << pd->numOutputChannels << (pd->numOutputChannels == 1 ? " out" : " outs");
-
-        if (pd->manufacturerName.isNotEmpty())  desc << " - " << pd->manufacturerName;
-        if (pd->version.isNotEmpty())           desc << " - " << pd->version;
-        if (pd->category.isNotEmpty())          desc << " - category: '" << pd->category << '\'';
-    }
-
-    if (name.isNotEmpty())
-    {
-        GlyphArrangement ga;
-        ga.addCurtailedLineOfText (Font (height * 0.7f, Font::bold),
-                                   name, 8.0f, height * 0.8f, width - 10.0f, true);
-
-        g.setColour (isBlacklisted ? Colours::red : Colours::black);
-        ga.draw (g);
-
-        const Rectangle<float> bb (ga.getBoundingBox (0, -1, false));
-
-        ga.clear();
-        ga.addCurtailedLineOfText (Font (height * 0.6f), desc,
-                                   jmax (bb.getRight() + 10.0f, width / 3.0f), height * 0.8f,
-                                   width - bb.getRight() - 12.0f, true);
-
-        g.setColour (isBlacklisted ? Colours::red : Colours::grey);
-        ga.draw (g);
-    }
-}
-
-static void removePluginItem (KnownPluginList& list, int index)
-{
-    if (index < list.getNumTypes())
-        list.removeType (index);
-    else
-        list.removeFromBlacklist (list.getBlacklistedFiles() [index - list.getNumTypes()]);
-}
-
-void PluginListComponent::deleteKeyPressed (int lastRowSelected)
-{
-    removePluginItem (list, lastRowSelected);
-}
-
-void PluginListComponent::removeSelected()
-{
-    const SparseSet <int> selected (listBox.getSelectedRows());
-
-    for (int i = list.getNumTypes(); --i >= 0;)
+    for (int i = table.getNumRows(); --i >= 0;)
         if (selected.contains (i))
-            removePluginItem (list, i);
+            removePluginItem (i);
+}
+
+void PluginListComponent::setTableModel (TableListBoxModel* model)
+{
+    table.setModel (nullptr);
+    tableModel = model;
+    table.setModel (tableModel);
+
+    table.getHeader().reSortTable();
+    table.updateContent();
+    table.repaint();
 }
 
 bool PluginListComponent::canShowSelectedFolder() const
 {
-    if (const PluginDescription* const desc = list.getType (listBox.getSelectedRow()))
+    if (const PluginDescription* const desc = list.getType (table.getSelectedRow()))
         return File::createFileWithoutCheckingPath (desc->fileOrIdentifier).exists();
 
     return false;
@@ -169,7 +236,7 @@ bool PluginListComponent::canShowSelectedFolder() const
 void PluginListComponent::showSelectedFolder()
 {
     if (canShowSelectedFolder())
-        if (const PluginDescription* const desc = list.getType (listBox.getSelectedRow()))
+        if (const PluginDescription* const desc = list.getType (table.getSelectedRow()))
             File (desc->fileOrIdentifier).getParentDirectory().startAsProcess();
 }
 
@@ -178,6 +245,14 @@ void PluginListComponent::removeMissingPlugins()
     for (int i = list.getNumTypes(); --i >= 0;)
         if (! formatManager.doesPluginStillExist (*list.getType (i)))
             list.removeType (i);
+}
+
+void PluginListComponent::removePluginItem (int index)
+{
+    if (index < list.getNumTypes())
+        list.removeType (index);
+    else
+        list.removeFromBlacklist (list.getBlacklistedFiles() [index - list.getNumTypes()]);
 }
 
 void PluginListComponent::optionsMenuStaticCallback (int result, PluginListComponent* pluginList)
@@ -192,12 +267,9 @@ void PluginListComponent::optionsMenuCallback (int result)
     {
         case 0:   break;
         case 1:   list.clear(); break;
-        case 2:   list.sort (KnownPluginList::sortAlphabetically); break;
-        case 3:   list.sort (KnownPluginList::sortByCategory); break;
-        case 4:   list.sort (KnownPluginList::sortByManufacturer); break;
-        case 5:   removeSelected(); break;
-        case 6:   showSelectedFolder(); break;
-        case 7:   removeMissingPlugins(); break;
+        case 2:   removeSelectedPlugins(); break;
+        case 3:   showSelectedFolder(); break;
+        case 4:   removeMissingPlugins(); break;
 
         default:
             if (AudioPluginFormat* format = formatManager.getFormat (result - 10))
@@ -213,13 +285,9 @@ void PluginListComponent::buttonClicked (Button* button)
     {
         PopupMenu menu;
         menu.addItem (1, TRANS("Clear list"));
-        menu.addItem (5, TRANS("Remove selected plug-in from list"), listBox.getNumSelectedRows() > 0);
-        menu.addItem (6, TRANS("Show folder containing selected plug-in"), canShowSelectedFolder());
-        menu.addItem (7, TRANS("Remove any plug-ins whose files no longer exist"));
-        menu.addSeparator();
-        menu.addItem (2, TRANS("Sort alphabetically"));
-        menu.addItem (3, TRANS("Sort by category"));
-        menu.addItem (4, TRANS("Sort by manufacturer"));
+        menu.addItem (2, TRANS("Remove selected plug-in from list"), table.getNumSelectedRows() > 0);
+        menu.addItem (3, TRANS("Show folder containing selected plug-in"), canShowSelectedFolder());
+        menu.addItem (4, TRANS("Remove any plug-ins whose files no longer exist"));
         menu.addSeparator();
 
         for (int i = 0; i < formatManager.getNumFormats(); ++i)
@@ -242,7 +310,7 @@ bool PluginListComponent::isInterestedInFileDrag (const StringArray& /*files*/)
 
 void PluginListComponent::filesDropped (const StringArray& files, int, int)
 {
-    OwnedArray <PluginDescription> typesFound;
+    OwnedArray<PluginDescription> typesFound;
     list.scanAndAddDragAndDroppedFiles (formatManager, files, typesFound);
 }
 
@@ -262,14 +330,11 @@ void PluginListComponent::setLastSearchPath (PropertiesFile& properties, AudioPl
 class PluginListComponent::Scanner    : private Timer
 {
 public:
-    Scanner (PluginListComponent& plc,
-             AudioPluginFormat& format,
-             PropertiesFile* properties,
-             int threads)
+    Scanner (PluginListComponent& plc, AudioPluginFormat& format, PropertiesFile* properties,
+             int threads, const String& title, const String& text)
         : owner (plc), formatToScan (format), propertiesToUse (properties),
           pathChooserWindow (TRANS("Select folders to scan..."), String::empty, AlertWindow::NoIcon),
-          progressWindow (TRANS("Scanning for plug-ins..."),
-                          TRANS("Searching for all possible plug-in files..."), AlertWindow::NoIcon),
+          progressWindow (title, text, AlertWindow::NoIcon),
           progress (0.0), numThreads (threads), finished (false)
     {
         FileSearchPath path (formatToScan.getDefaultLocationsToSearch());
@@ -480,7 +545,9 @@ private:
 
 void PluginListComponent::scanFor (AudioPluginFormat& format)
 {
-    currentScanner = new Scanner (*this, format, propertiesToUse, numThreads);
+    currentScanner = new Scanner (*this, format, propertiesToUse, numThreads,
+                                  dialogTitle.isNotEmpty() ? dialogTitle : TRANS("Scanning for plug-ins..."),
+                                  dialogText.isNotEmpty()  ? dialogText  : TRANS("Searching for all possible plug-in files..."));
 }
 
 bool PluginListComponent::isScanning() const noexcept

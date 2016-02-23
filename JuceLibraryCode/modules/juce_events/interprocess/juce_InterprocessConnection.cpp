@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,14 +22,27 @@
   ==============================================================================
 */
 
+struct InterprocessConnection::ConnectionThread  : public Thread
+{
+    ConnectionThread (InterprocessConnection& c)  : Thread ("JUCE IPC"), owner (c) {}
+
+    void run() override     { owner.runThread(); }
+
+private:
+    InterprocessConnection& owner;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionThread)
+};
+
+//==============================================================================
 InterprocessConnection::InterprocessConnection (const bool callbacksOnMessageThread,
                                                 const uint32 magicMessageHeaderNumber)
-    : Thread ("Juce IPC connection"),
-      callbackConnectionState (false),
+    : callbackConnectionState (false),
       useMessageThread (callbacksOnMessageThread),
       magicMessageHeader (magicMessageHeaderNumber),
       pipeReceiveMessageTimeout (-1)
 {
+    thread = new ConnectionThread (*this);
 }
 
 InterprocessConnection::~InterprocessConnection()
@@ -37,8 +50,8 @@ InterprocessConnection::~InterprocessConnection()
     callbackConnectionState = false;
     disconnect();
     masterReference.clear();
+    thread = nullptr;
 }
-
 
 //==============================================================================
 bool InterprocessConnection::connectToSocket (const String& hostName,
@@ -53,21 +66,19 @@ bool InterprocessConnection::connectToSocket (const String& hostName,
     if (socket->connect (hostName, portNumber, timeOutMillisecs))
     {
         connectionMadeInt();
-        startThread();
+        thread->startThread();
         return true;
     }
-    else
-    {
-        socket = nullptr;
-        return false;
-    }
+
+    socket = nullptr;
+    return false;
 }
 
 bool InterprocessConnection::connectToPipe (const String& pipeName, const int timeoutMs)
 {
     disconnect();
 
-    ScopedPointer <NamedPipe> newPipe (new NamedPipe());
+    ScopedPointer<NamedPipe> newPipe (new NamedPipe());
 
     if (newPipe->openExisting (pipeName))
     {
@@ -80,13 +91,13 @@ bool InterprocessConnection::connectToPipe (const String& pipeName, const int ti
     return false;
 }
 
-bool InterprocessConnection::createPipe (const String& pipeName, const int timeoutMs)
+bool InterprocessConnection::createPipe (const String& pipeName, const int timeoutMs, bool mustNotExist)
 {
     disconnect();
 
-    ScopedPointer <NamedPipe> newPipe (new NamedPipe());
+    ScopedPointer<NamedPipe> newPipe (new NamedPipe());
 
-    if (newPipe->createNewPipe (pipeName))
+    if (newPipe->createNewPipe (pipeName, mustNotExist))
     {
         const ScopedLock sl (pipeAndSocketLock);
         pipeReceiveMessageTimeout = timeoutMs;
@@ -99,21 +110,24 @@ bool InterprocessConnection::createPipe (const String& pipeName, const int timeo
 
 void InterprocessConnection::disconnect()
 {
-    if (socket != nullptr)
-        socket->close();
-
-    if (pipe != nullptr)
-        pipe->close();
-
-    stopThread (4000);
+    thread->signalThreadShouldExit();
 
     {
         const ScopedLock sl (pipeAndSocketLock);
-        socket = nullptr;
-        pipe = nullptr;
+        if (socket != nullptr)  socket->close();
+        if (pipe != nullptr)    pipe->close();
     }
 
+    thread->stopThread (4000);
+    deletePipeAndSocket();
     connectionLostInt();
+}
+
+void InterprocessConnection::deletePipeAndSocket()
+{
+    const ScopedLock sl (pipeAndSocketLock);
+    socket = nullptr;
+    pipe = nullptr;
 }
 
 bool InterprocessConnection::isConnected() const
@@ -122,63 +136,65 @@ bool InterprocessConnection::isConnected() const
 
     return ((socket != nullptr && socket->isConnected())
               || (pipe != nullptr && pipe->isOpen()))
-            && isThreadRunning();
+            && thread->isThreadRunning();
 }
 
 String InterprocessConnection::getConnectedHostName() const
 {
-    if (pipe != nullptr)
-        return "localhost";
-
-    if (socket != nullptr)
     {
-        if (! socket->isLocal())
-            return socket->getHostName();
+        const ScopedLock sl (pipeAndSocketLock);
 
-        return "localhost";
+        if (pipe == nullptr && socket == nullptr)
+            return String();
+
+        if (socket != nullptr && ! socket->isLocal())
+            return socket->getHostName();
     }
 
-    return String::empty;
+    return IPAddress::local().toString();
 }
 
 //==============================================================================
 bool InterprocessConnection::sendMessage (const MemoryBlock& message)
 {
-    uint32 messageHeader[2];
-    messageHeader [0] = ByteOrder::swapIfBigEndian (magicMessageHeader);
-    messageHeader [1] = ByteOrder::swapIfBigEndian ((uint32) message.getSize());
+    uint32 messageHeader[2] = { ByteOrder::swapIfBigEndian (magicMessageHeader),
+                                ByteOrder::swapIfBigEndian ((uint32) message.getSize()) };
 
     MemoryBlock messageData (sizeof (messageHeader) + message.getSize());
     messageData.copyFrom (messageHeader, 0, sizeof (messageHeader));
     messageData.copyFrom (message.getData(), sizeof (messageHeader), message.getSize());
 
-    int bytesWritten = 0;
+    return writeData (messageData.getData(), (int) messageData.getSize()) == (int) messageData.getSize();
+}
 
+int InterprocessConnection::writeData (void* data, int dataSize)
+{
     const ScopedLock sl (pipeAndSocketLock);
 
     if (socket != nullptr)
-        bytesWritten = socket->write (messageData.getData(), (int) messageData.getSize());
-    else if (pipe != nullptr)
-        bytesWritten = pipe->write (messageData.getData(), (int) messageData.getSize(), pipeReceiveMessageTimeout);
+        return socket->write (data, dataSize);
 
-    return bytesWritten == (int) messageData.getSize();
+    if (pipe != nullptr)
+        return pipe->write (data, dataSize, pipeReceiveMessageTimeout);
+
+    return 0;
 }
 
 //==============================================================================
-void InterprocessConnection::initialiseWithSocket (StreamingSocket* const socket_)
+void InterprocessConnection::initialiseWithSocket (StreamingSocket* newSocket)
 {
-    jassert (socket == nullptr);
-    socket = socket_;
+    jassert (socket == nullptr && pipe == nullptr);
+    socket = newSocket;
     connectionMadeInt();
-    startThread();
+    thread->startThread();
 }
 
-void InterprocessConnection::initialiseWithPipe (NamedPipe* const pipe_)
+void InterprocessConnection::initialiseWithPipe (NamedPipe* newPipe)
 {
-    jassert (pipe == nullptr);
-    pipe = pipe_;
+    jassert (socket == nullptr && pipe == nullptr);
+    pipe = newPipe;
     connectionMadeInt();
-    startThread();
+    thread->startThread();
 }
 
 //==============================================================================
@@ -276,7 +292,7 @@ bool InterprocessConnection::readNextMessageInt()
 
             while (bytesInMessage > 0)
             {
-                if (threadShouldExit())
+                if (thread->threadShouldExit())
                     return false;
 
                 const int numThisTime = jmin (bytesInMessage, 65536);
@@ -299,10 +315,7 @@ bool InterprocessConnection::readNextMessageInt()
     else if (bytes < 0)
     {
         if (socket != nullptr)
-        {
-            const ScopedLock sl (pipeAndSocketLock);
-            socket = nullptr;
-        }
+            deletePipeAndSocket();
 
         connectionLostInt();
         return false;
@@ -311,9 +324,9 @@ bool InterprocessConnection::readNextMessageInt()
     return true;
 }
 
-void InterprocessConnection::run()
+void InterprocessConnection::runThread()
 {
-    while (! threadShouldExit())
+    while (! thread->threadShouldExit())
     {
         if (socket != nullptr)
         {
@@ -321,45 +334,32 @@ void InterprocessConnection::run()
 
             if (ready < 0)
             {
-                {
-                    const ScopedLock sl (pipeAndSocketLock);
-                    socket = nullptr;
-                }
-
+                deletePipeAndSocket();
                 connectionLostInt();
                 break;
             }
-            else if (ready > 0)
+
+            if (ready == 0)
             {
-                if (! readNextMessageInt())
-                    break;
-            }
-            else
-            {
-                Thread::sleep (1);
+                thread->wait (1);
+                continue;
             }
         }
         else if (pipe != nullptr)
         {
             if (! pipe->isOpen())
             {
-                {
-                    const ScopedLock sl (pipeAndSocketLock);
-                    pipe = nullptr;
-                }
-
+                deletePipeAndSocket();
                 connectionLostInt();
                 break;
-            }
-            else
-            {
-                if (! readNextMessageInt())
-                    break;
             }
         }
         else
         {
             break;
         }
+
+        if (thread->threadShouldExit() || ! readNextMessageInt())
+            break;
     }
 }

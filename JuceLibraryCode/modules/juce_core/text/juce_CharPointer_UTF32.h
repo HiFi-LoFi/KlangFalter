@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -42,7 +42,7 @@ public:
     typedef juce_wchar CharType;
 
     inline explicit CharPointer_UTF32 (const CharType* const rawPointer) noexcept
-        : data (const_cast <CharType*> (rawPointer))
+        : data (const_cast<CharType*> (rawPointer))
     {
     }
 
@@ -59,7 +59,7 @@ public:
 
     inline CharPointer_UTF32 operator= (const CharType* text) noexcept
     {
-        data = const_cast <CharType*> (text);
+        data = const_cast<CharType*> (text);
         return *this;
     }
 
@@ -355,7 +355,7 @@ public:
     /** Returns true if this data contains a valid string in this encoding. */
     static bool isValidString (const CharType* dataToTest, int maxBytesToRead)
     {
-        maxBytesToRead /= sizeof (CharType);
+        maxBytesToRead /= (int) sizeof (CharType);
 
         while (--maxBytesToRead >= 0 && *dataToTest != 0)
             if (! canRepresent (*dataToTest++))
@@ -367,7 +367,7 @@ public:
     /** Atomically swaps this pointer for a new value, returning the previous value. */
     CharPointer_UTF32 atomicSwap (const CharPointer_UTF32 newValue)
     {
-        return CharPointer_UTF32 (reinterpret_cast <Atomic<CharType*>&> (data).exchange (newValue.data));
+        return CharPointer_UTF32 (reinterpret_cast<Atomic<CharType*>&> (data).exchange (newValue.data));
     }
 
 private:

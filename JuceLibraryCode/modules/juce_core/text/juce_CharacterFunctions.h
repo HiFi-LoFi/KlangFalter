@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -109,6 +109,16 @@ public:
     static bool isLetterOrDigit (char character) noexcept;
     /** Checks whether a character is alphabetic or numeric. */
     static bool isLetterOrDigit (juce_wchar character) noexcept;
+
+    /** Checks whether a character is a printable character, i.e. alphabetic, numeric,
+        a punctuation character or a space.
+    */
+    static bool isPrintable (char character) noexcept;
+
+    /** Checks whether a character is a printable character, i.e. alphabetic, numeric,
+        a punctuation character or a space.
+    */
+    static bool isPrintable (juce_wchar character) noexcept;
 
     /** Returns 0 to 16 for '0' to 'F", or -1 for characters that aren't a legal hex digit. */
     static int getHexDigitValue (juce_wchar digit) noexcept;
@@ -280,6 +290,26 @@ public:
         return isNeg ? -v : v;
     }
 
+    template <typename ResultType>
+    struct HexParser
+    {
+        template <typename CharPointerType>
+        static ResultType parse (CharPointerType t) noexcept
+        {
+            ResultType result = 0;
+
+            while (! t.isEmpty())
+            {
+                const int hexValue = CharacterFunctions::getHexDigitValue (t.getAndAdvance());
+
+                if (hexValue >= 0)
+                    result = (result << 4) | hexValue;
+            }
+
+            return result;
+        }
+    };
+
     //==============================================================================
     /** Counts the number of characters in a given string, stopping if the count exceeds
         a specified limit. */
@@ -311,15 +341,8 @@ public:
     template <typename DestCharPointerType, typename SrcCharPointerType>
     static void copyAll (DestCharPointerType& dest, SrcCharPointerType src) noexcept
     {
-        for (;;)
-        {
-            const juce_wchar c = src.getAndAdvance();
-
-            if (c == 0)
-                break;
-
+        while (juce_wchar c = src.getAndAdvance())
             dest.write (c);
-        }
 
         dest.writeNull();
     }
@@ -368,18 +391,28 @@ public:
         dest.writeNull();
     }
 
+    /** Compares two characters. */
+    static inline int compare (juce_wchar char1, juce_wchar char2) noexcept
+    {
+        if (int diff = static_cast<int> (char1) - static_cast<int> (char2))
+            return diff < 0 ? -1 : 1;
+
+        return 0;
+    }
+
     /** Compares two null-terminated character strings. */
     template <typename CharPointerType1, typename CharPointerType2>
     static int compare (CharPointerType1 s1, CharPointerType2 s2) noexcept
     {
         for (;;)
         {
-            const int c1 = (int) s1.getAndAdvance();
-            const int c2 = (int) s2.getAndAdvance();
-            const int diff = c1 - c2;
+            const juce_wchar c1 = s1.getAndAdvance();
 
-            if (diff != 0)  return diff < 0 ? -1 : 1;
-            if (c1 == 0)    break;
+            if (int diff = compare (c1, s2.getAndAdvance()))
+                return diff;
+
+            if (c1 == 0)
+                break;
         }
 
         return 0;
@@ -391,15 +424,22 @@ public:
     {
         while (--maxChars >= 0)
         {
-            const int c1 = (int) s1.getAndAdvance();
-            const int c2 = (int) s2.getAndAdvance();
-            const int diff = c1 - c2;
+            const juce_wchar c1 = s1.getAndAdvance();
 
-            if (diff != 0)  return diff < 0 ? -1 : 1;
-            if (c1 == 0)    break;
+            if (int diff = compare (c1, s2.getAndAdvance()))
+                return diff;
+
+            if (c1 == 0)
+                break;
         }
 
         return 0;
+    }
+
+    /** Compares two characters, using a case-independant match. */
+    static inline int compareIgnoreCase (juce_wchar char1, juce_wchar char2) noexcept
+    {
+        return char1 != char2 ? compare (toUpperCase (char1), toUpperCase (char2)) : 0;
     }
 
     /** Compares two null-terminated character strings, using a case-independant match. */
@@ -408,12 +448,13 @@ public:
     {
         for (;;)
         {
-            const int c1 = (int) s1.toUpperCase(); ++s1;
-            const int c2 = (int) s2.toUpperCase(); ++s2;
-            const int diff = c1 - c2;
+            const juce_wchar c1 = s1.getAndAdvance();
 
-            if (diff != 0)  return diff < 0 ? -1 : 1;
-            if (c1 == 0)    break;
+            if (int diff = compareIgnoreCase (c1, s2.getAndAdvance()))
+                return diff;
+
+            if (c1 == 0)
+                break;
         }
 
         return 0;
@@ -425,12 +466,13 @@ public:
     {
         while (--maxChars >= 0)
         {
-            const int c1 = (int) s1.toUpperCase(); ++s1;
-            const int c2 = (int) s2.toUpperCase(); ++s2;
-            const int diff = c1 - c2;
+            const juce_wchar c1 = s1.getAndAdvance();
 
-            if (diff != 0)  return diff < 0 ? -1 : 1;
-            if (c1 == 0)    break;
+            if (int diff = compareIgnoreCase (c1, s2.getAndAdvance()))
+                return diff;
+
+            if (c1 == 0)
+                break;
         }
 
         return 0;
@@ -469,6 +511,24 @@ public:
         while (textToSearch.compareUpTo (substringToLookFor, substringLength) != 0
                  && ! textToSearch.isEmpty())
             ++textToSearch;
+
+        return textToSearch;
+    }
+
+    /** Returns a pointer to the first occurrence of a substring in a string.
+        If the substring is not found, this will return a pointer to the string's
+        null terminator.
+    */
+    template <typename CharPointerType>
+    static CharPointerType find (CharPointerType textToSearch, const juce_wchar charToLookFor) noexcept
+    {
+        for (;; ++textToSearch)
+        {
+            const juce_wchar c = *textToSearch;
+
+            if (c == charToLookFor || c == 0)
+                break;
+        }
 
         return textToSearch;
     }
@@ -552,8 +612,8 @@ public:
     /** Returns a pointer to the first character in the string which is found in
         the breakCharacters string.
     */
-    template <typename Type>
-    static Type findEndOfToken (Type text, const Type breakCharacters, const Type quoteCharacters)
+    template <typename Type, typename BreakType>
+    static Type findEndOfToken (Type text, const BreakType breakCharacters, const Type quoteCharacters)
     {
         juce_wchar currentQuoteChar = 0;
 

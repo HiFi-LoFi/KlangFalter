@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -64,14 +64,10 @@ void InterprocessConnectionServer::run()
 {
     while ((! threadShouldExit()) && socket != nullptr)
     {
-        ScopedPointer <StreamingSocket> clientSocket (socket->waitForNextConnection());
+        ScopedPointer<StreamingSocket> clientSocket (socket->waitForNextConnection());
 
         if (clientSocket != nullptr)
-        {
-            InterprocessConnection* newConnection = createConnectionObject();
-
-            if (newConnection != nullptr)
+            if (InterprocessConnection* newConnection = createConnectionObject())
                 newConnection->initialiseWithSocket (clientSocket.release());
-        }
     }
 }

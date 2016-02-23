@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -48,7 +48,7 @@ public:
     //==============================================================================
     /** Creates an (invalid) file object.
 
-        The file is initially set to an empty path, so getFullPath() will return
+        The file is initially set to an empty path, so getFullPathName() will return
         an empty string, and comparing the file to File::nonexistent will return
         true.
 
@@ -203,7 +203,7 @@ public:
 
         @see getFileExtension, withFileExtension, getFileNameWithoutExtension
     */
-    bool hasFileExtension (const String& extensionToTest) const;
+    bool hasFileExtension (StringRef extensionToTest) const;
 
     /** Returns a version of this file with a different file extension.
 
@@ -215,7 +215,7 @@ public:
 
         @see getFileName, getFileExtension, hasFileExtension, getFileNameWithoutExtension
     */
-    File withFileExtension (const String& newExtension) const;
+    File withFileExtension (StringRef newExtension) const;
 
     /** Returns the last part of the filename, without its file extension.
 
@@ -255,7 +255,7 @@ public:
 
         @see getSiblingFile, getParentDirectory, getRelativePathFrom, isAChildOf
     */
-    File getChildFile (String relativeOrAbsolutePath) const;
+    File getChildFile (StringRef relativeOrAbsolutePath) const;
 
     /** Returns a file which is in the same directory as this one.
 
@@ -263,7 +263,7 @@ public:
 
         @see getChildFile, getParentDirectory
     */
-    File getSiblingFile (const String& siblingFileName) const;
+    File getSiblingFile (StringRef siblingFileName) const;
 
     //==============================================================================
     /** Returns the directory that contains this file or directory.
@@ -348,15 +348,25 @@ public:
     bool setReadOnly (bool shouldBeReadOnly,
                       bool applyRecursively = false) const;
 
+    /** Changes the execute-permissions of a file.
+
+        @param shouldBeExecutable   whether to add or remove execute-permission
+        @returns    true if it manages to change the file's permissions.
+    */
+    bool setExecutePermission (bool shouldBeExecutable) const;
+
     /** Returns true if this file is a hidden or system file.
         The criteria for deciding whether a file is hidden are platform-dependent.
     */
     bool isHidden() const;
 
-    /** If this file is a link, this returns the file that it points to.
-        If this file isn't actually link, it'll just return itself.
+    /** Returns a unique identifier for the file, if one is available.
+
+        Depending on the OS and file-system, this may be a unix inode number or
+        a win32 file identifier, or 0 if it fails to find one. The number will
+        be unique on the filesystem, but not globally.
     */
-    File getLinkedTarget() const;
+    uint64 getFileIdentifier() const;
 
     //==============================================================================
     /** Returns the last modification time of this file.
@@ -420,14 +430,15 @@ public:
 
         If it already exists or is a directory, this method will do nothing.
 
-        @returns    true if the file has been created (or if it already existed).
+        @returns    a result to indicate whether the file was created successfully,
+                    or an error message if it failed.
         @see createDirectory
     */
     Result create() const;
 
     /** Creates a new directory for this filename.
 
-        This will try to create the file as a directory, and fill also create
+        This will try to create the file as a directory, and will also create
         any parent directories it needs in order to complete the operation.
 
         @returns    a result to indicate whether the directory was created successfully, or
@@ -474,6 +485,9 @@ public:
 
         Note that the destination file isn't the directory to put it in, it's the actual
         filename that you want the new file to have.
+
+        Also note that on some OSes (e.g. Windows), moving files between different
+        volumes may not be possible.
 
         @returns    true if the operation succeeds
     */
@@ -738,7 +752,7 @@ public:
 
         @see revealToUser
     */
-    bool startAsProcess (const String& parameters = String::empty) const;
+    bool startAsProcess (const String& parameters = String()) const;
 
     /** Opens Finder, Explorer, or whatever the OS uses, to show the user this file's location.
         @see startAsProcess
@@ -833,6 +847,11 @@ public:
         /** In a plugin, this will return the path of the host executable. */
         hostApplicationPath,
 
+       #if JUCE_WINDOWS
+        /** On a Windows machine, returns the location of the Windows/System32 folder. */
+        windowsSystemDirectory,
+       #endif
+
         /** The directory in which applications normally get installed.
             So on windows, this would be something like "c:\program files", on the
             Mac "/Applications", or "/usr" on linux.
@@ -852,8 +871,7 @@ public:
         This will try to return the name of a non-existent temp file.
         To get the temp folder, you can use getSpecialLocation (File::tempDirectory).
     */
-    static File createTempFile (const String& fileNameEnding);
-
+    static File createTempFile (StringRef fileNameEnding);
 
     //==============================================================================
     /** Returns the current working directory.
@@ -908,7 +926,7 @@ public:
     static bool areFileNamesCaseSensitive();
 
     /** Returns true if the string seems to be a fully-specified absolute path. */
-    static bool isAbsolutePath (const String& path);
+    static bool isAbsolutePath (StringRef path);
 
     /** Creates a file that simply contains this string, without doing the sanity-checking
         that the normal constructors do.
@@ -920,8 +938,28 @@ public:
     /** Adds a separator character to the end of a path if it doesn't already have one. */
     static String addTrailingSeparator (const String& path);
 
-   #if JUCE_MAC || JUCE_IOS || DOXYGEN
     //==============================================================================
+    /** Tries to create a symbolic link and returns a boolean to indicate success */
+    bool createSymbolicLink (const File& linkFileToCreate, bool overwriteExisting) const;
+
+    /** Returns true if this file is a link or alias that can be followed using getLinkedTarget(). */
+    bool isSymbolicLink() const;
+
+    /** If this file is a link or alias, this returns the file that it points to.
+        If the file isn't actually link, it'll just return itself.
+    */
+    File getLinkedTarget() const;
+
+   #if JUCE_WINDOWS
+    /** Windows ONLY - Creates a win32 .LNK shortcut file that links to this file. */
+    bool createShortcut (const String& description, const File& linkFileToCreate) const;
+
+    /** Windows ONLY - Returns true if this is a win32 .LNK file. */
+    bool isShortcut() const;
+   #endif
+
+    //==============================================================================
+   #if JUCE_MAC || JUCE_IOS || DOXYGEN
     /** OSX ONLY - Finds the OSType of a file from the its resources. */
     OSType getMacOSType() const;
 
@@ -932,11 +970,6 @@ public:
    #if JUCE_MAC || DOXYGEN
     /** OSX ONLY - Adds this file to the OSX dock */
     void addToDock() const;
-   #endif
-
-   #if JUCE_WINDOWS
-    /** Windows ONLY - Creates a win32 .LNK shortcut file that links to this file. */
-    bool createLink (const String& description, const File& linkFileToCreate) const;
    #endif
 
 private:
@@ -952,6 +985,7 @@ private:
     bool setFileTimesInternal (int64 m, int64 a, int64 c) const;
     void getFileTimesInternal (int64& m, int64& a, int64& c) const;
     bool setFileReadOnlyInternal (bool) const;
+    bool setFileExecutableInternal (bool) const;
 };
 
 #endif   // JUCE_FILE_H_INCLUDED

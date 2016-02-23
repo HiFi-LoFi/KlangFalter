@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -71,6 +71,16 @@ public:
         layout, but it can be overridden for more specific needs.
     */
     virtual void hasBeenMoved();
+
+    //==============================================================================
+    /** This abstract base class is implemented by LookAndFeel classes. */
+    struct JUCE_API  LookAndFeelMethods
+    {
+        virtual ~LookAndFeelMethods() {}
+
+        virtual void drawStretchableLayoutResizerBar (Graphics&, int w, int h,
+                                                      bool isVerticalBar, bool isMouseOver, bool isMouseDragging) = 0;
+    };
 
     //==============================================================================
     /** @internal */

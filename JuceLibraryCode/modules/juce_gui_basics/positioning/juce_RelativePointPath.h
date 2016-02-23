@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -40,12 +40,12 @@ class JUCE_API  RelativePointPath
 public:
     //==============================================================================
     RelativePointPath();
-    RelativePointPath (const RelativePointPath& other);
+    RelativePointPath (const RelativePointPath&);
     explicit RelativePointPath (const Path& path);
     ~RelativePointPath();
 
-    bool operator== (const RelativePointPath& other) const noexcept;
-    bool operator!= (const RelativePointPath& other) const noexcept;
+    bool operator== (const RelativePointPath&) const noexcept;
+    bool operator!= (const RelativePointPath&) const noexcept;
 
     //==============================================================================
     /** Resolves this points in this path and adds them to a normal Path object. */
@@ -55,7 +55,7 @@ public:
     bool containsAnyDynamicPoints() const;
 
     /** Quickly swaps the contents of this path with another. */
-    void swapWith (RelativePointPath& other) noexcept;
+    void swapWith (RelativePointPath&) noexcept;
 
     //==============================================================================
     /** The types of element that may be contained in this path.

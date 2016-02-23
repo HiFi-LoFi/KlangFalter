@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,14 +22,13 @@
   ==============================================================================
 */
 
-
 JUCEApplication::JUCEApplication() {}
 JUCEApplication::~JUCEApplication() {}
 
 //==============================================================================
 JUCEApplication* JUCE_CALLTYPE JUCEApplication::getInstance() noexcept
 {
-    return dynamic_cast <JUCEApplication*> (JUCEApplicationBase::getInstance());
+    return dynamic_cast<JUCEApplication*> (JUCEApplicationBase::getInstance());
 }
 
 bool JUCEApplication::moreThanOneInstanceAllowed()  { return true; }
@@ -51,7 +50,7 @@ ApplicationCommandTarget* JUCEApplication::getNextCommandTarget()
     return nullptr;
 }
 
-void JUCEApplication::getAllCommands (Array <CommandID>& commands)
+void JUCEApplication::getAllCommands (Array<CommandID>& commands)
 {
     commands.add (StandardApplicationCommandIDs::quit);
 }

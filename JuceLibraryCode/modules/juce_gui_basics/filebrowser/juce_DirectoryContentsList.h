@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -107,6 +107,15 @@ public:
         @see setIgnoresHiddenFiles
     */
     bool ignoresHiddenFiles() const;
+
+    /** Replaces the current FileFilter.
+        This can be nullptr to have no filter. The DirectoryContentList does not take
+        ownership of this object - it just keeps a pointer to it, so you must manage its
+        lifetime.
+        Note that this only replaces the filter, it doesn't refresh the list - you'll
+        probably want to call refresh() after calling this.
+    */
+    void setFileFilter (const FileFilter* newFileFilter);
 
     //==============================================================================
     /** Contains cached information about one of the files in a DirectoryContentsList.

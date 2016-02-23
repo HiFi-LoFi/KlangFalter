@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -28,10 +28,7 @@
 
 //==============================================================================
 /**
-    Receives callbacks to indicate that some kind of event has occurred.
-
-    Used by various classes, e.g. buttons when they are pressed, to tell listeners
-    about something that's happened.
+    Interface class for delivery of events that are sent by an ActionBroadcaster.
 
     @see ActionBroadcaster, ChangeListener
 */

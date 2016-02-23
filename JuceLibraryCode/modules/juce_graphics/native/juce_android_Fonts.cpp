@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -138,22 +138,47 @@ public:
     {
         JNIEnv* const env = getEnv();
 
-        const bool isBold   = style.contains ("Bold");
-        const bool isItalic = style.contains ("Italic");
+        // First check whether there's an embedded asset with this font name:
+        typeface = GlobalRef (android.activity.callObjectMethod (JuceAppActivity.getTypeFaceFromAsset,
+                                                                 javaString ("fonts/" + name).get()));
 
-        File fontFile (getFontFile (name, style));
+        if (typeface.get() == nullptr)
+        {
+            const bool isBold   = style.contains ("Bold");
+            const bool isItalic = style.contains ("Italic");
 
-        if (! fontFile.exists())
-            fontFile = findFontFile (name, isBold, isItalic);
+            File fontFile (getFontFile (name, style));
 
-        if (fontFile.exists())
-            typeface = GlobalRef (env->CallStaticObjectMethod (TypefaceClass, TypefaceClass.createFromFile,
-                                                               javaString (fontFile.getFullPathName()).get()));
-        else
-            typeface = GlobalRef (env->CallStaticObjectMethod (TypefaceClass, TypefaceClass.create,
-                                                               javaString (getName()).get(),
-                                                               (isBold ? 1 : 0) + (isItalic ? 2 : 0)));
+            if (! fontFile.exists())
+                fontFile = findFontFile (name, isBold, isItalic);
 
+            if (fontFile.exists())
+                typeface = GlobalRef (env->CallStaticObjectMethod (TypefaceClass, TypefaceClass.createFromFile,
+                                                                   javaString (fontFile.getFullPathName()).get()));
+            else
+                typeface = GlobalRef (env->CallStaticObjectMethod (TypefaceClass, TypefaceClass.create,
+                                                                   javaString (getName()).get(),
+                                                                   (isBold ? 1 : 0) + (isItalic ? 2 : 0)));
+        }
+
+        initialise (env);
+    }
+
+    AndroidTypeface (const void* data, size_t size)
+        : Typeface (String (static_cast<uint64> (reinterpret_cast<uintptr_t> (data))), String())
+    {
+        JNIEnv* const env = getEnv();
+
+        LocalRef<jbyteArray> bytes (env->NewByteArray (size));
+        env->SetByteArrayRegion (bytes, 0, size, (const jbyte*) data);
+
+        typeface = GlobalRef (android.activity.callObjectMethod (JuceAppActivity.getTypeFaceFromByteArray, bytes.get()));
+
+        initialise (env);
+    }
+
+    void initialise (JNIEnv* const env)
+    {
         rect = GlobalRef (env->NewObject (RectClass, RectClass.constructor, 0, 0, 0, 0));
 
         paint = GlobalRef (GraphicsHelpers::createPaint (Graphics::highResamplingQuality));
@@ -170,11 +195,11 @@ public:
         heightToPointsFactor = referenceFontSize / totalHeight;
     }
 
-    float getAscent() const                 { return ascent; }
-    float getDescent() const                { return descent; }
-    float getHeightToPointsFactor() const   { return heightToPointsFactor; }
+    float getAscent() const override                 { return ascent; }
+    float getDescent() const override                { return descent; }
+    float getHeightToPointsFactor() const override   { return heightToPointsFactor; }
 
-    float getStringWidth (const String& text)
+    float getStringWidth (const String& text) override
     {
         JNIEnv* env = getEnv();
         const int numChars = text.length();
@@ -193,7 +218,7 @@ public:
         return x * referenceFontToUnits;
     }
 
-    void getGlyphPositions (const String& text, Array<int>& glyphs, Array<float>& xOffsets)
+    void getGlyphPositions (const String& text, Array<int>& glyphs, Array<float>& xOffsets) override
     {
         JNIEnv* env = getEnv();
         const int numChars = text.length();
@@ -218,12 +243,12 @@ public:
         }
     }
 
-    bool getOutlineForGlyph (int /*glyphNumber*/, Path& /*destPath*/)
+    bool getOutlineForGlyph (int /*glyphNumber*/, Path& /*destPath*/) override
     {
         return false;
     }
 
-    EdgeTable* getEdgeTableForGlyph (int glyphNumber, const AffineTransform& t)
+    EdgeTable* getEdgeTableForGlyph (int glyphNumber, const AffineTransform& t, float /*fontHeight*/) override
     {
         JNIEnv* env = getEnv();
 
@@ -291,7 +316,7 @@ private:
         file = getFontFile (family, "Regular");
 
         if (! file.exists())
-            file = getFontFile (family, String::empty);
+            file = getFontFile (family, String());
 
         return file;
     }
@@ -313,6 +338,11 @@ private:
 Typeface::Ptr Typeface::createSystemTypefaceFor (const Font& font)
 {
     return new AndroidTypeface (font);
+}
+
+Typeface::Ptr Typeface::createSystemTypefaceFor (const void* data, size_t size)
+{
+    return new AndroidTypeface (data, size);
 }
 
 void Typeface::scanFolderForFonts (const File&)

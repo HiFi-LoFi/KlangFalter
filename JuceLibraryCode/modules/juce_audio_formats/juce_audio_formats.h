@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -27,7 +27,7 @@
 
 #include "../juce_audio_basics/juce_audio_basics.h"
 
-//=============================================================================
+//==============================================================================
 /** Config: JUCE_USE_FLAC
     Enables the FLAC audio codec classes (available on all platforms).
     If your app doesn't need to read FLAC files, you might want to disable this to
@@ -50,8 +50,8 @@
     Enables the software-based MP3AudioFormat class.
     IMPORTANT DISCLAIMER: By choosing to enable the JUCE_USE_MP3AUDIOFORMAT flag and to compile
     this MP3 code into your software, you do so AT YOUR OWN RISK! By doing so, you are agreeing
-    that Raw Material Software is in no way responsible for any patent, copyright, or other
-    legal issues that you may suffer as a result.
+    that ROLI Ltd. is in no way responsible for any patent, copyright, or other legal issues
+    that you may suffer as a result.
 
     The code in juce_MP3AudioFormat.cpp is NOT guaranteed to be free from infringements of 3rd-party
     intellectual property. If you wish to use it, please seek your own independent advice about the
@@ -81,7 +81,7 @@
  #define JUCE_USE_WINDOWS_MEDIA_FORMAT 0
 #endif
 
-//=============================================================================
+//==============================================================================
 namespace juce
 {
 

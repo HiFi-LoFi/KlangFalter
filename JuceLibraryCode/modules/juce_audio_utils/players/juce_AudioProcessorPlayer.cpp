@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,14 +22,14 @@
   ==============================================================================
 */
 
-AudioProcessorPlayer::AudioProcessorPlayer()
+AudioProcessorPlayer::AudioProcessorPlayer(bool doDoublePrecisionProcessing)
     : processor (nullptr),
       sampleRate (0),
       blockSize (0),
       isPrepared (false),
+      isDoublePrecision (doDoublePrecisionProcessing),
       numInputChans (0),
-      numOutputChans (0),
-      tempBuffer (1, 1)
+      numOutputChans (0)
 {
 }
 
@@ -45,9 +45,13 @@ void AudioProcessorPlayer::setProcessor (AudioProcessor* const processorToPlay)
     {
         if (processorToPlay != nullptr && sampleRate > 0 && blockSize > 0)
         {
-            processorToPlay->setPlayConfigDetails (numInputChans, numOutputChans,
-                                                   sampleRate, blockSize);
+            processorToPlay->setPlayConfigDetails (numInputChans, numOutputChans, sampleRate, blockSize);
 
+            const bool supportsDouble = processorToPlay->supportsDoublePrecisionProcessing() && isDoublePrecision;
+            AudioProcessor::ProcessingPrecision precision = supportsDouble ? AudioProcessor::doublePrecision
+                                                                           : AudioProcessor::singlePrecision;
+
+            processorToPlay->setProcessingPrecision (precision);
             processorToPlay->prepareToPlay (sampleRate, blockSize);
         }
 
@@ -62,6 +66,28 @@ void AudioProcessorPlayer::setProcessor (AudioProcessor* const processorToPlay)
 
         if (oldOne != nullptr)
             oldOne->releaseResources();
+    }
+}
+
+void AudioProcessorPlayer::setDoublePrecisionProcessing (bool doublePrecision)
+{
+    if (doublePrecision != isDoublePrecision)
+    {
+        const ScopedLock sl (lock);
+
+        if (processor != nullptr)
+        {
+            processor->releaseResources();
+
+            const bool supportsDouble = processor->supportsDoublePrecisionProcessing() && doublePrecision;
+            AudioProcessor::ProcessingPrecision precision = supportsDouble ? AudioProcessor::doublePrecision
+                                                                           : AudioProcessor::singlePrecision;
+
+            processor->setProcessingPrecision (precision);
+            processor->prepareToPlay (sampleRate, blockSize);
+        }
+
+        isDoublePrecision = doublePrecision;
     }
 }
 
@@ -96,7 +122,7 @@ void AudioProcessorPlayer::audioDeviceIOCallback (const float** const inputChann
 
         for (int i = numOutputChannels; i < numInputChannels; ++i)
         {
-            channels[totalNumChans] = tempBuffer.getSampleData (i - numOutputChannels, 0);
+            channels[totalNumChans] = tempBuffer.getWritePointer (i - numOutputChannels);
             memcpy (channels[totalNumChans], inputChannelData[i], sizeof (float) * (size_t) numSamples);
             ++totalNumChans;
         }
@@ -120,22 +146,33 @@ void AudioProcessorPlayer::audioDeviceIOCallback (const float** const inputChann
 
     AudioSampleBuffer buffer (channels, totalNumChans, numSamples);
 
-    const ScopedLock sl (lock);
-
-    if (processor != nullptr)
     {
-        const ScopedLock sl2 (processor->getCallbackLock());
+        const ScopedLock sl (lock);
 
-        if (processor->isSuspended())
+        if (processor != nullptr)
         {
-            for (int i = 0; i < numOutputChannels; ++i)
-                zeromem (outputChannelData[i], sizeof (float) * (size_t) numSamples);
-        }
-        else
-        {
-            processor->processBlock (buffer, incomingMidi);
+            const ScopedLock sl2 (processor->getCallbackLock());
+
+            if (! processor->isSuspended())
+            {
+                if (processor->isUsingDoublePrecision())
+                {
+                    conversionBuffer.makeCopyOf (buffer);
+                    processor->processBlock (conversionBuffer, incomingMidi);
+                    buffer.makeCopyOf (conversionBuffer);
+                }
+                else
+                {
+                    processor->processBlock (buffer, incomingMidi);
+                }
+
+                return;
+            }
         }
     }
+
+    for (int i = 0; i < numOutputChannels; ++i)
+        FloatVectorOperations::clear (outputChannelData[i], numSamples);
 }
 
 void AudioProcessorPlayer::audioDeviceAboutToStart (AudioIODevice* const device)

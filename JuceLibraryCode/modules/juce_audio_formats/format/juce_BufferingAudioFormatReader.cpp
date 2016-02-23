@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -28,7 +28,8 @@ BufferingAudioReader::BufferingAudioReader (AudioFormatReader* sourceReader,
     : AudioFormatReader (nullptr, sourceReader->getFormatName()),
       source (sourceReader), thread (timeSliceThread),
       nextReadPosition (0),
-      numBlocks (1 + (samplesToBuffer / samplesPerBlock))
+      numBlocks (1 + (samplesToBuffer / samplesPerBlock)),
+      timeoutMs (0)
 {
     sampleRate            = source->sampleRate;
     lengthInSamples       = source->lengthInSamples;
@@ -77,7 +78,7 @@ bool BufferingAudioReader::readSamples (int** destSamples, int numDestChannels, 
                     dest += startOffsetInDestBuffer;
 
                     if (j < (int) numChannels)
-                        FloatVectorOperations::copy (dest, block->buffer.getSampleData (j, offset), numToDo);
+                        FloatVectorOperations::copy (dest, block->buffer.getReadPointer (j, offset), numToDo);
                     else
                         FloatVectorOperations::clear (dest, numToDo);
                 }

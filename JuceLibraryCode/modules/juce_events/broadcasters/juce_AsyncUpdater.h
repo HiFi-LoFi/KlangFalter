@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -68,8 +68,8 @@ public:
         callback happens, this will cancel the handleAsyncUpdate() callback.
 
         Note that this method simply cancels the next callback - if a callback is already
-        in progress on a different thread, this won't block until it finishes, so there's
-        no guarantee that the callback isn't still running when you return from
+        in progress on a different thread, this won't block until the callback finishes, so
+        there's no guarantee that the callback isn't still running when the method returns.
     */
     void cancelPendingUpdate() noexcept;
 
@@ -100,7 +100,7 @@ private:
     //==============================================================================
     class AsyncUpdaterMessage;
     friend class ReferenceCountedObjectPtr<AsyncUpdaterMessage>;
-    ReferenceCountedObjectPtr<AsyncUpdaterMessage> message;
+    ReferenceCountedObjectPtr<AsyncUpdaterMessage> activeMessage;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AsyncUpdater)
 };

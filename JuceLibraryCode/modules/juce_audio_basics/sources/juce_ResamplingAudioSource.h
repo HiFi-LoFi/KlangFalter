@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -66,6 +66,9 @@ public:
     */
     double getResamplingRatio() const noexcept                  { return ratio; }
 
+    /** Clears any buffers and filters that the resampler is using. */
+    void flushBuffers();
+
     //==============================================================================
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
     void releaseResources() override;
@@ -81,7 +84,8 @@ private:
     double coefficients[6];
     SpinLock ratioLock;
     const int numChannels;
-    HeapBlock<float*> destBuffers, srcBuffers;
+    HeapBlock<float*> destBuffers;
+    HeapBlock<const float*> srcBuffers;
 
     void setFilterCoefficients (double c1, double c2, double c3, double c4, double c5, double c6);
     void createLowPass (double proportionalRate);

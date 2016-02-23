@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -33,15 +33,19 @@ void AudioPluginFormatManager::addDefaultFormats()
     for (int i = formats.size(); --i >= 0;)
     {
        #if JUCE_PLUGINHOST_VST
-        jassert (dynamic_cast <VSTPluginFormat*> (formats[i]) == nullptr);
+        jassert (dynamic_cast<VSTPluginFormat*> (formats[i]) == nullptr);
+       #endif
+
+       #if JUCE_PLUGINHOST_VST3
+        jassert (dynamic_cast<VST3PluginFormat*> (formats[i]) == nullptr);
        #endif
 
        #if JUCE_PLUGINHOST_AU && JUCE_MAC
-        jassert (dynamic_cast <AudioUnitPluginFormat*> (formats[i]) == nullptr);
+        jassert (dynamic_cast<AudioUnitPluginFormat*> (formats[i]) == nullptr);
        #endif
 
        #if JUCE_PLUGINHOST_LADSPA && JUCE_LINUX
-        jassert (dynamic_cast <LADSPAPluginFormat*> (formats[i]) == nullptr);
+        jassert (dynamic_cast<LADSPAPluginFormat*> (formats[i]) == nullptr);
        #endif
     }
    #endif
@@ -52,6 +56,10 @@ void AudioPluginFormatManager::addDefaultFormats()
 
    #if JUCE_PLUGINHOST_VST
     formats.add (new VSTPluginFormat());
+   #endif
+
+   #if JUCE_PLUGINHOST_VST3
+    formats.add (new VST3PluginFormat());
    #endif
 
    #if JUCE_PLUGINHOST_LADSPA && JUCE_LINUX
@@ -74,28 +82,16 @@ void AudioPluginFormatManager::addFormat (AudioPluginFormat* const format)
     formats.add (format);
 }
 
-AudioPluginInstance* AudioPluginFormatManager::createPluginInstance (const PluginDescription& description,
-                                                                     String& errorMessage) const
+AudioPluginInstance* AudioPluginFormatManager::createPluginInstance (const PluginDescription& description, double rate,
+                                                                     int blockSize, String& errorMessage) const
 {
-    AudioPluginInstance* result = nullptr;
-
     for (int i = 0; i < formats.size(); ++i)
-    {
-        result = formats.getUnchecked(i)->createInstanceFromDescription (description);
+        if (AudioPluginInstance* result = formats.getUnchecked(i)->createInstanceFromDescription (description, rate, blockSize))
+            return result;
 
-        if (result != nullptr)
-            break;
-    }
-
-    if (result == nullptr)
-    {
-        if (! doesPluginStillExist (description))
-            errorMessage = TRANS ("This plug-in file no longer exists");
-        else
-            errorMessage = TRANS ("This plug-in failed to load correctly");
-    }
-
-    return result;
+    errorMessage = doesPluginStillExist (description) ? TRANS ("This plug-in failed to load correctly")
+                                                      : TRANS ("This plug-in file no longer exists");
+    return nullptr;
 }
 
 bool AudioPluginFormatManager::doesPluginStillExist (const PluginDescription& description) const

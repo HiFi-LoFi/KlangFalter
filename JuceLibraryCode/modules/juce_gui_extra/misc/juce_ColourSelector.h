@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -62,7 +62,7 @@ public:
         gapAroundColourSpaceComponent indicates how much of a gap to put around the
         colourspace and hue selector components.
     */
-    ColourSelector (int sectionsToShow = (showAlphaChannel | showColourAtTop | showSliders | showColourspace),
+    ColourSelector (int flags = (showAlphaChannel | showColourAtTop | showSliders | showColourspace),
                     int edgeGap = 4,
                     int gapAroundColourSpaceComponent = 7);
 
@@ -79,8 +79,7 @@ public:
     */
     Colour getCurrentColour() const;
 
-    /** Changes the colour that is currently being shown.
-    */
+    /** Changes the colour that is currently being shown. */
     void setCurrentColour (Colour newColour);
 
     //==============================================================================
@@ -146,7 +145,7 @@ private:
     ScopedPointer<Slider> sliders[4];
     ScopedPointer<ColourSpaceView> colourSpace;
     ScopedPointer<HueSelectorComp> hueSelector;
-    OwnedArray <SwatchComponent> swatchComponents;
+    OwnedArray<SwatchComponent> swatchComponents;
     const int flags;
     int edgeGap;
     Rectangle<int> previewArea;
@@ -155,7 +154,7 @@ private:
     void setSV (float newS, float newV);
     void updateHSV();
     void update();
-    void sliderValueChanged (Slider*);
+    void sliderValueChanged (Slider*) override;
     void paint (Graphics&) override;
     void resized() override;
 

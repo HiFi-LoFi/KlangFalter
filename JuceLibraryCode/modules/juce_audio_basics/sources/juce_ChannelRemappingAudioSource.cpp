@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -25,8 +25,7 @@
 ChannelRemappingAudioSource::ChannelRemappingAudioSource (AudioSource* const source_,
                                                           const bool deleteSourceWhenDeleted)
    : source (source_, deleteSourceWhenDeleted),
-     requiredNumberOfChannels (2),
-     buffer (2, 16)
+     requiredNumberOfChannels (2)
 {
     remappedInfo.buffer = &buffer;
     remappedInfo.startSample = 0;

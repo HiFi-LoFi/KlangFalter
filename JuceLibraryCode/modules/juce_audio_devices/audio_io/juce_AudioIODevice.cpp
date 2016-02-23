@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,20 +22,16 @@
   ==============================================================================
 */
 
-AudioIODevice::AudioIODevice (const String& deviceName, const String& typeName_)
-    : name (deviceName),
-      typeName (typeName_)
+AudioIODevice::AudioIODevice (const String& deviceName, const String& deviceTypeName)
+    : name (deviceName), typeName (deviceTypeName)
 {
 }
 
-AudioIODevice::~AudioIODevice()
-{
-}
+AudioIODevice::~AudioIODevice() {}
 
-bool AudioIODevice::hasControlPanel() const
-{
-    return false;
-}
+void AudioIODeviceCallback::audioDeviceError (const String&)    {}
+bool AudioIODevice::setAudioPreprocessingEnabled (bool)         { return false; }
+bool AudioIODevice::hasControlPanel() const                     { return false; }
 
 bool AudioIODevice::showControlPanel()
 {
@@ -43,6 +39,3 @@ bool AudioIODevice::showControlPanel()
                      // their hasControlPanel() method.
     return false;
 }
-
-//==============================================================================
-void AudioIODeviceCallback::audioDeviceError (const String&) {}

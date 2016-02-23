@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -44,7 +44,11 @@ public:
     /** Creates an empty URL. */
     URL();
 
-    /** Creates a URL from a string. */
+    /** Creates a URL from a string.
+        This will parse any embedded parameters after a '?' character and store them
+        in the list (see getParameterNames etc). If you don't want this to happen, you
+        can use createWithoutParsing().
+    */
     URL (const String& url);
 
     /** Creates a copy of another URL. */
@@ -71,6 +75,9 @@ public:
         end and url-encoded.
     */
     String toString (bool includeGetParameters) const;
+
+    /** Returns true if the URL is an empty string. */
+    bool isEmpty() const noexcept;
 
     /** True if it seems to be valid. */
     bool isWellFormed() const;
@@ -133,16 +140,39 @@ public:
     URL withParameter (const String& parameterName,
                        const String& parameterValue) const;
 
-    /** Returns a copy of this URl, with a file-upload type parameter added to it.
+    /** Returns a copy of this URL, with a set of GET or POST parameters added.
+        This is a convenience method, equivalent to calling withParameter for each value.
+        @see withParameter
+    */
+    URL withParameters (const StringPairArray& parametersToAdd) const;
+
+    /** Returns a copy of this URL, with a file-upload type parameter added to it.
 
         When performing a POST where one of your parameters is a binary file, this
         lets you specify the file.
 
         Note that the filename is stored, but the file itself won't actually be read
-        until this URL is later used to create a network input stream.
+        until this URL is later used to create a network input stream. If you want to
+        upload data from memory, use withDataToUpload().
+
+        @see withDataToUpload
     */
     URL withFileToUpload (const String& parameterName,
                           const File& fileToUpload,
+                          const String& mimeType) const;
+
+    /** Returns a copy of this URL, with a file-upload type parameter added to it.
+
+        When performing a POST where one of your parameters is a binary file, this
+        lets you specify the file content.
+        Note that the filename parameter should not be a full path, it's just the
+        last part of the filename.
+
+        @see withFileToUpload
+    */
+    URL withDataToUpload (const String& parameterName,
+                          const String& filename,
+                          const MemoryBlock& fileContentToUpload,
                           const String& mimeType) const;
 
     /** Returns an array of the names of all the URL's parameters.
@@ -171,17 +201,6 @@ public:
     */
     const StringArray& getParameterValues() const noexcept      { return parameterValues; }
 
-    /** Returns the set of files that should be uploaded as part of a POST operation.
-
-        This is the set of files that were added to the URL with the withFileToUpload()
-        method.
-    */
-    const StringPairArray& getFilesToUpload() const;
-
-    /** Returns the set of mime types associated with each of the upload files.
-    */
-    const StringPairArray& getMimeTypesOfUploadFiles() const;
-
     /** Returns a copy of this URL, with a block of data to send as the POST data.
 
         If you're setting the POST data, be careful not to have any parameters set
@@ -196,8 +215,25 @@ public:
     */
     URL withPOSTData (const String& postData) const;
 
+    /** Returns a copy of this URL, with a block of data to send as the POST data.
+
+        If you're setting the POST data, be careful not to have any parameters set
+        as well, otherwise it'll all get thrown in together, and might not have the
+        desired effect.
+
+        If the URL already contains some POST data, this will replace it, rather
+        than being appended to it.
+
+        This data will only be used if you specify a post operation when you call
+        createInputStream().
+    */
+    URL withPOSTData (const MemoryBlock& postData) const;
+
     /** Returns the data that was set using withPOSTData(). */
-    const String& getPostData() const noexcept                  { return postData; }
+    String getPostData() const noexcept                  { return postData.toString(); }
+
+    /** Returns the data that was set using withPOSTData() as MemoryBlock. */
+    const MemoryBlock& getPostDataAsMemoryBlock() const noexcept { return postData; }
 
     //==============================================================================
     /** Tries to launch the system's default browser to open the URL.
@@ -229,31 +265,46 @@ public:
 
     /** Attempts to open a stream that can read from this URL.
 
-        @param usePostCommand   if true, it will try to do use a http 'POST' to pass
-                                the paramters, otherwise it'll encode them into the
-                                URL and do a 'GET'.
-        @param progressCallback if this is non-zero, it lets you supply a callback function
-                                to keep track of the operation's progress. This can be useful
-                                for lengthy POST operations, so that you can provide user feedback.
+        Note that on some platforms (Android, for example) it's not permitted to do any network
+        action from the message thread, so you must only call it from a background thread.
+
+        @param doPostLikeRequest if true, the parameters added to this class will be transferred
+                                 via the HTTP headers which is typical for POST requests. Otherwise
+                                 the parameters will be added to the URL address. Additionally,
+                                 if the parameter httpRequestCmd is not specified (or empty) then this
+                                 parameter will determine which HTTP request command will be used
+                                 (POST or GET).
+        @param progressCallback  if this is non-zero, it lets you supply a callback function
+                                 to keep track of the operation's progress. This can be useful
+                                 for lengthy POST operations, so that you can provide user feedback.
         @param progressCallbackContext  if a callback is specified, this value will be passed to
-                                the function
-        @param extraHeaders     if not empty, this string is appended onto the headers that
-                                are used for the request. It must therefore be a valid set of HTML
-                                header directives, separated by newlines.
+                                 the function
+        @param extraHeaders      if not empty, this string is appended onto the headers that
+                                 are used for the request. It must therefore be a valid set of HTML
+                                 header directives, separated by newlines.
         @param connectionTimeOutMs  if 0, this will use whatever default setting the OS chooses. If
-                                a negative number, it will be infinite. Otherwise it specifies a
-                                time in milliseconds.
-        @param responseHeaders  if this is non-zero, all the (key, value) pairs received as headers
-                                in the response will be stored in this array
+                                 a negative number, it will be infinite. Otherwise it specifies a
+                                 time in milliseconds.
+        @param responseHeaders   if this is non-null, all the (key, value) pairs received as headers
+                                 in the response will be stored in this array
+        @param statusCode        if this is non-null, it will get set to the http status code, if one
+                                 is known, or 0 if a code isn't available
+        @param numRedirectsToFollow specifies the number of redirects that will be followed before
+                                 returning a response (ignored for Android which follows up to 5 redirects)
+        @param httpRequestCmd    Specify which HTTP Request to use. If this is empty, then doPostRequest
+                                 will determine the HTTP request.
         @returns    an input stream that the caller must delete, or a null pointer if there was an
                     error trying to open it.
      */
-    InputStream* createInputStream (bool usePostCommand,
+    InputStream* createInputStream (bool doPostLikeRequest,
                                     OpenStreamProgressCallback* progressCallback = nullptr,
                                     void* progressCallbackContext = nullptr,
-                                    const String& extraHeaders = String::empty,
+                                    String extraHeaders = String(),
                                     int connectionTimeOutMs = 0,
-                                    StringPairArray* responseHeaders = nullptr) const;
+                                    StringPairArray* responseHeaders = nullptr,
+                                    int* statusCode = nullptr,
+                                    int numRedirectsToFollow = 5,
+                                    String httpRequestCmd = String()) const;
 
 
     //==============================================================================
@@ -261,6 +312,9 @@ public:
 
         If it succeeds, this will return true and append the data it read onto the end
         of the memory block.
+
+        Note that on some platforms (Android, for example) it's not permitted to do any network
+        action from the message thread, so you must only call it from a background thread.
 
         @param destData         the memory block to append the new data to
         @param usePostCommand   whether to use a POST command to get the data (uses
@@ -277,6 +331,9 @@ public:
         operation that fails and one that returns an empty string, you'll need to use
         a different method, such as readEntireBinaryStream().
 
+        Note that on some platforms (Android, for example) it's not permitted to do any network
+        action from the message thread, so you must only call it from a background thread.
+
         @param usePostCommand   whether to use a POST command to get the data (uses
                                 a GET command if this is false)
         @see readEntireBinaryStream, readEntireXmlStream
@@ -290,6 +347,9 @@ public:
 
         When it returns a valid XmlElement object, the caller is responsibile for deleting
         this object when no longer needed.
+
+        Note that on some platforms (Android, for example) it's not permitted to do any network
+        action from the message thread, so you must only call it from a background thread.
 
         @param usePostCommand   whether to use a POST command to get the data (uses
                                 a GET command if this is false)
@@ -326,18 +386,36 @@ public:
     */
     static String removeEscapeChars (const String& stringToRemoveEscapeCharsFrom);
 
+    /** Returns a URL without attempting to remove any embedded parameters from the string.
+        This may be necessary if you need to create a request that involves both POST
+        parameters and parameters which are embedded in the URL address itself.
+    */
+    static URL createWithoutParsing (const String& url);
+
 private:
     //==============================================================================
-    String url, postData;
+    String url;
+    MemoryBlock postData;
     StringArray parameterNames, parameterValues;
-    StringPairArray filesToUpload, mimeTypes;
 
+    struct Upload  : public ReferenceCountedObject
+    {
+        Upload (const String&, const String&, const String&, const File&, MemoryBlock*);
+        String parameterName, filename, mimeType;
+        File file;
+        ScopedPointer<MemoryBlock> data;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Upload)
+    };
+
+    friend struct ContainerDeletePolicy<Upload>;
+    ReferenceCountedArray<Upload> filesToUpload;
+
+    URL (const String&, int);
     void addParameter (const String&, const String&);
+    void createHeadersAndPostData (String&, MemoryBlock&) const;
+    URL withUpload (Upload*) const;
 
-    static InputStream* createNativeStream (const String& address, bool isPost, const MemoryBlock& postData,
-                                            OpenStreamProgressCallback* progressCallback,
-                                            void* progressCallbackContext, const String& headers,
-                                            const int timeOutMs, StringPairArray* responseHeaders);
     JUCE_LEAK_DETECTOR (URL)
 };
 

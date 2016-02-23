@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -57,7 +57,7 @@ public:
     struct JUCE_API  Options
     {
         /** Creates an empty Options structure.
-            You'll need to fill-in the data memebers appropriately before using this structure.
+            You'll need to fill-in the data members appropriately before using this structure.
         */
         Options();
 
@@ -85,7 +85,8 @@ public:
             Because older apps would be broken by a silent change in this class's behaviour, you must now
             explicitly set the osxLibrarySubFolder value to indicate which path you want to use.
 
-            In newer apps, you should always set this to "Application Support".
+            In newer apps, you should always set this to "Application Support" or
+            "Application Support/YourSubFolderName".
 
             If your app needs to load settings files that were created by older versions of juce and
             you want to maintain backwards-compatibility, then you can set this to "Preferences".
@@ -105,6 +106,9 @@ public:
             The default constructor initialises this value to false.
         */
         bool ignoreCaseOfKeyNames;
+
+        /** If set to true, this prevents the file from being written to disk. */
+        bool doNotSave;
 
         /** If this is zero or greater, then after a value is changed, the object will wait
             for this amount of time and then save the file. If this zero, the file will be
@@ -141,7 +145,7 @@ public:
             C:\\Documents and Settings\\username\\Application Data\\[folderName]\\[applicationName].[filenameSuffix]
 
             On Linux it'll return
-            ~/.[folderName]/[applicationName].[filenameSuffix]
+            ~/[folderName]/[applicationName].[filenameSuffix]
 
             If the folderName variable is empty, it'll use the app name for this (or omit the
             folder name on the Mac).
@@ -219,7 +223,7 @@ public:
 
 protected:
     /** @internal */
-    virtual void propertyChanged();
+    void propertyChanged() override;
 
 private:
     //==============================================================================

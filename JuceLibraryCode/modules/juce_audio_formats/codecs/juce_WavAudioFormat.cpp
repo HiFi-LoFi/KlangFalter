@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -23,7 +23,6 @@
 */
 
 static const char* const wavFormatName = "WAV file";
-static const char* const wavExtensions[] = { ".wav", ".bwf", 0 };
 
 //==============================================================================
 const char* const WavAudioFormat::bwavDescription      = "bwav description";
@@ -37,7 +36,7 @@ const char* const WavAudioFormat::bwavCodingHistory    = "bwav coding history";
 StringPairArray WavAudioFormat::createBWAVMetadata (const String& description,
                                                     const String& originator,
                                                     const String& originatorRef,
-                                                    const Time date,
+                                                    Time date,
                                                     const int64 timeReferenceSamples,
                                                     const String& codingHistory)
 {
@@ -65,7 +64,87 @@ const char* const WavAudioFormat::acidDenominator      = "acid denominator";
 const char* const WavAudioFormat::acidNumerator        = "acid numerator";
 const char* const WavAudioFormat::acidTempo            = "acid tempo";
 
+const char* const WavAudioFormat::riffInfoArchivalLocation      = "IARL";
+const char* const WavAudioFormat::riffInfoArtist                = "IART";
+const char* const WavAudioFormat::riffInfoBaseURL               = "IBSU";
+const char* const WavAudioFormat::riffInfoCinematographer       = "ICNM";
+const char* const WavAudioFormat::riffInfoComment               = "CMNT";
+const char* const WavAudioFormat::riffInfoComments              = "COMM";
+const char* const WavAudioFormat::riffInfoCommissioned          = "ICMS";
+const char* const WavAudioFormat::riffInfoCopyright             = "ICOP";
+const char* const WavAudioFormat::riffInfoCostumeDesigner       = "ICDS";
+const char* const WavAudioFormat::riffInfoCountry               = "ICNT";
+const char* const WavAudioFormat::riffInfoCropped               = "ICRP";
+const char* const WavAudioFormat::riffInfoDateCreated           = "ICRD";
+const char* const WavAudioFormat::riffInfoDateTimeOriginal      = "IDIT";
+const char* const WavAudioFormat::riffInfoDefaultAudioStream    = "ICAS";
+const char* const WavAudioFormat::riffInfoDimension             = "IDIM";
+const char* const WavAudioFormat::riffInfoDirectory             = "DIRC";
+const char* const WavAudioFormat::riffInfoDistributedBy         = "IDST";
+const char* const WavAudioFormat::riffInfoDotsPerInch           = "IDPI";
+const char* const WavAudioFormat::riffInfoEditedBy              = "IEDT";
+const char* const WavAudioFormat::riffInfoEighthLanguage        = "IAS8";
+const char* const WavAudioFormat::riffInfoEncodedBy             = "CODE";
+const char* const WavAudioFormat::riffInfoEndTimecode           = "TCDO";
+const char* const WavAudioFormat::riffInfoEngineer              = "IENG";
+const char* const WavAudioFormat::riffInfoFifthLanguage         = "IAS5";
+const char* const WavAudioFormat::riffInfoFirstLanguage         = "IAS1";
+const char* const WavAudioFormat::riffInfoFourthLanguage        = "IAS4";
+const char* const WavAudioFormat::riffInfoGenre                 = "GENR";
+const char* const WavAudioFormat::riffInfoKeywords              = "IKEY";
+const char* const WavAudioFormat::riffInfoLanguage              = "LANG";
+const char* const WavAudioFormat::riffInfoLength                = "TLEN";
+const char* const WavAudioFormat::riffInfoLightness             = "ILGT";
+const char* const WavAudioFormat::riffInfoLocation              = "LOCA";
+const char* const WavAudioFormat::riffInfoLogoIconURL           = "ILIU";
+const char* const WavAudioFormat::riffInfoLogoURL               = "ILGU";
+const char* const WavAudioFormat::riffInfoMedium                = "IMED";
+const char* const WavAudioFormat::riffInfoMoreInfoBannerImage   = "IMBI";
+const char* const WavAudioFormat::riffInfoMoreInfoBannerURL     = "IMBU";
+const char* const WavAudioFormat::riffInfoMoreInfoText          = "IMIT";
+const char* const WavAudioFormat::riffInfoMoreInfoURL           = "IMIU";
+const char* const WavAudioFormat::riffInfoMusicBy               = "IMUS";
+const char* const WavAudioFormat::riffInfoNinthLanguage         = "IAS9";
+const char* const WavAudioFormat::riffInfoNumberOfParts         = "PRT2";
+const char* const WavAudioFormat::riffInfoOrganisation          = "TORG";
+const char* const WavAudioFormat::riffInfoPart                  = "PRT1";
+const char* const WavAudioFormat::riffInfoProducedBy            = "IPRO";
+const char* const WavAudioFormat::riffInfoProductionDesigner    = "IPDS";
+const char* const WavAudioFormat::riffInfoProductionStudio      = "ISDT";
+const char* const WavAudioFormat::riffInfoRate                  = "RATE";
+const char* const WavAudioFormat::riffInfoRated                 = "AGES";
+const char* const WavAudioFormat::riffInfoRating                = "IRTD";
+const char* const WavAudioFormat::riffInfoRippedBy              = "IRIP";
+const char* const WavAudioFormat::riffInfoSecondaryGenre        = "ISGN";
+const char* const WavAudioFormat::riffInfoSecondLanguage        = "IAS2";
+const char* const WavAudioFormat::riffInfoSeventhLanguage       = "IAS7";
+const char* const WavAudioFormat::riffInfoSharpness             = "ISHP";
+const char* const WavAudioFormat::riffInfoSixthLanguage         = "IAS6";
+const char* const WavAudioFormat::riffInfoSoftware              = "ISFT";
+const char* const WavAudioFormat::riffInfoSoundSchemeTitle      = "DISP";
+const char* const WavAudioFormat::riffInfoSource                = "ISRC";
+const char* const WavAudioFormat::riffInfoSourceFrom            = "ISRF";
+const char* const WavAudioFormat::riffInfoStarring_ISTR         = "ISTR";
+const char* const WavAudioFormat::riffInfoStarring_STAR         = "STAR";
+const char* const WavAudioFormat::riffInfoStartTimecode         = "TCOD";
+const char* const WavAudioFormat::riffInfoStatistics            = "STAT";
+const char* const WavAudioFormat::riffInfoSubject               = "ISBJ";
+const char* const WavAudioFormat::riffInfoTapeName              = "TAPE";
+const char* const WavAudioFormat::riffInfoTechnician            = "ITCH";
+const char* const WavAudioFormat::riffInfoThirdLanguage         = "IAS3";
+const char* const WavAudioFormat::riffInfoTimeCode              = "ISMP";
+const char* const WavAudioFormat::riffInfoTitle                 = "INAM";
+const char* const WavAudioFormat::riffInfoTrackNumber           = "TRCK";
+const char* const WavAudioFormat::riffInfoURL                   = "TURL";
+const char* const WavAudioFormat::riffInfoVegasVersionMajor     = "VMAJ";
+const char* const WavAudioFormat::riffInfoVegasVersionMinor     = "VMIN";
+const char* const WavAudioFormat::riffInfoVersion               = "TVER";
+const char* const WavAudioFormat::riffInfoWatermarkURL          = "IWMU";
+const char* const WavAudioFormat::riffInfoWrittenBy             = "IWRI";
+const char* const WavAudioFormat::riffInfoYear                  = "YEAR";
+
 const char* const WavAudioFormat::ISRC                 = "ISRC";
+const char* const WavAudioFormat::tracktionLoopInfo    = "tracktion loop info";
 
 //==============================================================================
 namespace WavFileHelpers
@@ -101,7 +180,7 @@ namespace WavFileHelpers
 
             const uint32 timeLow  = ByteOrder::swapIfBigEndian (timeRefLow);
             const uint32 timeHigh = ByteOrder::swapIfBigEndian (timeRefHigh);
-            const int64 time = (((int64)timeHigh) << 32) + timeLow;
+            const int64 time = (((int64) timeHigh) << 32) + timeLow;
 
             values.set (WavAudioFormat::bwavTimeReference, String (time));
             values.set (WavAudioFormat::bwavCodingHistory,
@@ -225,7 +304,7 @@ namespace WavFileHelpers
             {
                 data.setSize (roundUpSize (sizeof (SMPLChunk) + (size_t) (numLoops - 1) * sizeof (SampleLoop)), true);
 
-                SMPLChunk* const s = static_cast <SMPLChunk*> (data.getData());
+                SMPLChunk* const s = static_cast<SMPLChunk*> (data.getData());
 
                 s->manufacturer      = getValue (values, "Manufacturer", "0");
                 s->product           = getValue (values, "Product", "0");
@@ -293,7 +372,7 @@ namespace WavFileHelpers
             if (keys.contains ("LowNote", true) && keys.contains ("HighNote", true))
             {
                 data.setSize (8, true);
-                InstChunk* const inst = static_cast <InstChunk*> (data.getData());
+                InstChunk* const inst = static_cast<InstChunk*> (data.getData());
 
                 inst->baseNote      = getValue (values, "MidiUnityNote", "60");
                 inst->detune        = getValue (values, "Detune", "0");
@@ -356,7 +435,7 @@ namespace WavFileHelpers
             {
                 data.setSize (roundUpSize (sizeof (CueChunk) + (size_t) (numCues - 1) * sizeof (Cue)), true);
 
-                CueChunk* const c = static_cast <CueChunk*> (data.getData());
+                CueChunk* const c = static_cast<CueChunk*> (data.getData());
 
                 c->numCues = ByteOrder::swapIfBigEndian ((uint32) numCues);
 
@@ -473,6 +552,161 @@ namespace WavFileHelpers
     }
 
     //==============================================================================
+    /** Reads a RIFF List Info chunk from a stream positioned just after the size byte. */
+    namespace ListInfoChunk
+    {
+        static const char* const types[] =
+        {
+            WavAudioFormat::riffInfoArchivalLocation,
+            WavAudioFormat::riffInfoArtist,
+            WavAudioFormat::riffInfoBaseURL,
+            WavAudioFormat::riffInfoCinematographer,
+            WavAudioFormat::riffInfoComment,
+            WavAudioFormat::riffInfoComments,
+            WavAudioFormat::riffInfoCommissioned,
+            WavAudioFormat::riffInfoCopyright,
+            WavAudioFormat::riffInfoCostumeDesigner,
+            WavAudioFormat::riffInfoCountry,
+            WavAudioFormat::riffInfoCropped,
+            WavAudioFormat::riffInfoDateCreated,
+            WavAudioFormat::riffInfoDateTimeOriginal,
+            WavAudioFormat::riffInfoDefaultAudioStream,
+            WavAudioFormat::riffInfoDimension,
+            WavAudioFormat::riffInfoDirectory,
+            WavAudioFormat::riffInfoDistributedBy,
+            WavAudioFormat::riffInfoDotsPerInch,
+            WavAudioFormat::riffInfoEditedBy,
+            WavAudioFormat::riffInfoEighthLanguage,
+            WavAudioFormat::riffInfoEncodedBy,
+            WavAudioFormat::riffInfoEndTimecode,
+            WavAudioFormat::riffInfoEngineer,
+            WavAudioFormat::riffInfoFifthLanguage,
+            WavAudioFormat::riffInfoFirstLanguage,
+            WavAudioFormat::riffInfoFourthLanguage,
+            WavAudioFormat::riffInfoGenre,
+            WavAudioFormat::riffInfoKeywords,
+            WavAudioFormat::riffInfoLanguage,
+            WavAudioFormat::riffInfoLength,
+            WavAudioFormat::riffInfoLightness,
+            WavAudioFormat::riffInfoLocation,
+            WavAudioFormat::riffInfoLogoIconURL,
+            WavAudioFormat::riffInfoLogoURL,
+            WavAudioFormat::riffInfoMedium,
+            WavAudioFormat::riffInfoMoreInfoBannerImage,
+            WavAudioFormat::riffInfoMoreInfoBannerURL,
+            WavAudioFormat::riffInfoMoreInfoText,
+            WavAudioFormat::riffInfoMoreInfoURL,
+            WavAudioFormat::riffInfoMusicBy,
+            WavAudioFormat::riffInfoNinthLanguage,
+            WavAudioFormat::riffInfoNumberOfParts,
+            WavAudioFormat::riffInfoOrganisation,
+            WavAudioFormat::riffInfoPart,
+            WavAudioFormat::riffInfoProducedBy,
+            WavAudioFormat::riffInfoProductionDesigner,
+            WavAudioFormat::riffInfoProductionStudio,
+            WavAudioFormat::riffInfoRate,
+            WavAudioFormat::riffInfoRated,
+            WavAudioFormat::riffInfoRating,
+            WavAudioFormat::riffInfoRippedBy,
+            WavAudioFormat::riffInfoSecondaryGenre,
+            WavAudioFormat::riffInfoSecondLanguage,
+            WavAudioFormat::riffInfoSeventhLanguage,
+            WavAudioFormat::riffInfoSharpness,
+            WavAudioFormat::riffInfoSixthLanguage,
+            WavAudioFormat::riffInfoSoftware,
+            WavAudioFormat::riffInfoSoundSchemeTitle,
+            WavAudioFormat::riffInfoSource,
+            WavAudioFormat::riffInfoSourceFrom,
+            WavAudioFormat::riffInfoStarring_ISTR,
+            WavAudioFormat::riffInfoStarring_STAR,
+            WavAudioFormat::riffInfoStartTimecode,
+            WavAudioFormat::riffInfoStatistics,
+            WavAudioFormat::riffInfoSubject,
+            WavAudioFormat::riffInfoTapeName,
+            WavAudioFormat::riffInfoTechnician,
+            WavAudioFormat::riffInfoThirdLanguage,
+            WavAudioFormat::riffInfoTimeCode,
+            WavAudioFormat::riffInfoTitle,
+            WavAudioFormat::riffInfoTrackNumber,
+            WavAudioFormat::riffInfoURL,
+            WavAudioFormat::riffInfoVegasVersionMajor,
+            WavAudioFormat::riffInfoVegasVersionMinor,
+            WavAudioFormat::riffInfoVersion,
+            WavAudioFormat::riffInfoWatermarkURL,
+            WavAudioFormat::riffInfoWrittenBy,
+            WavAudioFormat::riffInfoYear
+        };
+
+        static bool isMatchingTypeIgnoringCase (const int value, const char* const name) noexcept
+        {
+            for (int i = 0; i < 4; ++i)
+                if ((juce_wchar) name[i] != CharacterFunctions::toUpperCase ((juce_wchar) ((value >> (i * 8)) & 0xff)))
+                    return false;
+
+            return true;
+        }
+
+        static void addToMetadata (StringPairArray& values, InputStream& input, int64 chunkEnd)
+        {
+            while (input.getPosition() < chunkEnd)
+            {
+                const int infoType = input.readInt();
+
+                int64 infoLength = chunkEnd - input.getPosition();
+
+                if (infoLength > 0)
+                {
+                    infoLength = jlimit ((int64) 0, infoLength, (int64) input.readInt());
+
+                    for (int i = 0; i < numElementsInArray (types); ++i)
+                    {
+                        if (isMatchingTypeIgnoringCase (infoType, types[i]))
+                        {
+                            MemoryBlock mb;
+                            input.readIntoMemoryBlock (mb, (ssize_t) infoLength);
+                            values.set (types[i], mb.toString());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        static bool writeValue (const StringPairArray& values, MemoryOutputStream& out, const char* paramName)
+        {
+            const String value (values.getValue (paramName, String()));
+
+            if (value.isEmpty())
+                return false;
+
+            const int valueLength = (int) value.getNumBytesAsUTF8() + 1;
+            const int chunkLength = valueLength + (valueLength & 1);
+
+            out.writeInt (chunkName (paramName));
+            out.writeInt (chunkLength);
+            out.write (value.toUTF8(), (size_t) valueLength);
+
+            if ((out.getDataSize() & 1) != 0)
+                out.writeByte (0);
+
+            return true;
+        }
+
+        static MemoryBlock createFrom (const StringPairArray& values)
+        {
+            MemoryOutputStream out;
+            out.writeInt (chunkName ("INFO"));
+            bool anyParamsDefined = false;
+
+            for (int i = 0; i < numElementsInArray (types); ++i)
+                if (writeValue (values, out, types[i]))
+                    anyParamsDefined = true;
+
+            return anyParamsDefined ? out.getMemoryBlock() : MemoryBlock();
+        }
+    }
+
+    //==============================================================================
     struct AcidChunk
     {
         /** Reads an acid RIFF chunk from a stream positioned just after the size byte. */
@@ -480,6 +714,38 @@ namespace WavFileHelpers
         {
             zerostruct (*this);
             input.read (this, (int) jmin (sizeof (*this), length));
+        }
+
+        AcidChunk (const StringPairArray& values)
+        {
+            zerostruct (*this);
+
+            flags = getFlagIfPresent (values, WavAudioFormat::acidOneShot,   0x01)
+                  | getFlagIfPresent (values, WavAudioFormat::acidRootSet,   0x02)
+                  | getFlagIfPresent (values, WavAudioFormat::acidStretch,   0x04)
+                  | getFlagIfPresent (values, WavAudioFormat::acidDiskBased, 0x08)
+                  | getFlagIfPresent (values, WavAudioFormat::acidizerFlag,  0x10);
+
+            if (values[WavAudioFormat::acidRootSet].getIntValue() != 0)
+                rootNote = ByteOrder::swapIfBigEndian ((uint16) values[WavAudioFormat::acidRootNote].getIntValue());
+
+            numBeats          = ByteOrder::swapIfBigEndian ((uint32) values[WavAudioFormat::acidBeats].getIntValue());
+            meterDenominator  = ByteOrder::swapIfBigEndian ((uint16) values[WavAudioFormat::acidDenominator].getIntValue());
+            meterNumerator    = ByteOrder::swapIfBigEndian ((uint16) values[WavAudioFormat::acidNumerator].getIntValue());
+
+            if (values.containsKey (WavAudioFormat::acidTempo))
+                tempo = swapFloatByteOrder (values[WavAudioFormat::acidTempo].getFloatValue());
+        }
+
+        static MemoryBlock createFrom (const StringPairArray& values)
+        {
+            return AcidChunk (values).toMemoryBlock();
+        }
+
+        MemoryBlock toMemoryBlock() const
+        {
+            return (flags != 0 || rootNote != 0 || numBeats != 0 || meterDenominator != 0 || meterNumerator != 0)
+                      ? MemoryBlock (this, sizeof (*this)) : MemoryBlock();
         }
 
         void addToMetadata (StringPairArray& values) const
@@ -491,29 +757,66 @@ namespace WavFileHelpers
             setBoolFlag (values, WavAudioFormat::acidizerFlag,  0x10);
 
             if (flags & 0x02) // root note set
-                values.set (WavAudioFormat::acidRootNote, String (rootNote));
+                values.set (WavAudioFormat::acidRootNote, String (ByteOrder::swapIfBigEndian (rootNote)));
 
-            values.set (WavAudioFormat::acidBeats,       String (numBeats));
-            values.set (WavAudioFormat::acidDenominator, String (meterDenominator));
-            values.set (WavAudioFormat::acidNumerator,   String (meterNumerator));
-            values.set (WavAudioFormat::acidTempo,       String (tempo));
+            values.set (WavAudioFormat::acidBeats,       String (ByteOrder::swapIfBigEndian (numBeats)));
+            values.set (WavAudioFormat::acidDenominator, String (ByteOrder::swapIfBigEndian (meterDenominator)));
+            values.set (WavAudioFormat::acidNumerator,   String (ByteOrder::swapIfBigEndian (meterNumerator)));
+            values.set (WavAudioFormat::acidTempo,       String (swapFloatByteOrder (tempo)));
         }
 
-        void setBoolFlag (StringPairArray& values, const char* name, int32 mask) const
+        void setBoolFlag (StringPairArray& values, const char* name, uint32 mask) const
         {
-            values.set (name, (flags & mask) ? "1" : "0");
+            values.set (name, (flags & ByteOrder::swapIfBigEndian (mask)) ? "1" : "0");
         }
 
-        int32 flags;
-        int16 rootNote;
-        int16 reserved1;
+        static uint32 getFlagIfPresent (const StringPairArray& values, const char* name, uint32 flag)
+        {
+            return values[name].getIntValue() != 0 ? ByteOrder::swapIfBigEndian (flag) : 0;
+        }
+
+        static float swapFloatByteOrder (const float x) noexcept
+        {
+           #ifdef JUCE_BIG_ENDIAN
+            union { uint32 asInt; float asFloat; } n;
+            n.asFloat = x;
+            n.asInt = ByteOrder::swap (n.asInt);
+            return n.asFloat;
+           #else
+            return x;
+           #endif
+        }
+
+        uint32 flags;
+        uint16 rootNote;
+        uint16 reserved1;
         float reserved2;
-        int32 numBeats;
-        int16 meterDenominator;
-        int16 meterNumerator;
+        uint32 numBeats;
+        uint16 meterDenominator;
+        uint16 meterNumerator;
         float tempo;
 
     } JUCE_PACKED;
+
+    //==============================================================================
+    struct TracktionChunk
+    {
+        static MemoryBlock createFrom (const StringPairArray& values)
+        {
+            MemoryOutputStream out;
+            const String s (values[WavAudioFormat::tracktionLoopInfo]);
+
+            if (s.isNotEmpty())
+            {
+                out.writeString (s);
+
+                if ((out.getDataSize() & 1) != 0)
+                    out.writeByte (0);
+            }
+
+            return out.getMemoryBlock();
+        }
+    };
 
     //==============================================================================
     namespace AXMLChunk
@@ -542,7 +845,7 @@ namespace WavFileHelpers
 
         static MemoryBlock createFrom (const StringPairArray& values)
         {
-            const String ISRC (values.getValue (WavAudioFormat::ISRC, String::empty));
+            const String ISRC (values.getValue (WavAudioFormat::ISRC, String()));
             MemoryOutputStream xml;
 
             if (ISRC.isNotEmpty())
@@ -605,7 +908,7 @@ class WavAudioFormatReader  : public AudioFormatReader
 {
 public:
     WavAudioFormatReader (InputStream* const in)
-        : AudioFormatReader (in, TRANS (wavFormatName)),
+        : AudioFormatReader (in, wavFormatName),
           bwavChunkStart (0),
           bwavSize (0),
           dataLength (0),
@@ -724,28 +1027,28 @@ public:
                     bwavChunkStart = input->getPosition();
                     bwavSize = length;
 
-                    HeapBlock <BWAVChunk> bwav;
+                    HeapBlock<BWAVChunk> bwav;
                     bwav.calloc (jmax ((size_t) length + 1, sizeof (BWAVChunk)), 1);
                     input->read (bwav, (int) length);
                     bwav->copyTo (metadataValues, (int) length);
                 }
                 else if (chunkType == chunkName ("smpl"))
                 {
-                    HeapBlock <SMPLChunk> smpl;
+                    HeapBlock<SMPLChunk> smpl;
                     smpl.calloc (jmax ((size_t) length + 1, sizeof (SMPLChunk)), 1);
                     input->read (smpl, (int) length);
                     smpl->copyTo (metadataValues, (int) length);
                 }
                 else if (chunkType == chunkName ("inst") || chunkType == chunkName ("INST")) // need to check which...
                 {
-                    HeapBlock <InstChunk> inst;
+                    HeapBlock<InstChunk> inst;
                     inst.calloc (jmax ((size_t) length + 1, sizeof (InstChunk)), 1);
                     input->read (inst, (int) length);
                     inst->copyTo (metadataValues);
                 }
                 else if (chunkType == chunkName ("cue "))
                 {
-                    HeapBlock <CueChunk> cue;
+                    HeapBlock<CueChunk> cue;
                     cue.calloc (jmax ((size_t) length + 1, sizeof (CueChunk)), 1);
                     input->read (cue, (int) length);
                     cue->copyTo (metadataValues, (int) length);
@@ -753,12 +1056,18 @@ public:
                 else if (chunkType == chunkName ("axml"))
                 {
                     MemoryBlock axml;
-                    input->readIntoMemoryBlock (axml, (size_t) length);
+                    input->readIntoMemoryBlock (axml, (ssize_t) length);
                     AXMLChunk::addToMetadata (metadataValues, axml.toString());
                 }
                 else if (chunkType == chunkName ("LIST"))
                 {
-                    if (input->readInt() == chunkName ("adtl"))
+                    const int subChunkType = input->readInt();
+
+                    if (subChunkType == chunkName ("info") || subChunkType == chunkName ("INFO"))
+                    {
+                        ListInfoChunk::addToMetadata (metadataValues, *input, chunkEnd);
+                    }
+                    else if (subChunkType == chunkName ("adtl"))
                     {
                         while (input->getPosition() < chunkEnd)
                         {
@@ -816,6 +1125,12 @@ public:
                 else if (chunkType == chunkName ("acid"))
                 {
                     AcidChunk (*input, length).addToMetadata (metadataValues);
+                }
+                else if (chunkType == chunkName ("Trkn"))
+                {
+                    MemoryBlock tracktion;
+                    input->readIntoMemoryBlock (tracktion, (ssize_t) length);
+                    metadataValues.set (WavAudioFormat::tracktionLoopInfo, tracktion.toString());
                 }
                 else if (chunkEnd <= input->getPosition())
                 {
@@ -900,7 +1215,7 @@ public:
     WavAudioFormatWriter (OutputStream* const out, const double rate,
                           const unsigned int numChans, const unsigned int bits,
                           const StringPairArray& metadataValues)
-        : AudioFormatWriter (out, TRANS (wavFormatName), rate, numChans, bits),
+        : AudioFormatWriter (out, wavFormatName, rate, numChans, bits),
           lengthInSamples (0),
           bytesWritten (0),
           writeFailed (false)
@@ -909,17 +1224,20 @@ public:
 
         if (metadataValues.size() > 0)
         {
-            // The meta data should have been santised for the WAV format.
+            // The meta data should have been sanitised for the WAV format.
             // If it was originally sourced from an AIFF file the MetaDataSource
             // key should be removed (or set to "WAV") once this has been done
             jassert (metadataValues.getValue ("MetaDataSource", "None") != "AIFF");
 
-            bwavChunk = BWAVChunk::createFrom (metadataValues);
-            axmlChunk = AXMLChunk::createFrom (metadataValues);
-            smplChunk = SMPLChunk::createFrom (metadataValues);
-            instChunk = InstChunk::createFrom (metadataValues);
-            cueChunk  = CueChunk ::createFrom (metadataValues);
-            listChunk = ListChunk::createFrom (metadataValues);
+            bwavChunk     = BWAVChunk::createFrom (metadataValues);
+            axmlChunk     = AXMLChunk::createFrom (metadataValues);
+            smplChunk     = SMPLChunk::createFrom (metadataValues);
+            instChunk     = InstChunk::createFrom (metadataValues);
+            cueChunk      = CueChunk ::createFrom (metadataValues);
+            listChunk     = ListChunk::createFrom (metadataValues);
+            listInfoChunk = ListInfoChunk::createFrom (metadataValues);
+            acidChunk     = AcidChunk::createFrom (metadataValues);
+            trckChunk     = TracktionChunk::createFrom (metadataValues);
         }
 
         headerPosition = out->getPosition();
@@ -928,12 +1246,6 @@ public:
 
     ~WavAudioFormatWriter()
     {
-        if ((bytesWritten & 1) != 0) // pad to an even length
-        {
-            ++bytesWritten;
-            output->writeByte (0);
-        }
-
         writeHeader();
     }
 
@@ -967,17 +1279,28 @@ public:
             writeFailed = true;
             return false;
         }
-        else
-        {
-            bytesWritten += bytes;
-            lengthInSamples += (uint64) numSamples;
 
+        bytesWritten += bytes;
+        lengthInSamples += (uint64) numSamples;
+        return true;
+    }
+
+    bool flush() override
+    {
+        const int64 lastWritePos = output->getPosition();
+        writeHeader();
+
+        if (output->setPosition (lastWritePos))
             return true;
-        }
+
+        // if this fails, you've given it an output stream that can't seek! It needs
+        // to be able to seek back to write the header
+        jassertfalse;
+        return false;
     }
 
 private:
-    MemoryBlock tempBlock, bwavChunk, axmlChunk, smplChunk, instChunk, cueChunk, listChunk;
+    MemoryBlock tempBlock, bwavChunk, axmlChunk, smplChunk, instChunk, cueChunk, listChunk, listInfoChunk, acidChunk, trckChunk;
     uint64 lengthInSamples, bytesWritten;
     int64 headerPosition;
     bool writeFailed;
@@ -987,11 +1310,13 @@ private:
         switch (numChannels)
         {
             case 1:   return 0;
-            case 2:   return 1 + 2; // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT
-            case 5:   return 1 + 2 + 4 + 16 + 32; // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT
-            case 6:   return 1 + 2 + 4 + 8 + 16 + 32; // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT
-            case 7:   return 1 + 2 + 4  + 16 + 32 + 512 + 1024; // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER  | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT
-            case 8:   return 1 + 2 + 4 + 8 + 16 + 32 + 512 + 1024; // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT
+            case 2:   return 1 + 2;                                 // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT
+            case 3:   return 1 + 2 + 4;                             // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER
+            case 4:   return 1 + 2 + 16 + 32;                       // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT
+            case 5:   return 1 + 2 + 4 + 16 + 32;                   // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT
+            case 6:   return 1 + 2 + 4 + 8 + 16 + 32;               // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT
+            case 7:   return 1 + 2 + 4 + 16 + 32 + 512 + 1024;      // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT
+            case 8:   return 1 + 2 + 4 + 8 + 16 + 32 + 512 + 1024;  // SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT
             default:  break;
         }
 
@@ -1000,13 +1325,18 @@ private:
 
     void writeHeader()
     {
-        using namespace WavFileHelpers;
-        const bool seekedOk = output->setPosition (headerPosition);
-        (void) seekedOk;
+        if ((bytesWritten & 1) != 0) // pad to an even length
+            output->writeByte (0);
 
-        // if this fails, you've given it an output stream that can't seek! It needs
-        // to be able to seek back to write the header
-        jassert (seekedOk);
+        using namespace WavFileHelpers;
+
+        if (headerPosition != output->getPosition() && ! output->setPosition (headerPosition))
+        {
+            // if this fails, you've given it an output stream that can't seek! It needs to be
+            // able to seek back to go back and write the header after the data has been written.
+            jassertfalse;
+            return;
+        }
 
         const size_t bytesPerFrame = numChannels * bitsPerSample / 8;
         uint64 audioDataSize = bytesPerFrame * lengthInSamples;
@@ -1022,6 +1352,9 @@ private:
                                        + chunkSize (instChunk)
                                        + chunkSize (cueChunk)
                                        + chunkSize (listChunk)
+                                       + chunkSize (listInfoChunk)
+                                       + chunkSize (acidChunk)
+                                       + chunkSize (trckChunk)
                                        + (8 + 28)); // (ds64 chunk)
 
         riffChunkSize += (riffChunkSize & 1);
@@ -1095,19 +1428,22 @@ private:
             output->write (subFormat.data4, sizeof (subFormat.data4));
         }
 
-        writeChunk (bwavChunk, chunkName ("bext"));
-        writeChunk (axmlChunk, chunkName ("axml"));
-        writeChunk (smplChunk, chunkName ("smpl"));
-        writeChunk (instChunk, chunkName ("inst"), 7);
-        writeChunk (cueChunk,  chunkName ("cue "));
-        writeChunk (listChunk, chunkName ("LIST"));
+        writeChunk (bwavChunk,     chunkName ("bext"));
+        writeChunk (axmlChunk,     chunkName ("axml"));
+        writeChunk (smplChunk,     chunkName ("smpl"));
+        writeChunk (instChunk,     chunkName ("inst"), 7);
+        writeChunk (cueChunk,      chunkName ("cue "));
+        writeChunk (listChunk,     chunkName ("LIST"));
+        writeChunk (listInfoChunk, chunkName ("LIST"));
+        writeChunk (acidChunk,     chunkName ("acid"));
+        writeChunk (trckChunk,     chunkName ("Trkn"));
 
         writeChunkHeader (chunkName ("data"), isRF64 ? -1 : (int) (lengthInSamples * bytesPerFrame));
 
         usesFloatingPointData = (bitsPerSample == 32);
     }
 
-    static int chunkSize (const MemoryBlock& data) noexcept     { return data.getSize() > 0 ? (8 + data.getSize()) : 0; }
+    static size_t chunkSize (const MemoryBlock& data) noexcept     { return data.getSize() > 0 ? (8 + data.getSize()) : 0; }
 
     void writeChunkHeader (int chunkType, int size) const
     {
@@ -1131,8 +1467,8 @@ private:
 class MemoryMappedWavReader   : public MemoryMappedAudioFormatReader
 {
 public:
-    MemoryMappedWavReader (const File& file, const WavAudioFormatReader& reader)
-        : MemoryMappedAudioFormatReader (file, reader, reader.dataChunkStart,
+    MemoryMappedWavReader (const File& wavFile, const WavAudioFormatReader& reader)
+        : MemoryMappedAudioFormatReader (wavFile, reader, reader.dataChunkStart,
                                          reader.dataLength, reader.bytesPerFrame)
     {
     }
@@ -1155,59 +1491,71 @@ public:
         return true;
     }
 
-    void readMaxLevels (int64 startSampleInFile, int64 numSamples,
-                        float& min0, float& max0, float& min1, float& max1) override
+    void getSample (int64 sample, float* result) const noexcept override
     {
-        if (numSamples <= 0)
-        {
-            min0 = max0 = min1 = max1 = 0;
-            return;
-        }
+        const int num = (int) numChannels;
 
-        if (map == nullptr || ! mappedSection.contains (Range<int64> (startSampleInFile, startSampleInFile + numSamples)))
+        if (map == nullptr || ! mappedSection.contains (sample))
         {
             jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read.
 
-            min0 = max0 = min1 = max1 = 0;
+            zeromem (result, sizeof (float) * (size_t) num);
+            return;
+        }
+
+        float** dest = &result;
+        const void* source = sampleToPointer (sample);
+
+        switch (bitsPerSample)
+        {
+            case 8:     ReadHelper<AudioData::Float32, AudioData::UInt8, AudioData::LittleEndian>::read (dest, 0, 1, source, 1, num); break;
+            case 16:    ReadHelper<AudioData::Float32, AudioData::Int16, AudioData::LittleEndian>::read (dest, 0, 1, source, 1, num); break;
+            case 24:    ReadHelper<AudioData::Float32, AudioData::Int24, AudioData::LittleEndian>::read (dest, 0, 1, source, 1, num); break;
+            case 32:    if (usesFloatingPointData) ReadHelper<AudioData::Float32, AudioData::Float32, AudioData::LittleEndian>::read (dest, 0, 1, source, 1, num);
+                        else                       ReadHelper<AudioData::Float32, AudioData::Int32,   AudioData::LittleEndian>::read (dest, 0, 1, source, 1, num); break;
+            default:    jassertfalse; break;
+        }
+    }
+
+    void readMaxLevels (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) override
+    {
+        numSamples = jmin (numSamples, lengthInSamples - startSampleInFile);
+
+        if (map == nullptr || numSamples <= 0 || ! mappedSection.contains (Range<int64> (startSampleInFile, startSampleInFile + numSamples)))
+        {
+            jassert (numSamples <= 0); // you must make sure that the window contains all the samples you're going to attempt to read.
+
+            for (int i = 0; i < numChannelsToRead; ++i)
+                results[i] = Range<float>();
+
             return;
         }
 
         switch (bitsPerSample)
         {
-            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, min0, max0, min1, max1); break;
-            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, min0, max0, min1, max1); break;
-            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, min0, max0, min1, max1); break;
-            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, min0, max0, min1, max1);
-                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, min0, max0, min1, max1); break;
+            case 8:     scanMinAndMax<AudioData::UInt8> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 16:    scanMinAndMax<AudioData::Int16> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 24:    scanMinAndMax<AudioData::Int24> (startSampleInFile, numSamples, results, numChannelsToRead); break;
+            case 32:    if (usesFloatingPointData) scanMinAndMax<AudioData::Float32> (startSampleInFile, numSamples, results, numChannelsToRead);
+                        else                       scanMinAndMax<AudioData::Int32>   (startSampleInFile, numSamples, results, numChannelsToRead); break;
             default:    jassertfalse; break;
         }
     }
 
 private:
     template <typename SampleType>
-    void scanMinAndMax (int64 startSampleInFile, int64 numSamples,
-                        float& min0, float& max0, float& min1, float& max1) const noexcept
+    void scanMinAndMax (int64 startSampleInFile, int64 numSamples, Range<float>* results, int numChannelsToRead) const noexcept
     {
-        scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (0, startSampleInFile, numSamples, min0, max0);
-
-        if (numChannels > 1)
-            scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (1, startSampleInFile, numSamples, min1, max1);
-        else
-            min1 = max1 = 0;
+        for (int i = 0; i < numChannelsToRead; ++i)
+            results[i] = scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (i, startSampleInFile, numSamples);
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemoryMappedWavReader)
 };
 
 //==============================================================================
-WavAudioFormat::WavAudioFormat()
-    : AudioFormat (TRANS (wavFormatName), StringArray (wavExtensions))
-{
-}
-
-WavAudioFormat::~WavAudioFormat()
-{
-}
+WavAudioFormat::WavAudioFormat()  : AudioFormat (wavFormatName, ".wav .bwf") {}
+WavAudioFormat::~WavAudioFormat() {}
 
 Array<int> WavAudioFormat::getPossibleSampleRates()
 {
@@ -1232,7 +1580,7 @@ AudioFormatReader* WavAudioFormat::createReaderFor (InputStream* sourceStream,
 {
     ScopedPointer<WavAudioFormatReader> r (new WavAudioFormatReader (sourceStream));
 
-    if (r->sampleRate > 0 && r->numChannels > 0)
+    if (r->sampleRate > 0 && r->numChannels > 0 && r->bytesPerFrame > 0)
         return r.release();
 
     if (! deleteStreamIfOpeningFails)
@@ -1258,7 +1606,7 @@ AudioFormatWriter* WavAudioFormat::createWriterFor (OutputStream* out, double sa
                                                     unsigned int numChannels, int bitsPerSample,
                                                     const StringPairArray& metadataValues, int /*qualityOptionIndex*/)
 {
-    if (getPossibleBitDepths().contains (bitsPerSample))
+    if (out != nullptr && getPossibleBitDepths().contains (bitsPerSample))
         return new WavAudioFormatWriter (out, sampleRate, (unsigned int) numChannels,
                                          (unsigned int) bitsPerSample, metadataValues);
 
@@ -1341,3 +1689,70 @@ bool WavAudioFormat::replaceMetadataInFile (const File& wavFile, const StringPai
 
     return slowCopyWavFileWithNewMetadata (wavFile, newMetadata);
 }
+
+//==============================================================================
+#if JUCE_UNIT_TESTS
+
+class WaveAudioFormatTests : public UnitTest
+{
+public:
+    WaveAudioFormatTests() : UnitTest ("Wave audio format tests") {}
+
+    void runTest() override
+    {
+        beginTest ("Setting up metadata");
+
+        StringPairArray metadataValues = WavAudioFormat::createBWAVMetadata ("description",
+                                                                             "originator",
+                                                                             "originatorRef",
+                                                                             Time::getCurrentTime(),
+                                                                             numTestAudioBufferSamples,
+                                                                             "codingHistory");
+
+        for (int i = numElementsInArray (WavFileHelpers::ListInfoChunk::types); --i >= 0;)
+            metadataValues.set (WavFileHelpers::ListInfoChunk::types[i],
+                                WavFileHelpers::ListInfoChunk::types[i]);
+
+        if (metadataValues.size() > 0)
+            metadataValues.set ("MetaDataSource", "WAV");
+
+        WavAudioFormat format;
+        MemoryBlock memoryBlock;
+
+        {
+            beginTest ("Creating a basic wave writer");
+
+            ScopedPointer<AudioFormatWriter> writer (format.createWriterFor (new MemoryOutputStream (memoryBlock, false),
+                                                                             44100.0, numTestAudioBufferChannels,
+                                                                             32, metadataValues, 0));
+            expect (writer != nullptr);
+
+            AudioSampleBuffer buffer (numTestAudioBufferChannels, numTestAudioBufferSamples);
+            buffer.clear();
+
+            beginTest ("Writing audio data to the basic wave writer");
+            expect (writer->writeFromAudioSampleBuffer (buffer, 0, numTestAudioBufferSamples));
+        }
+
+        {
+            beginTest ("Creating a basic wave reader");
+
+            ScopedPointer<AudioFormatReader> reader (format.createReaderFor (new MemoryInputStream (memoryBlock, false), false));
+            expect (reader != nullptr);
+            expect (reader->metadataValues == metadataValues, "Somehow, the metadata is different!");
+        }
+    }
+
+private:
+    enum
+    {
+        numTestAudioBufferChannels = 2,
+        numTestAudioBufferSamples = 256
+    };
+
+    JUCE_DECLARE_NON_COPYABLE (WaveAudioFormatTests)
+};
+
+static const WaveAudioFormatTests waveAudioFormatTests;
+
+#endif

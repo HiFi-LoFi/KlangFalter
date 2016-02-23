@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -182,11 +182,9 @@ namespace DSoundLogging
         }
     }
 
-    #define CATCH JUCE_CATCH_EXCEPTION
     #define JUCE_DS_LOG(a)        DSoundLogging::logMessage(a);
     #define JUCE_DS_LOG_ERROR(a)  DSoundLogging::logError(a, __LINE__);
    #else
-    #define CATCH JUCE_CATCH_ALL
     #define JUCE_DS_LOG(a)
     #define JUCE_DS_LOG_ERROR(a)
    #endif
@@ -251,7 +249,7 @@ public:
         {
             JUCE_DS_LOG ("closing output: " + name);
             HRESULT hr = pOutputBuffer->Stop();
-            JUCE_DS_LOG_ERROR (hr); (void) hr;
+            JUCE_DS_LOG_ERROR (hr); ignoreUnused (hr);
 
             pOutputBuffer->Release();
             pOutputBuffer = nullptr;
@@ -354,7 +352,7 @@ public:
                                         hr = pOutputBuffer->Play (0, 0, 1 /* DSBPLAY_LOOPING */);
 
                                         if (SUCCEEDED (hr))
-                                            return String::empty;
+                                            return String();
                                     }
                                 }
                             }
@@ -534,7 +532,7 @@ public:
         {
             JUCE_DS_LOG ("closing input: " + name);
             HRESULT hr = pInputBuffer->Stop();
-            JUCE_DS_LOG_ERROR (hr); (void) hr;
+            JUCE_DS_LOG_ERROR (hr); ignoreUnused (hr);
 
             pInputBuffer->Release();
             pInputBuffer = nullptr;
@@ -597,7 +595,7 @@ public:
                 hr = pInputBuffer->Start (1 /* DSCBSTART_LOOPING */);
 
                 if (SUCCEEDED (hr))
-                    return String::empty;
+                    return String();
             }
         }
 
@@ -640,7 +638,7 @@ public:
             DWORD dwsize1 = 0;
             DWORD dwsize2 = 0;
 
-            HRESULT hr = pInputBuffer->Lock ((DWORD) readOffset, (DWORD) bytesPerBuffer,
+            hr = pInputBuffer->Lock ((DWORD) readOffset, (DWORD) bytesPerBuffer,
                                              (void**) &buf1, &dwsize1,
                                              (void**) &buf2, &dwsize2, 0);
 
@@ -731,8 +729,6 @@ public:
           isStarted (false),
           bufferSizeSamples (0),
           sampleRate (0.0),
-          inputBuffers (1, 1),
-          outputBuffers (1, 1),
           callback (nullptr)
     {
         if (outputDeviceIndex_ >= 0)
@@ -755,15 +751,15 @@ public:
 
     String open (const BigInteger& inputChannels,
                  const BigInteger& outputChannels,
-                 double sampleRate, int bufferSizeSamples)
+                 double newSampleRate, int newBufferSize) override
     {
-        lastError = openDevice (inputChannels, outputChannels, sampleRate, bufferSizeSamples);
+        lastError = openDevice (inputChannels, outputChannels, newSampleRate, newBufferSize);
         isOpen_ = lastError.isEmpty();
 
         return lastError;
     }
 
-    void close()
+    void close() override
     {
         stop();
 
@@ -774,38 +770,41 @@ public:
         }
     }
 
-    bool isOpen()                                       { return isOpen_ && isThreadRunning(); }
-    int getCurrentBufferSizeSamples()                   { return bufferSizeSamples; }
-    double getCurrentSampleRate()                       { return sampleRate; }
-    BigInteger getActiveOutputChannels() const          { return enabledOutputs; }
-    BigInteger getActiveInputChannels() const           { return enabledInputs; }
-    int getOutputLatencyInSamples()                     { return (int) (getCurrentBufferSizeSamples() * 1.5); }
-    int getInputLatencyInSamples()                      { return getOutputLatencyInSamples(); }
-    StringArray getOutputChannelNames()                 { return outChannels; }
-    StringArray getInputChannelNames()                  { return inChannels; }
+    bool isOpen() override                              { return isOpen_ && isThreadRunning(); }
+    int getCurrentBufferSizeSamples() override          { return bufferSizeSamples; }
+    double getCurrentSampleRate() override              { return sampleRate; }
+    BigInteger getActiveOutputChannels() const override { return enabledOutputs; }
+    BigInteger getActiveInputChannels() const override  { return enabledInputs; }
+    int getOutputLatencyInSamples() override            { return (int) (getCurrentBufferSizeSamples() * 1.5); }
+    int getInputLatencyInSamples() override             { return getOutputLatencyInSamples(); }
+    StringArray getOutputChannelNames() override        { return outChannels; }
+    StringArray getInputChannelNames() override         { return inChannels; }
 
-    int getNumSampleRates()                             { return 4; }
-    int getDefaultBufferSize()                          { return 2560; }
-    int getNumBufferSizesAvailable()                    { return 50; }
-
-    double getSampleRate (int index)
+    Array<double> getAvailableSampleRates() override
     {
-        const double samps[] = { 44100.0, 48000.0, 88200.0, 96000.0 };
-        return samps [jlimit (0, 3, index)];
+        static const double rates[] = { 44100.0, 48000.0, 88200.0, 96000.0 };
+        return Array<double> (rates, numElementsInArray (rates));
     }
 
-    int getBufferSizeSamples (int index)
+    Array<int> getAvailableBufferSizes() override
     {
+        Array<int> r;
         int n = 64;
-        for (int i = 0; i < index; ++i)
+
+        for (int i = 0; i < 50; ++i)
+        {
+            r.add (n);
             n += (n < 512) ? 32
                            : ((n < 1024) ? 64
                                          : ((n < 2048) ? 128 : 256));
+        }
 
-        return n;
+        return r;
     }
 
-    int getCurrentBitDepth()
+    int getDefaultBufferSize() override                 { return 2560; }
+
+    int getCurrentBitDepth() override
     {
         int bits = 256;
 
@@ -821,7 +820,7 @@ public:
         return bits;
     }
 
-    void start (AudioIODeviceCallback* call)
+    void start (AudioIODeviceCallback* call) override
     {
         if (isOpen_ && call != nullptr && ! isStarted)
         {
@@ -840,7 +839,7 @@ public:
         }
     }
 
-    void stop()
+    void stop() override
     {
         if (isStarted)
         {
@@ -856,8 +855,8 @@ public:
         }
     }
 
-    bool isPlaying()                { return isStarted && isOpen_ && isThreadRunning(); }
-    String getLastError()           { return lastError; }
+    bool isPlaying() override            { return isStarted && isOpen_ && isThreadRunning(); }
+    String getLastError() override       { return lastError; }
 
     //==============================================================================
     StringArray inChannels, outChannels;
@@ -868,8 +867,8 @@ private:
     bool isStarted;
     String lastError;
 
-    OwnedArray <DSoundInternalInChannel> inChans;
-    OwnedArray <DSoundInternalOutChannel> outChans;
+    OwnedArray<DSoundInternalInChannel> inChans;
+    OwnedArray<DSoundInternalOutChannel> outChans;
     WaitableEvent startEvent;
 
     int bufferSizeSamples;
@@ -995,10 +994,8 @@ public:
 
             if (isStarted)
             {
-                callback->audioDeviceIOCallback (const_cast <const float**> (inputBuffers.getArrayOfChannels()),
-                                                 inputBuffers.getNumChannels(),
-                                                 outputBuffers.getArrayOfChannels(),
-                                                 outputBuffers.getNumChannels(),
+                callback->audioDeviceIOCallback (inputBuffers.getArrayOfReadPointers(), inputBuffers.getNumChannels(),
+                                                 outputBuffers.getArrayOfWritePointers(), outputBuffers.getNumChannels(),
                                                  bufferSizeSamples);
             }
             else
@@ -1102,13 +1099,8 @@ String DSoundAudioIODevice::openDevice (const BigInteger& inputChannels,
 
     for (int i = 0; i <= enabledInputs.getHighestBit(); i += 2)
     {
-        float* left = nullptr;
-        if (enabledInputs[i])
-            left = inputBuffers.getSampleData (numIns++);
-
-        float* right = nullptr;
-        if (enabledInputs[i + 1])
-            right = inputBuffers.getSampleData (numIns++);
+        float* left  = enabledInputs[i]     ? inputBuffers.getWritePointer (numIns++) : nullptr;
+        float* right = enabledInputs[i + 1] ? inputBuffers.getWritePointer (numIns++) : nullptr;
 
         if (left != nullptr || right != nullptr)
             inChans.add (new DSoundInternalInChannel (dlh.inputDeviceNames [inputDeviceIndex],
@@ -1128,13 +1120,8 @@ String DSoundAudioIODevice::openDevice (const BigInteger& inputChannels,
 
     for (int i = 0; i <= enabledOutputs.getHighestBit(); i += 2)
     {
-        float* left = nullptr;
-        if (enabledOutputs[i])
-            left = outputBuffers.getSampleData (numOuts++);
-
-        float* right = nullptr;
-        if (enabledOutputs[i + 1])
-            right = outputBuffers.getSampleData (numOuts++);
+        float* left  = enabledOutputs[i]     ? outputBuffers.getWritePointer (numOuts++) : nullptr;
+        float* right = enabledOutputs[i + 1] ? outputBuffers.getWritePointer (numOuts++) : nullptr;
 
         if (left != nullptr || right != nullptr)
             outChans.add (new DSoundInternalOutChannel (dlh.outputDeviceNames[outputDeviceIndex],
@@ -1237,7 +1224,7 @@ public:
     {
         jassert (hasScanned); // need to call scanForDevices() before doing this
 
-        if (DSoundAudioIODevice* const d = dynamic_cast <DSoundAudioIODevice*> (device))
+        if (DSoundAudioIODevice* const d = dynamic_cast<DSoundAudioIODevice*> (device))
             return asInput ? d->inputDeviceIndex
                            : d->outputDeviceIndex;
 
@@ -1266,7 +1253,7 @@ private:
     DSoundDeviceList deviceList;
     bool hasScanned;
 
-    void systemDeviceChanged()
+    void systemDeviceChanged() override
     {
         DSoundDeviceList newList;
         newList.scan();

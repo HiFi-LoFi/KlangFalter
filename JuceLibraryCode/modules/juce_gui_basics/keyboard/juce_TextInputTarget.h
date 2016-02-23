@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -71,6 +71,24 @@ public:
 
     /** Returns the position of the caret, relative to the component's origin. */
     virtual Rectangle<int> getCaretRectangle() = 0;
+
+    /** A set of possible on-screen keyboard types, for use in the
+        getKeyboardType() method.
+    */
+    enum VirtualKeyboardType
+    {
+        textKeyboard = 0,
+        numericKeyboard,
+        decimalKeyboard,
+        urlKeyboard,
+        emailAddressKeyboard,
+        phoneNumberKeyboard
+    };
+
+    /** Returns the target's preference for the type of keyboard that would be most appropriate.
+        This may be ignored, depending on the capabilities of the OS.
+    */
+    virtual VirtualKeyboardType getKeyboardType()       { return textKeyboard; }
 };
 
 

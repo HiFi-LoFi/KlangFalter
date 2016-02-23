@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -25,7 +25,7 @@
 void AudioDataConverters::convertFloatToInt16LE (const float* source, void* dest, int numSamples, const int destBytesPerSample)
 {
     const double maxVal = (double) 0x7fff;
-    char* intData = static_cast <char*> (dest);
+    char* intData = static_cast<char*> (dest);
 
     if (dest != (void*) source || destBytesPerSample <= 4)
     {
@@ -50,7 +50,7 @@ void AudioDataConverters::convertFloatToInt16LE (const float* source, void* dest
 void AudioDataConverters::convertFloatToInt16BE (const float* source, void* dest, int numSamples, const int destBytesPerSample)
 {
     const double maxVal = (double) 0x7fff;
-    char* intData = static_cast <char*> (dest);
+    char* intData = static_cast<char*> (dest);
 
     if (dest != (void*) source || destBytesPerSample <= 4)
     {
@@ -75,7 +75,7 @@ void AudioDataConverters::convertFloatToInt16BE (const float* source, void* dest
 void AudioDataConverters::convertFloatToInt24LE (const float* source, void* dest, int numSamples, const int destBytesPerSample)
 {
     const double maxVal = (double) 0x7fffff;
-    char* intData = static_cast <char*> (dest);
+    char* intData = static_cast<char*> (dest);
 
     if (dest != (void*) source || destBytesPerSample <= 4)
     {
@@ -100,7 +100,7 @@ void AudioDataConverters::convertFloatToInt24LE (const float* source, void* dest
 void AudioDataConverters::convertFloatToInt24BE (const float* source, void* dest, int numSamples, const int destBytesPerSample)
 {
     const double maxVal = (double) 0x7fffff;
-    char* intData = static_cast <char*> (dest);
+    char* intData = static_cast<char*> (dest);
 
     if (dest != (void*) source || destBytesPerSample <= 4)
     {
@@ -125,7 +125,7 @@ void AudioDataConverters::convertFloatToInt24BE (const float* source, void* dest
 void AudioDataConverters::convertFloatToInt32LE (const float* source, void* dest, int numSamples, const int destBytesPerSample)
 {
     const double maxVal = (double) 0x7fffffff;
-    char* intData = static_cast <char*> (dest);
+    char* intData = static_cast<char*> (dest);
 
     if (dest != (void*) source || destBytesPerSample <= 4)
     {
@@ -150,7 +150,7 @@ void AudioDataConverters::convertFloatToInt32LE (const float* source, void* dest
 void AudioDataConverters::convertFloatToInt32BE (const float* source, void* dest, int numSamples, const int destBytesPerSample)
 {
     const double maxVal = (double) 0x7fffffff;
-    char* intData = static_cast <char*> (dest);
+    char* intData = static_cast<char*> (dest);
 
     if (dest != (void*) source || destBytesPerSample <= 4)
     {
@@ -176,7 +176,7 @@ void AudioDataConverters::convertFloatToFloat32LE (const float* source, void* de
 {
     jassert (dest != (void*) source || destBytesPerSample <= 4); // This op can't be performed on in-place data!
 
-    char* d = static_cast <char*> (dest);
+    char* d = static_cast<char*> (dest);
 
     for (int i = 0; i < numSamples; ++i)
     {
@@ -194,7 +194,7 @@ void AudioDataConverters::convertFloatToFloat32BE (const float* source, void* de
 {
     jassert (dest != (void*) source || destBytesPerSample <= 4); // This op can't be performed on in-place data!
 
-    char* d = static_cast <char*> (dest);
+    char* d = static_cast<char*> (dest);
 
     for (int i = 0; i < numSamples; ++i)
     {
@@ -212,7 +212,7 @@ void AudioDataConverters::convertFloatToFloat32BE (const float* source, void* de
 void AudioDataConverters::convertInt16LEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
     const float scale = 1.0f / 0x7fff;
-    const char* intData = static_cast <const char*> (source);
+    const char* intData = static_cast<const char*> (source);
 
     if (source != (void*) dest || srcBytesPerSample >= 4)
     {
@@ -237,7 +237,7 @@ void AudioDataConverters::convertInt16LEToFloat (const void* const source, float
 void AudioDataConverters::convertInt16BEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
     const float scale = 1.0f / 0x7fff;
-    const char* intData = static_cast <const char*> (source);
+    const char* intData = static_cast<const char*> (source);
 
     if (source != (void*) dest || srcBytesPerSample >= 4)
     {
@@ -262,7 +262,7 @@ void AudioDataConverters::convertInt16BEToFloat (const void* const source, float
 void AudioDataConverters::convertInt24LEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
     const float scale = 1.0f / 0x7fffff;
-    const char* intData = static_cast <const char*> (source);
+    const char* intData = static_cast<const char*> (source);
 
     if (source != (void*) dest || srcBytesPerSample >= 4)
     {
@@ -287,7 +287,7 @@ void AudioDataConverters::convertInt24LEToFloat (const void* const source, float
 void AudioDataConverters::convertInt24BEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
     const float scale = 1.0f / 0x7fffff;
-    const char* intData = static_cast <const char*> (source);
+    const char* intData = static_cast<const char*> (source);
 
     if (source != (void*) dest || srcBytesPerSample >= 4)
     {
@@ -312,7 +312,7 @@ void AudioDataConverters::convertInt24BEToFloat (const void* const source, float
 void AudioDataConverters::convertInt32LEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
     const float scale = 1.0f / 0x7fffffff;
-    const char* intData = static_cast <const char*> (source);
+    const char* intData = static_cast<const char*> (source);
 
     if (source != (void*) dest || srcBytesPerSample >= 4)
     {
@@ -337,7 +337,7 @@ void AudioDataConverters::convertInt32LEToFloat (const void* const source, float
 void AudioDataConverters::convertInt32BEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
     const float scale = 1.0f / 0x7fffffff;
-    const char* intData = static_cast <const char*> (source);
+    const char* intData = static_cast<const char*> (source);
 
     if (source != (void*) dest || srcBytesPerSample >= 4)
     {
@@ -361,7 +361,7 @@ void AudioDataConverters::convertInt32BEToFloat (const void* const source, float
 
 void AudioDataConverters::convertFloat32LEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
-    const char* s = static_cast <const char*> (source);
+    const char* s = static_cast<const char*> (source);
 
     for (int i = 0; i < numSamples; ++i)
     {
@@ -378,7 +378,7 @@ void AudioDataConverters::convertFloat32LEToFloat (const void* const source, flo
 
 void AudioDataConverters::convertFloat32BEToFloat (const void* const source, float* const dest, int numSamples, const int srcBytesPerSample)
 {
-    const char* s = static_cast <const char*> (source);
+    const char* s = static_cast<const char*> (source);
 
     for (int i = 0; i < numSamples; ++i)
     {
@@ -482,17 +482,16 @@ public:
     template <class F1, class E1, class F2, class E2>
     struct Test5
     {
-        static void test (UnitTest& unitTest)
+        static void test (UnitTest& unitTest, Random& r)
         {
-            test (unitTest, false);
-            test (unitTest, true);
+            test (unitTest, false, r);
+            test (unitTest, true, r);
         }
 
-        static void test (UnitTest& unitTest, bool inPlace)
+        static void test (UnitTest& unitTest, bool inPlace, Random& r)
         {
             const int numSamples = 2048;
             int32 original [numSamples], converted [numSamples], reversed [numSamples];
-            Random r;
 
             {
                 AudioData::Pointer<F1, E1, AudioData::NonInterleaved, AudioData::NonConst> d (original);
@@ -549,49 +548,50 @@ public:
     template <class F1, class E1, class FormatType>
     struct Test3
     {
-        static void test (UnitTest& unitTest)
+        static void test (UnitTest& unitTest, Random& r)
         {
-            Test5 <F1, E1, FormatType, AudioData::BigEndian>::test (unitTest);
-            Test5 <F1, E1, FormatType, AudioData::LittleEndian>::test (unitTest);
+            Test5 <F1, E1, FormatType, AudioData::BigEndian>::test (unitTest, r);
+            Test5 <F1, E1, FormatType, AudioData::LittleEndian>::test (unitTest, r);
         }
     };
 
     template <class FormatType, class Endianness>
     struct Test2
     {
-        static void test (UnitTest& unitTest)
+        static void test (UnitTest& unitTest, Random& r)
         {
-            Test3 <FormatType, Endianness, AudioData::Int8>::test (unitTest);
-            Test3 <FormatType, Endianness, AudioData::UInt8>::test (unitTest);
-            Test3 <FormatType, Endianness, AudioData::Int16>::test (unitTest);
-            Test3 <FormatType, Endianness, AudioData::Int24>::test (unitTest);
-            Test3 <FormatType, Endianness, AudioData::Int32>::test (unitTest);
-            Test3 <FormatType, Endianness, AudioData::Float32>::test (unitTest);
+            Test3 <FormatType, Endianness, AudioData::Int8>::test (unitTest, r);
+            Test3 <FormatType, Endianness, AudioData::UInt8>::test (unitTest, r);
+            Test3 <FormatType, Endianness, AudioData::Int16>::test (unitTest, r);
+            Test3 <FormatType, Endianness, AudioData::Int24>::test (unitTest, r);
+            Test3 <FormatType, Endianness, AudioData::Int32>::test (unitTest, r);
+            Test3 <FormatType, Endianness, AudioData::Float32>::test (unitTest, r);
         }
     };
 
     template <class FormatType>
     struct Test1
     {
-        static void test (UnitTest& unitTest)
+        static void test (UnitTest& unitTest, Random& r)
         {
-            Test2 <FormatType, AudioData::BigEndian>::test (unitTest);
-            Test2 <FormatType, AudioData::LittleEndian>::test (unitTest);
+            Test2 <FormatType, AudioData::BigEndian>::test (unitTest, r);
+            Test2 <FormatType, AudioData::LittleEndian>::test (unitTest, r);
         }
     };
 
-    void runTest()
+    void runTest() override
     {
+        Random r = getRandom();
         beginTest ("Round-trip conversion: Int8");
-        Test1 <AudioData::Int8>::test (*this);
+        Test1 <AudioData::Int8>::test (*this, r);
         beginTest ("Round-trip conversion: Int16");
-        Test1 <AudioData::Int16>::test (*this);
+        Test1 <AudioData::Int16>::test (*this, r);
         beginTest ("Round-trip conversion: Int24");
-        Test1 <AudioData::Int24>::test (*this);
+        Test1 <AudioData::Int24>::test (*this, r);
         beginTest ("Round-trip conversion: Int32");
-        Test1 <AudioData::Int32>::test (*this);
+        Test1 <AudioData::Int32>::test (*this, r);
         beginTest ("Round-trip conversion: Float32");
-        Test1 <AudioData::Float32>::test (*this);
+        Test1 <AudioData::Float32>::test (*this, r);
     }
 };
 

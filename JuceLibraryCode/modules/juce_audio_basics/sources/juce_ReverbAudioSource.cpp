@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -48,12 +48,12 @@ void ReverbAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& bufferT
 
     if (! bypass)
     {
-        float* const firstChannel = bufferToFill.buffer->getSampleData (0, bufferToFill.startSample);
+        float* const firstChannel = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
 
         if (bufferToFill.buffer->getNumChannels() > 1)
         {
             reverb.processStereo (firstChannel,
-                                  bufferToFill.buffer->getSampleData (1, bufferToFill.startSample),
+                                  bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample),
                                   bufferToFill.numSamples);
         }
         else

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -32,12 +32,7 @@
 
 //==============================================================================
 /**
-    A wrapper for a streaming (TCP) socket.
-
-    This allows low-level use of sockets; for an easier-to-use messaging layer on top of
-    sockets, you could also try the InterprocessConnection class.
-
-    @see DatagramSocket, InterprocessConnection, InterprocessConnectionServer
+    Represents a MAC network card adapter address ID.
 */
 class JUCE_API  MACAddress
 {
@@ -48,22 +43,31 @@ public:
 
     //==============================================================================
     /** Creates a null address (00-00-00-00-00-00). */
-    MACAddress();
+    MACAddress() noexcept;
 
     /** Creates a copy of another address. */
-    MACAddress (const MACAddress& other);
+    MACAddress (const MACAddress&) noexcept;
 
     /** Creates a copy of another address. */
-    MACAddress& operator= (const MACAddress& other);
+    MACAddress& operator= (const MACAddress&) noexcept;
 
     /** Creates an address from 6 bytes. */
-    explicit MACAddress (const uint8 bytes[6]);
+    explicit MACAddress (const uint8 bytes[6]) noexcept;
+
+    /** Creates an address from a hex string.
+        If the string isn't a 6-byte hex value, this will just default-initialise
+        the object.
+    */
+    explicit MACAddress (StringRef address);
 
     /** Returns a pointer to the 6 bytes that make up this address. */
     const uint8* getBytes() const noexcept        { return address; }
 
     /** Returns a dash-separated string in the form "11-22-33-44-55-66" */
     String toString() const;
+
+    /** Returns a hex string of this address, using a custom separator between each byte. */
+    String toString (StringRef separator) const;
 
     /** Returns the address in the lower 6 bytes of an int64.
 
@@ -75,8 +79,8 @@ public:
     /** Returns true if this address is null (00-00-00-00-00-00). */
     bool isNull() const noexcept;
 
-    bool operator== (const MACAddress& other) const noexcept;
-    bool operator!= (const MACAddress& other) const noexcept;
+    bool operator== (const MACAddress&) const noexcept;
+    bool operator!= (const MACAddress&) const noexcept;
 
     //==============================================================================
 private:

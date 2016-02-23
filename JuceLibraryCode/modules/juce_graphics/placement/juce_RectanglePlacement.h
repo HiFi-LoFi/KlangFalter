@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -41,14 +41,17 @@ public:
     /** Creates a RectanglePlacement object using a combination of flags from the Flags enum. */
     inline RectanglePlacement (int placementFlags) noexcept  : flags (placementFlags) {}
 
+    /** Creates a default RectanglePlacement object, which is equivalent to using the 'centred' flag. */
+    inline RectanglePlacement() noexcept                     : flags (centred) {}
+
     /** Creates a copy of another RectanglePlacement object. */
-    RectanglePlacement (const RectanglePlacement& other) noexcept;
+    RectanglePlacement (const RectanglePlacement&) noexcept;
 
     /** Copies another RectanglePlacement object. */
-    RectanglePlacement& operator= (const RectanglePlacement& other) noexcept;
+    RectanglePlacement& operator= (const RectanglePlacement&) noexcept;
 
-    bool operator== (const RectanglePlacement& other) const noexcept;
-    bool operator!= (const RectanglePlacement& other) const noexcept;
+    bool operator== (const RectanglePlacement&) const noexcept;
+    bool operator!= (const RectanglePlacement&) const noexcept;
 
     //==============================================================================
     /** Flag values that can be combined and used in the constructor. */
@@ -148,10 +151,10 @@ public:
                                     const Rectangle<ValueType>& destination) const noexcept
     {
         double x = source.getX(), y = source.getY(), w = source.getWidth(), h = source.getHeight();
-        applyTo (x, y, w, h, static_cast <double> (destination.getX()), static_cast <double> (destination.getY()),
-                 static_cast <double> (destination.getWidth()), static_cast <double> (destination.getHeight()));
-        return Rectangle<ValueType> (static_cast <ValueType> (x), static_cast <ValueType> (y),
-                                     static_cast <ValueType> (w), static_cast <ValueType> (h));
+        applyTo (x, y, w, h, static_cast<double> (destination.getX()), static_cast<double> (destination.getY()),
+                 static_cast<double> (destination.getWidth()), static_cast<double> (destination.getHeight()));
+        return Rectangle<ValueType> (static_cast<ValueType> (x), static_cast<ValueType> (y),
+                                     static_cast<ValueType> (w), static_cast<ValueType> (h));
     }
 
     /** Returns the transform that should be applied to these source coordinates to fit them

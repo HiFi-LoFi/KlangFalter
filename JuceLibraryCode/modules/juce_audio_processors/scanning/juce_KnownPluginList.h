@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -97,6 +97,9 @@ public:
                          OwnedArray <PluginDescription>& typesFound,
                          AudioPluginFormat& formatToUse);
 
+    /** Tells a custom scanner that a scan has finished, and it can release any resources. */
+    void scanFinished();
+
     /** Returns true if the specified file is already known about and if it
         hasn't been modified since our entry was created.
     */
@@ -132,7 +135,9 @@ public:
         sortAlphabetically,
         sortByCategory,
         sortByManufacturer,
-        sortByFileSystemLocation
+        sortByFormat,
+        sortByFileSystemLocation,
+        sortByInfoUpdateTime
     };
 
     //==============================================================================
@@ -143,7 +148,7 @@ public:
 
         Use getIndexChosenByMenu() to find out the type that was chosen.
     */
-    void addToMenu (PopupMenu& menu, const SortMethod sortMethod) const;
+    void addToMenu (PopupMenu& menu, SortMethod sortMethod) const;
 
     /** Converts a menu item index that has been chosen into its index in this list.
         Returns -1 if it's not an ID that was used.
@@ -153,7 +158,7 @@ public:
 
     //==============================================================================
     /** Sorts the list. */
-    void sort (const SortMethod method);
+    void sort (SortMethod method, bool forwards);
 
     //==============================================================================
     /** Creates some XML that can be used to store the state of this list. */
@@ -169,8 +174,8 @@ public:
     struct PluginTree
     {
         String folder; /**< The name of this folder in the tree */
-        OwnedArray <PluginTree> subFolders;
-        Array <const PluginDescription*> plugins;
+        OwnedArray<PluginTree> subFolders;
+        Array<const PluginDescription*> plugins;
     };
 
     /** Creates a PluginTree object containing all the known plugins. */
@@ -189,13 +194,25 @@ public:
         virtual bool findPluginTypesFor (AudioPluginFormat& format,
                                          OwnedArray <PluginDescription>& result,
                                          const String& fileOrIdentifier) = 0;
+
+        /** Called when a scan has finished, to allow clean-up of resources. */
+        virtual void scanFinished();
+
+        /** Returns true if the current scan should be abandoned.
+            Any blocking methods should check this value repeatedly and return if
+            if becomes true.
+        */
+        bool shouldExit() const noexcept;
     };
 
-    void setCustomScanner (CustomScanner* scanner);
+    /** Supplies a custom scanner to be used in future scans.
+        The KnownPluginList will take ownership of the object passed in.
+    */
+    void setCustomScanner (CustomScanner*);
 
 private:
     //==============================================================================
-    OwnedArray <PluginDescription> types;
+    OwnedArray<PluginDescription> types;
     StringArray blacklist;
     ScopedPointer<CustomScanner> scanner;
     CriticalSection scanLock;

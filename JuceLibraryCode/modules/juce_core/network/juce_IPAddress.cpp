@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -55,7 +55,7 @@ IPAddress::IPAddress (uint32 n) noexcept
 IPAddress::IPAddress (const String& adr)
 {
     StringArray tokens;
-    tokens.addTokens (adr, ".", String::empty);
+    tokens.addTokens (adr, ".", String());
 
     for (int i = 0; i < 4; ++i)
         address[i] = (uint8) tokens[i].getIntValue();
@@ -126,7 +126,7 @@ static void findIPAddresses (int sock, Array<IPAddress>& result)
         cfg.ifc_buf += IFNAMSIZ + cfg.ifc_req->ifr_addr.sa_len;
     }
    #else
-    for (size_t i = 0; i < cfg.ifc_len / sizeof (struct ifreq); ++i)
+    for (size_t i = 0; i < (size_t) cfg.ifc_len / (size_t) sizeof (struct ifreq); ++i)
     {
         const ifreq& item = cfg.ifc_req[i];
 

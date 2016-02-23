@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -22,15 +22,15 @@
   ==============================================================================
 */
 
-SamplerSound::SamplerSound (const String& name_,
+SamplerSound::SamplerSound (const String& soundName,
                             AudioFormatReader& source,
-                            const BigInteger& midiNotes_,
+                            const BigInteger& notes,
                             const int midiNoteForNormalPitch,
                             const double attackTimeSecs,
                             const double releaseTimeSecs,
                             const double maxSampleLengthSeconds)
-    : name (name_),
-      midiNotes (midiNotes_),
+    : name (soundName),
+      midiNotes (notes),
       midiRootNote (midiNoteForNormalPitch)
 {
     sourceSampleRate = source.sampleRate;
@@ -59,12 +59,12 @@ SamplerSound::~SamplerSound()
 {
 }
 
-bool SamplerSound::appliesToNote (const int midiNoteNumber)
+bool SamplerSound::appliesToNote (int midiNoteNumber)
 {
     return midiNotes [midiNoteNumber];
 }
 
-bool SamplerSound::appliesToChannel (const int /*midiChannel*/)
+bool SamplerSound::appliesToChannel (int /*midiChannel*/)
 {
     return true;
 }
@@ -85,7 +85,7 @@ SamplerVoice::~SamplerVoice()
 
 bool SamplerVoice::canPlaySound (SynthesiserSound* sound)
 {
-    return dynamic_cast <const SamplerSound*> (sound) != nullptr;
+    return dynamic_cast<const SamplerSound*> (sound) != nullptr;
 }
 
 void SamplerVoice::startNote (const int midiNoteNumber,
@@ -93,7 +93,7 @@ void SamplerVoice::startNote (const int midiNoteNumber,
                               SynthesiserSound* s,
                               const int /*currentPitchWheelPosition*/)
 {
-    if (const SamplerSound* const sound = dynamic_cast <const SamplerSound*> (s))
+    if (const SamplerSound* const sound = dynamic_cast<const SamplerSound*> (s))
     {
         pitchRatio = pow (2.0, (midiNoteNumber - sound->midiRootNote) / 12.0)
                         * sound->sourceSampleRate / getSampleRate();
@@ -119,7 +119,7 @@ void SamplerVoice::startNote (const int midiNoteNumber,
         if (sound->releaseSamples > 0)
             releaseDelta = (float) (-pitchRatio / sound->releaseSamples);
         else
-            releaseDelta = 0.0f;
+            releaseDelta = -1.0f;
     }
     else
     {
@@ -127,7 +127,7 @@ void SamplerVoice::startNote (const int midiNoteNumber,
     }
 }
 
-void SamplerVoice::stopNote (const bool allowTailOff)
+void SamplerVoice::stopNote (float /*velocity*/, bool allowTailOff)
 {
     if (allowTailOff)
     {
@@ -152,14 +152,14 @@ void SamplerVoice::controllerMoved (const int /*controllerNumber*/,
 //==============================================================================
 void SamplerVoice::renderNextBlock (AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
-    if (const SamplerSound* const playingSound = static_cast <SamplerSound*> (getCurrentlyPlayingSound().get()))
+    if (const SamplerSound* const playingSound = static_cast<SamplerSound*> (getCurrentlyPlayingSound().get()))
     {
-        const float* const inL = playingSound->data->getSampleData (0, 0);
+        const float* const inL = playingSound->data->getReadPointer (0);
         const float* const inR = playingSound->data->getNumChannels() > 1
-                                    ? playingSound->data->getSampleData (1, 0) : nullptr;
+                                    ? playingSound->data->getReadPointer (1) : nullptr;
 
-        float* outL = outputBuffer.getSampleData (0, startSample);
-        float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getSampleData (1, startSample) : nullptr;
+        float* outL = outputBuffer.getWritePointer (0, startSample);
+        float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getWritePointer (1, startSample) : nullptr;
 
         while (--numSamples >= 0)
         {
@@ -197,7 +197,7 @@ void SamplerVoice::renderNextBlock (AudioSampleBuffer& outputBuffer, int startSa
 
                 if (attackReleaseLevel <= 0.0f)
                 {
-                    stopNote (false);
+                    stopNote (0.0f, false);
                     break;
                 }
             }
@@ -216,7 +216,7 @@ void SamplerVoice::renderNextBlock (AudioSampleBuffer& outputBuffer, int startSa
 
             if (sourceSamplePosition > playingSound->length)
             {
-                stopNote (false);
+                stopNote (0.0f, false);
                 break;
             }
         }

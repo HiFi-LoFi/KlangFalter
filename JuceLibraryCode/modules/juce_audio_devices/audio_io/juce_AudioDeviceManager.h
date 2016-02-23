@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -190,8 +190,12 @@ public:
                        int numOutputChannelsNeeded,
                        const XmlElement* savedState,
                        bool selectDefaultDeviceOnFailure,
-                       const String& preferredDefaultDeviceName = String::empty,
-                       const AudioDeviceSetup* preferredSetupOptions = 0);
+                       const String& preferredDefaultDeviceName = String(),
+                       const AudioDeviceSetup* preferredSetupOptions = nullptr);
+
+    /** Resets everything to a default device setup, clearing any stored settings. */
+    String initialiseWithDefaultDevices (int numInputChannelsNeeded,
+                                         int numOutputChannelsNeeded);
 
     /** Returns some XML representing the current state of the manager.
 
@@ -205,10 +209,9 @@ public:
 
     //==============================================================================
     /** Returns the current device properties that are in use.
-
         @see setAudioDeviceSetup
     */
-    void getAudioDeviceSetup (AudioDeviceSetup& setup);
+    void getAudioDeviceSetup (AudioDeviceSetup& result);
 
     /** Changes the current device or its settings.
 
@@ -257,9 +260,7 @@ public:
     void setCurrentAudioDeviceType (const String& type,
                                     bool treatAsChosenDevice);
 
-
     /** Closes the currently-open device.
-
         You can call restartLastAudioDevice() later to reopen it in the same state
         that it was just in.
     */
@@ -301,8 +302,8 @@ public:
 
     //==============================================================================
     /** Returns the average proportion of available CPU being spent inside the audio callbacks.
-
-        Returns a value between 0 and 1.0
+        @returns  A value between 0 and 1.0 to indicate the approximate proportion of CPU
+                  time spent in the callbacks.
     */
     double getCpuUsage() const;
 
@@ -329,16 +330,16 @@ public:
     void setMidiInputEnabled (const String& midiInputDeviceName, bool enabled);
 
     /** Returns true if a given midi input device is being used.
-
         @see setMidiInputEnabled
     */
     bool isMidiInputEnabled (const String& midiInputDeviceName) const;
 
     /** Registers a listener for callbacks when midi events arrive from a midi input.
 
-        The device name can be empty to indicate that it wants events from whatever the
-        current "default" device is. Or it can be the name of one of the midi input devices
-        (see MidiInput::getDevices() for the names).
+        The device name can be empty to indicate that it wants to receive all incoming
+        events from all the enabled MIDI inputs. Or it can be the name of one of the
+        MIDI input devices if it just wants the events from that device. (see
+        MidiInput::getDevices() for the list of device names).
 
         Only devices which are enabled (see the setMidiInputEnabled() method) will have their
         events forwarded on to listeners.
@@ -346,8 +347,7 @@ public:
     void addMidiInputCallback (const String& midiInputDeviceName,
                                MidiInputCallback* callback);
 
-    /** Removes a listener that was previously registered with addMidiInputCallback().
-    */
+    /** Removes a listener that was previously registered with addMidiInputCallback(). */
     void removeMidiInputCallback (const String& midiInputDeviceName,
                                   MidiInputCallback* callback);
 
@@ -367,23 +367,18 @@ public:
     void setDefaultMidiOutput (const String& deviceName);
 
     /** Returns the name of the default midi output.
-
         @see setDefaultMidiOutput, getDefaultMidiOutput
     */
-    String getDefaultMidiOutputName() const                         { return defaultMidiOutputName; }
+    const String& getDefaultMidiOutputName() const noexcept         { return defaultMidiOutputName; }
 
     /** Returns the current default midi output device.
-
-        If no device has been selected, or the device can't be opened, this will
-        return 0.
-
+        If no device has been selected, or the device can't be opened, this will return nullptr.
         @see getDefaultMidiOutputName
     */
     MidiOutput* getDefaultMidiOutput() const noexcept               { return defaultMidiOutput; }
 
-    /** Returns a list of the types of device supported.
-    */
-    const OwnedArray <AudioIODeviceType>& getAvailableDeviceTypes();
+    /** Returns a list of the types of device supported. */
+    const OwnedArray<AudioIODeviceType>& getAvailableDeviceTypes();
 
     //==============================================================================
     /** Creates a list of available types.
@@ -394,7 +389,7 @@ public:
         You can override this if your app needs to do something specific, like avoid
         using DirectSound devices, etc.
     */
-    virtual void createAudioDeviceTypes (OwnedArray <AudioIODeviceType>& types);
+    virtual void createAudioDeviceTypes (OwnedArray<AudioIODeviceType>& types);
 
     /** Adds a new device type to the list of types.
         The manager will take ownership of the object that is passed-in.
@@ -409,6 +404,58 @@ public:
     */
     void playTestSound();
 
+    /** Plays a sound from a file. */
+    void playSound (const File& file);
+
+    /** Convenient method to play sound from a JUCE resource. */
+    void playSound (const void* resourceData, size_t resourceSize);
+
+    /** Plays the sound from an audio format reader.
+
+        If deleteWhenFinished is true then the format reader will be
+        automatically deleted once the sound has finished playing.
+    */
+    void playSound (AudioFormatReader* buffer, bool deleteWhenFinished = false);
+
+    /** Plays the sound from a positionable audio source.
+
+        This will output the sound coming from a positionable audio source.
+        This gives you slightly more control over the sound playback compared
+        to  the other playSound methods. For example, if you would like to
+        stop the sound prematurely you can call this method with a
+        TransportAudioSource and then call audioSource->stop. Note that,
+        you must call audioSource->start to start the playback, if your
+        audioSource is a TransportAudioSource.
+
+        The audio device manager will not hold any references to this audio
+        source once the audio source has stopped playing for any reason,
+        for example when the sound has finished playing or when you have
+        called audioSource->stop. Therefore, calling audioSource->start() on
+        a finished audioSource will not restart the sound again. If this is
+        desired simply call playSound with the same audioSource again.
+
+        @param audioSource   the audio source to play
+        @param deleteWhenFinished If this is true then the audio source will
+                                  be deleted once the device manager has finished playing.
+    */
+    void playSound (PositionableAudioSource* audioSource, bool deleteWhenFinished = false);
+
+    /** Plays the sound from an audio sample buffer.
+
+        This will output the sound contained in an audio sample buffer. If
+        deleteWhenFinished is true then the audio sample buffer will be
+        automatically deleted once the sound has finished playing.
+
+        If playOnAllOutputChannels is true, then if there are more output channels
+        than buffer channels, then the ones that are available will be re-used on
+        multiple outputs so that something is sent to all output channels. If it
+        is false, then the buffer will just be played on the first output channels.
+    */
+    void playSound (AudioSampleBuffer* buffer,
+                    bool deleteWhenFinished = false,
+                    bool playOnAllOutputChannels = false);
+
+    //==============================================================================
     /** Turns on level-measuring.
 
         When enabled, the device manager will measure the peak input level
@@ -425,9 +472,7 @@ public:
     void enableInputLevelMeasurement (bool enableMeasurement);
 
     /** Returns the current input level.
-
         To use this, you must first enable it by calling enableInputLevelMeasurement().
-
         See enableInputLevelMeasurement() for more info.
     */
     double getCurrentInputLevel() const;
@@ -446,30 +491,33 @@ public:
 
 private:
     //==============================================================================
-    OwnedArray <AudioIODeviceType> availableDeviceTypes;
-    OwnedArray <AudioDeviceSetup> lastDeviceTypeConfigs;
+    OwnedArray<AudioIODeviceType> availableDeviceTypes;
+    OwnedArray<AudioDeviceSetup> lastDeviceTypeConfigs;
 
     AudioDeviceSetup currentSetup;
-    ScopedPointer <AudioIODevice> currentAudioDevice;
-    Array <AudioIODeviceCallback*> callbacks;
+    ScopedPointer<AudioIODevice> currentAudioDevice;
+    Array<AudioIODeviceCallback*> callbacks;
     int numInputChansNeeded, numOutputChansNeeded;
     String currentDeviceType;
     BigInteger inputChannels, outputChannels;
-    ScopedPointer <XmlElement> lastExplicitSettings;
+    ScopedPointer<XmlElement> lastExplicitSettings;
     mutable bool listNeedsScanning;
-    bool useInputNames;
     Atomic<int> inputLevelMeasurementEnabledCount;
     double inputLevel;
-    ScopedPointer <AudioSampleBuffer> testSound;
-    int testSoundPosition;
     AudioSampleBuffer tempBuffer;
 
+    struct MidiCallbackInfo
+    {
+        String deviceName;
+        MidiInputCallback* callback;
+    };
+
     StringArray midiInsFromXml;
-    OwnedArray <MidiInput> enabledMidiInputs;
-    Array <MidiInputCallback*> midiCallbacks;
-    StringArray midiCallbackDevices;
+    OwnedArray<MidiInput> enabledMidiInputs;
+    Array<MidiCallbackInfo> midiCallbacks;
+
     String defaultMidiOutputName;
-    ScopedPointer <MidiOutput> defaultMidiOutput;
+    ScopedPointer<MidiOutput> defaultMidiOutput;
     CriticalSection audioCallbackLock, midiCallbackLock;
 
     double cpuUsageMs, timeToCpuScale;
@@ -500,6 +548,9 @@ private:
     double chooseBestSampleRate (double preferred) const;
     int chooseBestBufferSize (int preferred) const;
     void insertDefaultDeviceNames (AudioDeviceSetup&) const;
+    String initialiseDefault (const String& preferredDefaultDeviceName, const AudioDeviceSetup*);
+    String initialiseFromXML (const XmlElement&, bool selectDefaultDeviceOnFailure,
+                              const String& preferredDefaultDeviceName, const AudioDeviceSetup*);
 
     AudioIODeviceType* findType (const String& inputName, const String& outputName);
     AudioIODeviceType* findType (const String& typeName);

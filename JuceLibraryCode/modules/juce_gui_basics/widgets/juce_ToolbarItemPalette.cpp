@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -28,13 +28,13 @@ ToolbarItemPalette::ToolbarItemPalette (ToolbarItemFactory& tbf, Toolbar& bar)
     Component* const itemHolder = new Component();
     viewport.setViewedComponent (itemHolder);
 
-    Array <int> allIds;
+    Array<int> allIds;
     factory.getAllToolbarItemIds (allIds);
 
     for (int i = 0; i < allIds.size(); ++i)
         addComponent (allIds.getUnchecked (i), -1);
 
-    addAndMakeVisible (&viewport);
+    addAndMakeVisible (viewport);
 }
 
 ToolbarItemPalette::~ToolbarItemPalette()

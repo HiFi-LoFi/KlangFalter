@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -99,13 +99,13 @@ namespace CustomTypefaceHelpers
 
 //==============================================================================
 CustomTypeface::CustomTypeface()
-    : Typeface (String::empty, String::empty)
+    : Typeface (String(), String())
 {
     clear();
 }
 
 CustomTypeface::CustomTypeface (InputStream& serialisedTypefaceStream)
-    : Typeface (String::empty, String::empty)
+    : Typeface (String(), String())
 {
     clear();
 
@@ -385,7 +385,7 @@ bool CustomTypeface::getOutlineForGlyph (int glyphNumber, Path& path)
     return false;
 }
 
-EdgeTable* CustomTypeface::getEdgeTableForGlyph (int glyphNumber, const AffineTransform& transform)
+EdgeTable* CustomTypeface::getEdgeTableForGlyph (int glyphNumber, const AffineTransform& transform, float fontHeight)
 {
     if (const GlyphInfo* const glyph = findGlyph ((juce_wchar) glyphNumber, true))
     {
@@ -399,7 +399,7 @@ EdgeTable* CustomTypeface::getEdgeTableForGlyph (int glyphNumber, const AffineTr
         const Typeface::Ptr fallbackTypeface (getFallbackTypeface());
 
         if (fallbackTypeface != nullptr && fallbackTypeface != this)
-            return fallbackTypeface->getEdgeTableForGlyph (glyphNumber, transform);
+            return fallbackTypeface->getEdgeTableForGlyph (glyphNumber, transform, fontHeight);
     }
 
     return nullptr;

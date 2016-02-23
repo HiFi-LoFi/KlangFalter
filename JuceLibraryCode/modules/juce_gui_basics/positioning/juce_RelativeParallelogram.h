@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -50,8 +50,8 @@ public:
     AffineTransform resetToPerpendicular (Expression::Scope* scope);
     bool isDynamic() const;
 
-    bool operator== (const RelativeParallelogram& other) const noexcept;
-    bool operator!= (const RelativeParallelogram& other) const noexcept;
+    bool operator== (const RelativeParallelogram&) const noexcept;
+    bool operator!= (const RelativeParallelogram&) const noexcept;
 
     static Point<float> getInternalCoordForPoint (const Point<float>* parallelogramCorners, Point<float> point) noexcept;
     static Point<float> getPointForInternalCoord (const Point<float>* parallelogramCorners, Point<float> internalPoint) noexcept;

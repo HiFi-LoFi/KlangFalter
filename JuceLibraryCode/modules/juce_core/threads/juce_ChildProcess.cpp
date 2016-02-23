@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -28,6 +28,26 @@
 
 ChildProcess::ChildProcess() {}
 ChildProcess::~ChildProcess() {}
+
+bool ChildProcess::isRunning() const
+{
+    return activeProcess != nullptr && activeProcess->isRunning();
+}
+
+int ChildProcess::readProcessOutput (void* dest, int numBytes)
+{
+    return activeProcess != nullptr ? activeProcess->read (dest, numBytes) : 0;
+}
+
+bool ChildProcess::kill()
+{
+    return activeProcess == nullptr || activeProcess->killProcess();
+}
+
+uint32 ChildProcess::getExitCode() const
+{
+    return activeProcess != nullptr ? activeProcess->getExitCode() : 0;
+}
 
 bool ChildProcess::waitForProcessToFinish (const int timeoutMs) const
 {
@@ -69,7 +89,7 @@ class ChildProcessTests  : public UnitTest
 public:
     ChildProcessTests() : UnitTest ("ChildProcess") {}
 
-    void runTest()
+    void runTest() override
     {
         beginTest ("Child Processes");
 

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -54,13 +54,15 @@ public:
         (e.g. VST shells) can use a single DLL to create a set of different plugin
         subtypes, so in that case, each subtype is returned as a separate object.
     */
-    virtual void findAllTypesForFile (OwnedArray <PluginDescription>& results,
+    virtual void findAllTypesForFile (OwnedArray<PluginDescription>& results,
                                       const String& fileOrIdentifier) = 0;
 
     /** Tries to recreate a type from a previously generated PluginDescription.
         @see PluginDescription::createInstance
     */
-    virtual AudioPluginInstance* createInstanceFromDescription (const PluginDescription& desc) = 0;
+    virtual AudioPluginInstance* createInstanceFromDescription (const PluginDescription& desc,
+                                                                double initialSampleRate,
+                                                                int initialBufferSize) = 0;
 
     /** Should do a quick check to see if this file or directory might be a plugin of
         this format.

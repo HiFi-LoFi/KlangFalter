@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -118,8 +118,8 @@ class LADSPAPluginInstance     : public AudioPluginInstance
 {
 public:
     LADSPAPluginInstance (const LADSPAModuleHandle::Ptr& m)
-        : plugin (nullptr), handle (nullptr), initialised (false),
-          tempBuffer (1, 1), module (m)
+        : module (m), plugin (nullptr), handle (nullptr),
+          initialised (false), tempBuffer (1, 1)
     {
         ++insideLADSPACallback;
 
@@ -167,8 +167,10 @@ public:
         handle = nullptr;
     }
 
-    void initialise()
+    void initialise (double initialSampleRate, int initialBlockSize)
     {
+        setPlayConfigDetails (inputs.size(), outputs.size(), initialSampleRate, initialBlockSize);
+
         if (initialised || plugin == nullptr || handle == nullptr)
             return;
 
@@ -199,9 +201,7 @@ public:
         for (int i = 0; i < parameters.size(); ++i)
             plugin->connect_port (handle, parameters[i], &(parameterValues[i].scaled));
 
-        setPlayConfigDetails (inputs.size(), outputs.size(),
-                              getSampleRate() > 0 ? getSampleRate() : 44100.0f,
-                              getBlockSize() > 0  ? getBlockSize() : 512);
+        setPlayConfigDetails (inputs.size(), outputs.size(), initialSampleRate, initialBlockSize);
 
         setCurrentProgram (0);
         setLatencySamples (0);
@@ -220,12 +220,13 @@ public:
         desc.fileOrIdentifier = module->file.getFullPathName();
         desc.uid = getUID();
         desc.lastFileModTime = module->file.getLastModificationTime();
+        desc.lastInfoUpdateTime = Time::getCurrentTime();
         desc.pluginFormatName = "LADSPA";
         desc.category = getCategory();
-        desc.manufacturerName = plugin != nullptr ? String (plugin->Maker) : String::empty;
+        desc.manufacturerName = plugin != nullptr ? String (plugin->Maker) : String();
         desc.version = getVersion();
-        desc.numInputChannels  = getNumInputChannels();
-        desc.numOutputChannels = getNumOutputChannels();
+        desc.numInputChannels  = getTotalNumInputChannels();
+        desc.numOutputChannels = getTotalNumOutputChannels();
         desc.isInstrument = false;
     }
 
@@ -251,18 +252,14 @@ public:
     bool acceptsMidi() const                  { return false; }
     bool producesMidi() const                 { return false; }
 
-    bool silenceInProducesSilenceOut() const  { return plugin == nullptr; } // ..any way to get a proper answer for these?
     double getTailLengthSeconds() const       { return 0.0; }
 
     //==============================================================================
     void prepareToPlay (double newSampleRate, int samplesPerBlockExpected)
     {
-        setPlayConfigDetails (inputs.size(), outputs.size(),
-                              newSampleRate, samplesPerBlockExpected);
-
         setLatencySamples (0);
 
-        initialise();
+        initialise (newSampleRate, samplesPerBlockExpected);
 
         if (initialised)
         {
@@ -297,13 +294,13 @@ public:
         {
             for (int i = 0; i < inputs.size(); ++i)
                 plugin->connect_port (handle, inputs[i],
-                                      i < buffer.getNumChannels() ? buffer.getSampleData (i) : nullptr);
+                                      i < buffer.getNumChannels() ? buffer.getWritePointer (i) : nullptr);
 
             if (plugin->run != nullptr)
             {
                 for (int i = 0; i < outputs.size(); ++i)
                     plugin->connect_port (handle, outputs.getUnchecked(i),
-                                          i < buffer.getNumChannels() ? buffer.getSampleData (i) : nullptr);
+                                          i < buffer.getNumChannels() ? buffer.getWritePointer (i) : nullptr);
 
                 plugin->run (handle, numSamples);
                 return;
@@ -315,7 +312,7 @@ public:
                 tempBuffer.clear();
 
                 for (int i = 0; i < outputs.size(); ++i)
-                    plugin->connect_port (handle, outputs.getUnchecked(i), tempBuffer.getSampleData (i));
+                    plugin->connect_port (handle, outputs.getUnchecked(i), tempBuffer.getWritePointer (i));
 
                 plugin->run_adding (handle, numSamples);
 
@@ -329,27 +326,27 @@ public:
             jassertfalse; // no callback to use?
         }
 
-        for (int i = getNumInputChannels(); i < getNumOutputChannels(); ++i)
+        for (int i = getTotalNumInputChannels(), e = getTotalNumOutputChannels(); i < e; ++i)
             buffer.clear (i, 0, numSamples);
     }
 
-    bool isInputChannelStereoPair (int index) const    { return isPositiveAndBelow (index, getNumInputChannels()); }
-    bool isOutputChannelStereoPair (int index) const   { return isPositiveAndBelow (index, getNumInputChannels()); }
+    bool isInputChannelStereoPair (int index) const    { return isPositiveAndBelow (index, getTotalNumInputChannels()); }
+    bool isOutputChannelStereoPair (int index) const   { return isPositiveAndBelow (index, getTotalNumOutputChannels()); }
 
     const String getInputChannelName (const int index) const
     {
-        if (isPositiveAndBelow (index, getNumInputChannels()))
+        if (isPositiveAndBelow (index, getTotalNumInputChannels()))
             return String (plugin->PortNames [inputs [index]]).trim();
 
-        return String::empty;
+        return String();
     }
 
     const String getOutputChannelName (const int index) const
     {
-        if (isPositiveAndBelow (index, getNumInputChannels()))
+        if (isPositiveAndBelow (index, getTotalNumInputChannels()))
             return String (plugin->PortNames [outputs [index]]).trim();
 
-        return String::empty;
+        return String();
     }
 
     //==============================================================================
@@ -393,7 +390,7 @@ public:
             return String (plugin->PortNames [parameters [index]]).trim();
         }
 
-        return String::empty;
+        return String();
     }
 
     const String getParameterText (int index)
@@ -410,7 +407,7 @@ public:
             return String (parameterValues[index].scaled, 4);
         }
 
-        return String::empty;
+        return String();
     }
 
     //==============================================================================
@@ -427,7 +424,7 @@ public:
     const String getProgramName (int index)
     {
         // XXX
-        return String::empty;
+        return String();
     }
 
     void changeProgramName (int index, const String& newName)
@@ -453,7 +450,7 @@ public:
 
     void setStateInformation (const void* data, int sizeInBytes)
     {
-        const float* p = static_cast <const float*> (data);
+        const float* p = static_cast<const float*> (data);
 
         for (int i = 0; i < getNumParameters(); ++i)
             setParameter (i, p[i]);
@@ -584,12 +581,12 @@ void LADSPAPluginFormat::findAllTypesForFile (OwnedArray <PluginDescription>& re
     desc.fileOrIdentifier = fileOrIdentifier;
     desc.uid = 0;
 
-    ScopedPointer<LADSPAPluginInstance> instance (dynamic_cast <LADSPAPluginInstance*> (createInstanceFromDescription (desc)));
+    ScopedPointer<LADSPAPluginInstance> instance (dynamic_cast<LADSPAPluginInstance*> (createInstanceFromDescription (desc, 44100.0, 512)));
 
     if (instance == nullptr || ! instance->isValid())
         return;
 
-    instance->initialise();
+    instance->initialise (44100.0, 512);
 
     instance->fillInPluginDescription (desc);
 
@@ -613,7 +610,8 @@ void LADSPAPluginFormat::findAllTypesForFile (OwnedArray <PluginDescription>& re
     }
 }
 
-AudioPluginInstance* LADSPAPluginFormat::createInstanceFromDescription (const PluginDescription& desc)
+AudioPluginInstance* LADSPAPluginFormat::createInstanceFromDescription (const PluginDescription& desc,
+                                                                        double sampleRate, int blockSize)
 {
     ScopedPointer<LADSPAPluginInstance> result;
 
@@ -633,7 +631,7 @@ AudioPluginInstance* LADSPAPluginFormat::createInstanceFromDescription (const Pl
             result = new LADSPAPluginInstance (module);
 
             if (result->plugin != nullptr && result->isValid())
-                result->initialise();
+                result->initialise (sampleRate, blockSize);
             else
                 result = nullptr;
         }

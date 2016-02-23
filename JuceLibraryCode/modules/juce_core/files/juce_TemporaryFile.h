@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -48,7 +48,7 @@
         TemporaryFile temp (myTargetFile);
 
         // create a stream to the temporary file, and write some data to it...
-        ScopedPointer <FileOutputStream> out (temp.getFile().createOutputStream());
+        ScopedPointer<FileOutputStream> out (temp.getFile().createOutputStream());
 
         if (out != nullptr)
         {
@@ -89,7 +89,7 @@ public:
         The file will not be created until you write to it. And remember that when
         this object is deleted, the file will also be deleted!
     */
-    TemporaryFile (const String& suffix = String::empty,
+    TemporaryFile (const String& suffix = String(),
                    int optionFlags = 0);
 
     /** Creates a temporary file in the same directory as a specified file.

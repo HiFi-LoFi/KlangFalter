@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -82,7 +82,7 @@ public:
         them, you can use this to show it in front of the relevent parent window, which
         is a bit neater than just having it appear in the middle of the screen.
 
-        If componentToCentreAround is 0, then the currently active TopLevelWindow will
+        If componentToCentreAround is nullptr, then the currently active TopLevelWindow will
         be used instead. If no window is focused, it'll just default to the middle of the
         screen.
     */
@@ -122,10 +122,12 @@ public:
     */
     static TopLevelWindow* getActiveTopLevelWindow() noexcept;
 
+    /** Adds the window to the desktop using the default flags. */
+    void addToDesktop();
 
     //==============================================================================
     /** @internal */
-    virtual void addToDesktop (int windowStyleFlags, void* nativeWindowToAttachTo = nullptr) override;
+    void addToDesktop (int windowStyleFlags, void* nativeWindowToAttachTo = nullptr) override;
 
 protected:
     //==============================================================================
@@ -149,10 +151,11 @@ protected:
 
 private:
     friend class TopLevelWindowManager;
+    friend class ResizableWindow;
     bool useDropShadow, useNativeTitleBar, isCurrentlyActive;
     ScopedPointer<DropShadower> shadower;
 
-    void setWindowActive (bool isNowActive);
+    void setWindowActive (bool);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TopLevelWindow)
 };

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -52,28 +52,23 @@ public:
 
     //==============================================================================
     /** Returns the number of tracks in the file.
-
         @see getTrack, addTrack
     */
     int getNumTracks() const noexcept;
 
     /** Returns a pointer to one of the tracks in the file.
-
         @returns a pointer to the track, or nullptr if the index is out-of-range
         @see getNumTracks, addTrack
     */
     const MidiMessageSequence* getTrack (int index) const noexcept;
 
     /** Adds a midi track to the file.
-
         This will make its own internal copy of the sequence that is passed-in.
-
         @see getNumTracks, getTrack
     */
     void addTrack (const MidiMessageSequence& trackSequence);
 
     /** Removes all midi tracks from the file.
-
         @see getNumTracks
     */
     void clear();
@@ -120,23 +115,23 @@ public:
 
     //==============================================================================
     /** Makes a list of all the tempo-change meta-events from all tracks in the midi file.
-
         Useful for finding the positions of all the tempo changes in a file.
-
         @param tempoChangeEvents    a list to which all the events will be added
     */
     void findAllTempoEvents (MidiMessageSequence& tempoChangeEvents) const;
 
     /** Makes a list of all the time-signature meta-events from all tracks in the midi file.
-
         Useful for finding the positions of all the tempo changes in a file.
-
         @param timeSigEvents        a list to which all the events will be added
     */
     void findAllTimeSigEvents (MidiMessageSequence& timeSigEvents) const;
 
-    /** Returns the latest timestamp in any of the tracks.
+    /** Makes a list of all the time-signature meta-events from all tracks in the midi file.
+        @param keySigEvents         a list to which all the events will be added
+    */
+    void findAllKeySigEvents (MidiMessageSequence& keySigEvents) const;
 
+    /** Returns the latest timestamp in any of the tracks.
         (Useful for finding the length of the file).
     */
     double getLastTimestamp() const;
@@ -156,10 +151,11 @@ public:
     bool readFrom (InputStream& sourceStream);
 
     /** Writes the midi tracks as a standard midi file.
-
+        The midiFileType value is written as the file's format type, which can be 0, 1
+        or 2 - see the midi file spec for more info about that.
         @returns true if the operation succeeded.
     */
-    bool writeTo (OutputStream& destStream);
+    bool writeTo (OutputStream& destStream, int midiFileType = 1);
 
     /** Converts the timestamp of all the midi events from midi ticks to seconds.
 
@@ -171,11 +167,11 @@ public:
 
 private:
     //==============================================================================
-    OwnedArray <MidiMessageSequence> tracks;
+    OwnedArray<MidiMessageSequence> tracks;
     short timeFormat;
 
-    void readNextTrack (const uint8* data, int size);
-    void writeTrack (OutputStream& mainOut, int trackNum);
+    void readNextTrack (const uint8*, int size);
+    void writeTrack (OutputStream&, int trackNum);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiFile)
 };

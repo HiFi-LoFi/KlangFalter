@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -38,7 +38,7 @@ FilenameComponent::FilenameComponent (const String& name,
       wildcard (fileBrowserWildcard),
       enforcedSuffix (suffix)
 {
-    addAndMakeVisible (&filenameBox);
+    addAndMakeVisible (filenameBox);
     filenameBox.setEditableText (canEditFilename);
     filenameBox.addListener (this);
     filenameBox.setTextWhenNothingSelected (textWhenNothingSelected);
@@ -66,6 +66,13 @@ void FilenameComponent::paintOverChildren (Graphics& g)
 void FilenameComponent::resized()
 {
     getLookAndFeel().layoutFilenameComponent (*this, &filenameBox, browseButton);
+}
+
+KeyboardFocusTraverser* FilenameComponent::createFocusTraverser()
+{
+    // This prevents the sub-components from grabbing focus if the
+    // FilenameComponent has been set to refuse focus.
+    return getWantsKeyboardFocus() ? Component::createFocusTraverser() : nullptr;
 }
 
 void FilenameComponent::setBrowseButtonText (const String& newBrowseButtonText)
@@ -155,9 +162,14 @@ void FilenameComponent::fileDragExit (const StringArray&)
 }
 
 //==============================================================================
+String FilenameComponent::getCurrentFileText() const
+{
+    return filenameBox.getText();
+}
+
 File FilenameComponent::getCurrentFile() const
 {
-    File f (filenameBox.getText());
+    File f (File::getCurrentWorkingDirectory().getChildFile (getCurrentFileText()));
 
     if (enforcedSuffix.isNotEmpty())
         f = f.withFileExtension (enforcedSuffix);

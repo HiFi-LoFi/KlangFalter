@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -32,8 +32,8 @@ namespace
 
         jassert ((int) x >= -maxVal && (int) x <= maxVal
               && (int) y >= -maxVal && (int) y <= maxVal
-              && (int) w >= -maxVal && (int) w <= maxVal
-              && (int) h >= -maxVal && (int) h <= maxVal);
+              && (int) w >= 0 && (int) w <= maxVal
+              && (int) h >= 0 && (int) h <= maxVal);
        #endif
 
         return Rectangle<Type> (x, y, w, h);
@@ -232,16 +232,24 @@ Font Graphics::getCurrentFont() const
 void Graphics::drawSingleLineText (const String& text, const int startX, const int baselineY,
                                    Justification justification) const
 {
-    if (text.isNotEmpty()
-         && startX < context.getClipBounds().getRight())
+    if (text.isNotEmpty())
     {
-        GlyphArrangement arr;
-        arr.addLineOfText (context.getFont(), text, (float) startX, (float) baselineY);
-
         // Don't pass any vertical placement flags to this method - they'll be ignored.
         jassert (justification.getOnlyVerticalFlags() == 0);
 
         const int flags = justification.getOnlyHorizontalFlags();
+
+        if (flags == Justification::right)
+        {
+            if (startX < context.getClipBounds().getX())
+                return;
+        }
+        else if (flags == Justification::left)
+            if (startX > context.getClipBounds().getRight())
+                return;
+
+        GlyphArrangement arr;
+        arr.addLineOfText (context.getFont(), text, (float) startX, (float) baselineY);
 
         if (flags != Justification::left)
         {
@@ -273,28 +281,30 @@ void Graphics::drawMultiLineText (const String& text, const int startX,
     }
 }
 
-void Graphics::drawText (const String& text, const Rectangle<int>& area,
-                         Justification justificationType,
-                         const bool useEllipsesIfTooBig) const
+void Graphics::drawText (const String& text, const Rectangle<float>& area,
+                         Justification justificationType, bool useEllipsesIfTooBig) const
 {
-    if (text.isNotEmpty() && context.clipRegionIntersects (area))
+    if (text.isNotEmpty() && context.clipRegionIntersects (area.getSmallestIntegerContainer()))
     {
         GlyphArrangement arr;
-        arr.addCurtailedLineOfText (context.getFont(), text,
-                                    0.0f, 0.0f, (float) area.getWidth(),
-                                    useEllipsesIfTooBig);
+        arr.addCurtailedLineOfText (context.getFont(), text, 0.0f, 0.0f,
+                                    area.getWidth(), useEllipsesIfTooBig);
 
         arr.justifyGlyphs (0, arr.getNumGlyphs(),
-                           (float) area.getX(), (float) area.getY(),
-                           (float) area.getWidth(), (float) area.getHeight(),
+                           area.getX(), area.getY(), area.getWidth(), area.getHeight(),
                            justificationType);
         arr.draw (*this);
     }
 }
 
+void Graphics::drawText (const String& text, const Rectangle<int>& area,
+                         Justification justificationType, bool useEllipsesIfTooBig) const
+{
+    drawText (text, area.toFloat(), justificationType, useEllipsesIfTooBig);
+}
+
 void Graphics::drawText (const String& text, const int x, const int y, const int width, const int height,
-                         Justification justificationType,
-                         const bool useEllipsesIfTooBig) const
+                         Justification justificationType, const bool useEllipsesIfTooBig) const
 {
     drawText (text, Rectangle<int> (x, y, width, height), justificationType, useEllipsesIfTooBig);
 }
@@ -353,6 +363,12 @@ void Graphics::fillRectList (const RectangleList<float>& rectangles) const
     context.fillRectList (rectangles);
 }
 
+void Graphics::fillRectList (const RectangleList<int>& rects) const
+{
+    for (const Rectangle<int>* r = rects.begin(), * const e = rects.end(); r != e; ++r)
+        context.fillRect (*r, false);
+}
+
 void Graphics::setPixel (int x, int y) const
 {
     context.fillRect (Rectangle<int> (x, y, 1, 1), false);
@@ -378,9 +394,15 @@ void Graphics::fillAll (Colour colourToUse) const
 
 
 //==============================================================================
+void Graphics::fillPath (const Path& path) const
+{
+    if (! (context.isClipEmpty() || path.isEmpty()))
+        context.fillPath (path, AffineTransform());
+}
+
 void Graphics::fillPath (const Path& path, const AffineTransform& transform) const
 {
-    if ((! context.isClipEmpty()) && ! path.isEmpty())
+    if (! (context.isClipEmpty() || path.isEmpty()))
         context.fillPath (path, transform);
 }
 
@@ -411,6 +433,8 @@ void Graphics::drawRect (const Rectangle<int>& r, int lineThickness) const
 
 void Graphics::drawRect (Rectangle<float> r, const float lineThickness) const
 {
+    jassert (r.getWidth() >= 0.0f && r.getHeight() >= 0.0f);
+
     RectangleList<float> rects;
     rects.addWithoutMerging (r.removeFromTop    (lineThickness));
     rects.addWithoutMerging (r.removeFromBottom (lineThickness));
@@ -422,14 +446,14 @@ void Graphics::drawRect (Rectangle<float> r, const float lineThickness) const
 //==============================================================================
 void Graphics::fillEllipse (const Rectangle<float>& area) const
 {
-    fillEllipse (area.getX(), area.getY(), area.getWidth(), area.getHeight());
+    Path p;
+    p.addEllipse (area);
+    fillPath (p);
 }
 
-void Graphics::fillEllipse (float x, float y, float width, float height) const
+void Graphics::fillEllipse (float x, float y, float w, float h) const
 {
-    Path p;
-    p.addEllipse (x, y, width, height);
-    fillPath (p);
+    fillEllipse (Rectangle<float> (x, y, w, h));
 }
 
 void Graphics::drawEllipse (float x, float y, float width, float height, float lineThickness) const
@@ -437,6 +461,11 @@ void Graphics::drawEllipse (float x, float y, float width, float height, float l
     Path p;
     p.addEllipse (x, y, width, height);
     strokePath (p, PathStrokeType (lineThickness));
+}
+
+void Graphics::drawEllipse (const Rectangle<float>& area, float lineThickness) const
+{
+    drawEllipse (area.getX(), area.getY(), area.getWidth(), area.getHeight(), lineThickness);
 }
 
 void Graphics::fillRoundedRectangle (float x, float y, float width, float height, float cornerSize) const

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -41,7 +41,7 @@
 
     Note: If all that you need to do is to respond to files being drag-and-dropped from
     the operating system onto your component, you don't need any of these classes: you can do this
-    simply by overriding Component::filesDropped().
+    simply by overriding FileDragAndDropTarget::filesDropped().
 
     @see DragAndDropTarget
 */
@@ -102,6 +102,9 @@ public:
     */
     var getCurrentDragDescription() const;
 
+    /** If a drag is in progress, this allows the image being shown to be dynamically updated. */
+    void setCurrentDragImage (const Image& newImage);
+
     /** Utility to find the DragAndDropContainer for a given Component.
 
         This will search up this component's parent hierarchy looking for the first
@@ -110,7 +113,7 @@ public:
         It's useful when a component wants to call startDragging but doesn't know
         the DragAndDropContainer it should to use.
 
-        Obviously this may return 0 if it doesn't find a suitable component.
+        Obviously this may return nullptr if it doesn't find a suitable component.
     */
     static DragAndDropContainer* findParentDragContainerFor (Component* childComponent);
 
@@ -165,14 +168,20 @@ protected:
     virtual bool shouldDropFilesWhenDraggedExternally (const DragAndDropTarget::SourceDetails& sourceDetails,
                                                        StringArray& files, bool& canMoveFiles);
 
+    /** Subclasses can override this to be told when a drag starts. */
+    virtual void dragOperationStarted();
+
+    /** Subclasses can override this to be told when a drag finishes. */
+    virtual void dragOperationEnded();
+
 private:
     //==============================================================================
     class DragImageComponent;
     friend class DragImageComponent;
-    ScopedPointer <Component> dragImageComponent;
-    var currentDragDesc;
+    friend struct ContainerDeletePolicy<DragImageComponent>;
+    ScopedPointer<DragImageComponent> dragImageComponent;
 
-    JUCE_DEPRECATED (virtual bool shouldDropFilesWhenDraggedExternally (const String&, Component*, StringArray&, bool&)) { return false; }
+    JUCE_DEPRECATED_WITH_BODY (virtual bool shouldDropFilesWhenDraggedExternally (const String&, Component*, StringArray&, bool&), { return false; })
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DragAndDropContainer)
 };

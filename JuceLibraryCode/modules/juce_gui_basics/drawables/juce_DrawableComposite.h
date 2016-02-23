@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -30,6 +30,11 @@
 /**
     A drawable object which acts as a container for a set of other Drawables.
 
+    Note that although this is a Component, it takes ownership of its child components
+    and will delete them, so that you can use it as a self-contained graphic object.
+    The intention is that you should not add your own components to it, only add other
+    Drawable objects.
+
     @see Drawable
 */
 class JUCE_API  DrawableComposite  : public Drawable
@@ -40,7 +45,7 @@ public:
     DrawableComposite();
 
     /** Creates a copy of a DrawableComposite. */
-    DrawableComposite (const DrawableComposite& other);
+    DrawableComposite (const DrawableComposite&);
 
     /** Destructor. */
     ~DrawableComposite();
@@ -92,15 +97,15 @@ public:
 
     //==============================================================================
     /** @internal */
-    Drawable* createCopy() const;
+    Drawable* createCopy() const override;
     /** @internal */
-    void refreshFromValueTree (const ValueTree& tree, ComponentBuilder& builder);
+    void refreshFromValueTree (const ValueTree&, ComponentBuilder&);
     /** @internal */
-    ValueTree createValueTree (ComponentBuilder::ImageProvider* imageProvider) const;
+    ValueTree createValueTree (ComponentBuilder::ImageProvider* imageProvider) const override;
     /** @internal */
     static const Identifier valueTreeType;
     /** @internal */
-    Rectangle<float> getDrawableBounds() const;
+    Rectangle<float> getDrawableBounds() const override;
     /** @internal */
     void childBoundsChanged (Component*) override;
     /** @internal */

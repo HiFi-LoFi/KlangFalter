@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -221,12 +221,12 @@ public:
                                     is exhausted)
         @returns the number of bytes written
     */
-    virtual int writeFromInputStream (InputStream& source, int64 maxNumBytesToWrite);
+    virtual int64 writeFromInputStream (InputStream& source, int64 maxNumBytesToWrite);
 
     //==============================================================================
     /** Sets the string that will be written to the stream when the writeNewLine()
         method is called.
-        By default this will be set the the value of NewLine::getDefault().
+        By default this will be set the value of NewLine::getDefault().
     */
     void setNewLineString (const String& newLineString);
 

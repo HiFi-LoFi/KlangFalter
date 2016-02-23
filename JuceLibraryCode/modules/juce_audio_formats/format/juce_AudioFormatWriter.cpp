@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -68,7 +68,7 @@ bool AudioFormatWriter::writeFromAudioReader (AudioFormatReader& reader,
     int* buffers [128] = { 0 };
 
     for (int i = tempBuffer.getNumChannels(); --i >= 0;)
-        buffers[i] = reinterpret_cast<int*> (tempBuffer.getSampleData (i, 0));
+        buffers[i] = reinterpret_cast<int*> (tempBuffer.getWritePointer (i, 0));
 
     if (numSamplesToRead < 0)
         numSamplesToRead = reader.lengthInSamples;
@@ -95,7 +95,7 @@ bool AudioFormatWriter::writeFromAudioReader (AudioFormatReader& reader,
             }
         }
 
-        if (! write (const_cast <const int**> (buffers), numToDo))
+        if (! write (const_cast<const int**> (buffers), numToDo))
             return false;
 
         numSamplesToRead -= numToDo;
@@ -127,7 +127,7 @@ bool AudioFormatWriter::writeFromAudioSource (AudioSource& source, int numSample
     return true;
 }
 
-bool AudioFormatWriter::writeFromFloatArrays (const float** channels, int numSourceChannels, int numSamples)
+bool AudioFormatWriter::writeFromFloatArrays (const float* const* channels, int numSourceChannels, int numSamples)
 {
     if (numSamples <= 0)
         return true;
@@ -170,31 +170,37 @@ bool AudioFormatWriter::writeFromAudioSampleBuffer (const AudioSampleBuffer& sou
     jassert (startSample >= 0 && startSample + numSamples <= source.getNumSamples() && numSourceChannels > 0);
 
     if (startSample == 0)
-        return writeFromFloatArrays ((const float**) source.getArrayOfChannels(), numSourceChannels, numSamples);
+        return writeFromFloatArrays (source.getArrayOfReadPointers(), numSourceChannels, numSamples);
 
     const float* chans [256];
     jassert ((int) numChannels < numElementsInArray (chans));
 
     for (int i = 0; i < numSourceChannels; ++i)
-        chans[i] = source.getSampleData (i, startSample);
+        chans[i] = source.getReadPointer (i, startSample);
 
     chans[numSourceChannels] = nullptr;
 
     return writeFromFloatArrays (chans, numSourceChannels, numSamples);
 }
 
+bool AudioFormatWriter::flush()
+{
+    return false;
+}
+
 //==============================================================================
-class AudioFormatWriter::ThreadedWriter::Buffer   : public AbstractFifo,
-                                                    private TimeSliceClient
+class AudioFormatWriter::ThreadedWriter::Buffer   : private TimeSliceClient
 {
 public:
     Buffer (TimeSliceThread& tst, AudioFormatWriter* w, int channels, int numSamples)
-        : AbstractFifo (numSamples),
+        : fifo (numSamples),
           buffer (channels, numSamples),
           timeSliceThread (tst),
           writer (w),
           receiver (nullptr),
           samplesWritten (0),
+          samplesPerFlush (0),
+          flushSampleCounter (0),
           isRunning (true)
     {
         timeSliceThread.addTimeSliceClient (this);
@@ -209,7 +215,7 @@ public:
         {}
     }
 
-    bool write (const float** data, int numSamples)
+    bool write (const float* const* data, int numSamples)
     {
         if (numSamples <= 0 || ! isRunning)
             return true;
@@ -217,7 +223,7 @@ public:
         jassert (timeSliceThread.isThreadRunning());  // you need to get your thread running before pumping data into this!
 
         int start1, size1, start2, size2;
-        prepareToWrite (numSamples, start1, size1, start2, size2);
+        fifo.prepareToWrite (numSamples, start1, size1, start2, size2);
 
         if (size1 + size2 < numSamples)
             return false;
@@ -228,7 +234,7 @@ public:
             buffer.copyFrom (i, start2, data[i] + size1, size2);
         }
 
-        finishedWrite (size1 + size2);
+        fifo.finishedWrite (size1 + size2);
         timeSliceThread.notify();
         return true;
     }
@@ -240,10 +246,10 @@ public:
 
     int writePendingData()
     {
-        const int numToDo = getTotalSize() / 4;
+        const int numToDo = fifo.getTotalSize() / 4;
 
         int start1, size1, start2, size2;
-        prepareToRead (numToDo, start1, size1, start2, size2);
+        fifo.prepareToRead (numToDo, start1, size1, start2, size2);
 
         if (size1 <= 0)
             return 10;
@@ -266,7 +272,19 @@ public:
             samplesWritten += size2;
         }
 
-        finishedRead (size1 + size2);
+        fifo.finishedRead (size1 + size2);
+
+        if (samplesPerFlush > 0)
+        {
+            flushSampleCounter -= size1 + size2;
+
+            if (flushSampleCounter <= 0)
+            {
+                flushSampleCounter = samplesPerFlush;
+                writer->flush();
+            }
+        }
+
         return 0;
     }
 
@@ -280,13 +298,20 @@ public:
         samplesWritten = 0;
     }
 
+    void setFlushInterval (int numSamples) noexcept
+    {
+        samplesPerFlush = numSamples;
+    }
+
 private:
+    AbstractFifo fifo;
     AudioSampleBuffer buffer;
     TimeSliceThread& timeSliceThread;
     ScopedPointer<AudioFormatWriter> writer;
     CriticalSection thumbnailLock;
     IncomingDataReceiver* receiver;
     int64 samplesWritten;
+    int samplesPerFlush, flushSampleCounter;
     volatile bool isRunning;
 
     JUCE_DECLARE_NON_COPYABLE (Buffer)
@@ -301,7 +326,7 @@ AudioFormatWriter::ThreadedWriter::~ThreadedWriter()
 {
 }
 
-bool AudioFormatWriter::ThreadedWriter::write (const float** data, int numSamples)
+bool AudioFormatWriter::ThreadedWriter::write (const float* const* data, int numSamples)
 {
     return buffer->write (data, numSamples);
 }
@@ -309,4 +334,9 @@ bool AudioFormatWriter::ThreadedWriter::write (const float** data, int numSample
 void AudioFormatWriter::ThreadedWriter::setDataReceiver (AudioFormatWriter::ThreadedWriter::IncomingDataReceiver* receiver)
 {
     buffer->setDataReceiver (receiver);
+}
+
+void AudioFormatWriter::ThreadedWriter::setFlushInterval (int numSamplesPerFlush) noexcept
+{
+    buffer->setFlushInterval (numSamplesPerFlush);
 }

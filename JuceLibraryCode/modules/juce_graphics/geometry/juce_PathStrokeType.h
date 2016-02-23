@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -63,6 +63,9 @@ public:
     };
 
     //==============================================================================
+    /** Creates a stroke type with a given line-width, and default joint/end styles. */
+    explicit PathStrokeType (float strokeThickness) noexcept;
+
     /** Creates a stroke type.
 
         @param strokeThickness      the width of the line to use
@@ -70,14 +73,14 @@ public:
         @param endStyle             the type of end-caps to use for the ends of open paths.
     */
     PathStrokeType (float strokeThickness,
-                    JointStyle jointStyle = mitered,
+                    JointStyle jointStyle,
                     EndCapStyle endStyle = butt) noexcept;
 
-    /** Createes a copy of another stroke type. */
-    PathStrokeType (const PathStrokeType& other) noexcept;
+    /** Creates a copy of another stroke type. */
+    PathStrokeType (const PathStrokeType&) noexcept;
 
     /** Copies another stroke onto this one. */
-    PathStrokeType& operator= (const PathStrokeType& other) noexcept;
+    PathStrokeType& operator= (const PathStrokeType&) noexcept;
 
     /** Destructor. */
     ~PathStrokeType() noexcept;
@@ -101,7 +104,7 @@ public:
     */
     void createStrokedPath (Path& destPath,
                             const Path& sourcePath,
-                            const AffineTransform& transform = AffineTransform::identity,
+                            const AffineTransform& transform = AffineTransform(),
                             float extraAccuracy = 1.0f) const;
 
 
@@ -133,7 +136,7 @@ public:
                              const Path& sourcePath,
                              const float* dashLengths,
                              int numDashLengths,
-                             const AffineTransform& transform = AffineTransform::identity,
+                             const AffineTransform& transform = AffineTransform(),
                              float extraAccuracy = 1.0f) const;
 
     //==============================================================================
@@ -160,7 +163,7 @@ public:
                                      const Path& sourcePath,
                                      float arrowheadStartWidth, float arrowheadStartLength,
                                      float arrowheadEndWidth, float arrowheadEndLength,
-                                     const AffineTransform& transform = AffineTransform::identity,
+                                     const AffineTransform& transform = AffineTransform(),
                                      float extraAccuracy = 1.0f) const;
 
     //==============================================================================
@@ -184,10 +187,10 @@ public:
 
     //==============================================================================
     /** Compares the stroke thickness, joint and end styles of two stroke types. */
-    bool operator== (const PathStrokeType& other) const noexcept;
+    bool operator== (const PathStrokeType&) const noexcept;
 
     /** Compares the stroke thickness, joint and end styles of two stroke types. */
-    bool operator!= (const PathStrokeType& other) const noexcept;
+    bool operator!= (const PathStrokeType&) const noexcept;
 
 private:
     //==============================================================================

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -67,21 +67,21 @@ public:
     Path();
 
     /** Creates a copy of another path. */
-    Path (const Path& other);
+    Path (const Path&);
 
     /** Destructor. */
     ~Path();
 
     /** Copies this path from another one. */
-    Path& operator= (const Path& other);
+    Path& operator= (const Path&);
 
    #if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
-    Path (Path&& other) noexcept;
-    Path& operator= (Path&& other) noexcept;
+    Path (Path&&) noexcept;
+    Path& operator= (Path&&) noexcept;
    #endif
 
-    bool operator== (const Path& other) const noexcept;
-    bool operator!= (const Path& other) const noexcept;
+    bool operator== (const Path&) const noexcept;
+    bool operator!= (const Path&) const noexcept;
 
     //==============================================================================
     /** Returns true if the path doesn't contain any lines or curves. */
@@ -158,7 +158,7 @@ public:
     /** Returns the length of the path.
         @see getPointAlongPath
     */
-    float getLength (const AffineTransform& transform = AffineTransform::identity) const;
+    float getLength (const AffineTransform& transform = AffineTransform()) const;
 
     /** Returns a point that is the specified distance along the path.
         If the distance is greater than the total length of the path, this will return the
@@ -166,7 +166,7 @@ public:
         @see getLength
     */
     Point<float> getPointAlongPath (float distanceFromStart,
-                                    const AffineTransform& transform = AffineTransform::identity) const;
+                                    const AffineTransform& transform = AffineTransform()) const;
 
     /** Finds the point along the path which is nearest to a given position.
         This sets pointOnPath to the nearest point, and returns the distance of this point from the start
@@ -174,7 +174,7 @@ public:
     */
     float getNearestPoint (const Point<float> targetPoint,
                            Point<float>& pointOnPath,
-                           const AffineTransform& transform = AffineTransform::identity) const;
+                           const AffineTransform& transform = AffineTransform()) const;
 
     //==============================================================================
     /** Removes all lines and curves, resetting the path completely. */
@@ -315,8 +315,8 @@ public:
     template <typename ValueType>
     void addRectangle (const Rectangle<ValueType>& rectangle)
     {
-        addRectangle (static_cast <float> (rectangle.getX()), static_cast <float> (rectangle.getY()),
-                      static_cast <float> (rectangle.getWidth()), static_cast <float> (rectangle.getHeight()));
+        addRectangle (static_cast<float> (rectangle.getX()), static_cast<float> (rectangle.getY()),
+                      static_cast<float> (rectangle.getWidth()), static_cast<float> (rectangle.getHeight()));
     }
 
     /** Adds a rectangle with rounded corners to the path.
@@ -350,8 +350,8 @@ public:
     template <typename ValueType>
     void addRoundedRectangle (const Rectangle<ValueType>& rectangle, float cornerSizeX, float cornerSizeY)
     {
-        addRoundedRectangle (static_cast <float> (rectangle.getX()), static_cast <float> (rectangle.getY()),
-                             static_cast <float> (rectangle.getWidth()), static_cast <float> (rectangle.getHeight()),
+        addRoundedRectangle (static_cast<float> (rectangle.getX()), static_cast<float> (rectangle.getY()),
+                             static_cast<float> (rectangle.getWidth()), static_cast<float> (rectangle.getHeight()),
                              cornerSizeX, cornerSizeY);
     }
 
@@ -377,6 +377,18 @@ public:
                       float x2, float y2,
                       float x3, float y3);
 
+    /** Adds a triangle to the path.
+
+        The triangle is added as a new closed sub-path. (Any currently open paths will be left open).
+
+        Note that whether the vertices are specified in clockwise or anticlockwise
+        order will affect how the triangle is filled when it overlaps other
+        shapes (the winding order setting will affect this of course).
+    */
+    void addTriangle (Point<float> point1,
+                      Point<float> point2,
+                      Point<float> point3);
+
     /** Adds a quadrilateral to the path.
 
         The quad is added as a new closed sub-path. (Any currently open paths will be left open).
@@ -391,12 +403,16 @@ public:
                            float x4, float y4);
 
     /** Adds an ellipse to the path.
-
         The shape is added as a new sub-path. (Any currently open paths will be left open).
-
         @see addArc
     */
     void addEllipse (float x, float y, float width, float height);
+
+    /** Adds an ellipse to the path.
+        The shape is added as a new sub-path. (Any currently open paths will be left open).
+        @see addArc
+    */
+    void addEllipse (Rectangle<float> area);
 
     /** Adds an elliptical arc to the current path.
 
@@ -473,11 +489,33 @@ public:
         @param innerCircleProportionalSize  if this is > 0, then the pie will be drawn as a curved band around a hollow
                             ellipse at its centre, where this value indicates the inner ellipse's size with
                             respect to the outer one.
-
         @see addArc
     */
     void addPieSegment (float x, float y,
                         float width, float height,
+                        float fromRadians,
+                        float toRadians,
+                        float innerCircleProportionalSize);
+
+    /** Adds a "pie-chart" shape to the path.
+
+        The shape is added as a new sub-path. (Any currently open paths will be left open).
+
+        Note that when specifying the start and end angles, the curve will be drawn either clockwise
+        or anti-clockwise according to whether the end angle is greater than the start. This means
+        that sometimes you may need to use values greater than 2*Pi for the end angle.
+
+        @param segmentBounds the outer rectangle in which the elliptical outline fits
+        @param fromRadians   the angle (clockwise) in radians at which to start the arc segment (where 0 is the
+                             top-centre of the ellipse)
+        @param toRadians     the angle (clockwise) in radians at which to end the arc segment (where 0 is the
+                             top-centre of the ellipse)
+        @param innerCircleProportionalSize  if this is > 0, then the pie will be drawn as a curved band around a hollow
+                             ellipse at its centre, where this value indicates the inner ellipse's size with
+                             respect to the outer one.
+        @see addArc
+    */
+    void addPieSegment (Rectangle<float> segmentBounds,
                         float fromRadians,
                         float toRadians,
                         float innerCircleProportionalSize);
@@ -558,7 +596,19 @@ public:
         The internal data of the two paths is swapped over, so this is much faster than
         copying it to a temp variable and back.
     */
-    void swapWithPath (Path& other) noexcept;
+    void swapWithPath (Path&) noexcept;
+
+    //==============================================================================
+    /** Preallocates enough space for adding the given number of coordinates to the path.
+        If you're about to add a large number of lines or curves to the path, it can make
+        the task much more efficient to call this first and avoid costly reallocations
+        as the structure grows.
+        The actual value to pass is a bit tricky to calculate because the space required
+        depends on what you're adding - e.g. each lineTo() or startNewSubPath() will
+        require 3 coords (x, y and a type marker). Each quadraticTo() will need 5, and
+        a cubicTo() will require 7. Closing a sub-path will require 1.
+    */
+    void preallocateSpace (int numExtraCoordsToMakeSpaceFor);
 
     //==============================================================================
     /** Applies a 2D transform to all the vertices in the path.
@@ -667,8 +717,8 @@ public:
     {
     public:
         //==============================================================================
-        Iterator (const Path& path);
-        ~Iterator();
+        Iterator (const Path& path) noexcept;
+        ~Iterator() noexcept;
 
         //==============================================================================
         /** Moves onto the next element in the path.
@@ -677,7 +727,7 @@ public:
             the elementType variable will be set to the type of the current element,
             and some of the x and y variables will be filled in with values.
         */
-        bool next();
+        bool next() noexcept;
 
         //==============================================================================
         enum PathElementType
@@ -740,14 +790,13 @@ public:
     /** Restores this path from a string that was created with the toString() method.
         @see toString()
     */
-    void restoreFromString (const String& stringVersion);
-
+    void restoreFromString (StringRef stringVersion);
 
 private:
     //==============================================================================
     friend class PathFlatteningIterator;
     friend class Path::Iterator;
-    ArrayAllocationBase <float, DummyCriticalSection> data;
+    ArrayAllocationBase<float, DummyCriticalSection> data;
     size_t numElements;
 
     struct PathBounds

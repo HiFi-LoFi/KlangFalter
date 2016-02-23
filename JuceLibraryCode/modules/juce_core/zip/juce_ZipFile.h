@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -40,7 +40,7 @@
 class JUCE_API  ZipFile
 {
 public:
-    /** Creates a ZipFile based for a file. */
+    /** Creates a ZipFile to read a specific file. */
     explicit ZipFile (const File& file);
 
     //==============================================================================
@@ -91,15 +91,12 @@ public:
     int getNumEntries() const noexcept;
 
     /** Returns a structure that describes one of the entries in the zip file.
-
         This may return zero if the index is out of range.
-
         @see ZipFile::ZipEntry
     */
     const ZipEntry* getEntry (int index) const noexcept;
 
     /** Returns the index of the first entry with a given filename.
-
         This uses a case-sensitive comparison to look for a filename in the
         list of entries. It might return -1 if no match is found.
 
@@ -116,8 +113,7 @@ public:
     */
     const ZipEntry* getEntry (const String& fileName) const noexcept;
 
-    /** Sorts the list of entries, based on the filename.
-    */
+    /** Sorts the list of entries, based on the filename. */
     void sortEntriesByFilename();
 
     //==============================================================================
@@ -128,6 +124,11 @@ public:
 
         The stream must not be used after the ZipFile object that created
         has been deleted.
+
+        Note that if the ZipFile was created with a user-supplied InputStream object,
+        then all the streams which are created by this method will by trying to share
+        the same source stream, so cannot be safely used on  multiple threads! (But if
+        you create the ZipFile from a File or InputSource, then it is safe to do this).
     */
     InputStream* createStreamForEntry (int index);
 
@@ -138,6 +139,11 @@ public:
 
         The stream must not be used after the ZipFile object that created
         has been deleted.
+
+        Note that if the ZipFile was created with a user-supplied InputStream object,
+        then all the streams which are created by this method will by trying to share
+        the same source stream, so cannot be safely used on  multiple threads! (But if
+        you create the ZipFile from a File or InputSource, then it is safe to do this).
     */
     InputStream* createStreamForEntry (const ZipEntry& entry);
 
@@ -175,18 +181,18 @@ public:
 
         Create a ZipFile::Builder object, and call its addFile() method to add some files,
         then you can write it to a stream with write().
-
-        Currently this just stores the files with no compression.. That will be added
-        soon!
     */
-    class Builder
+    class JUCE_API  Builder
     {
     public:
+        /** Creates an empty builder object. */
         Builder();
+
+        /** Destructor. */
         ~Builder();
 
-        /** Adds a file while should be added to the archive.
-            The file isn't read immediately, all the files will be read later when the writeToStream()
+        /** Adds a file to the list of items which will be added to the archive.
+            The file isn't read immediately: the files will be read later when the writeToStream()
             method is called.
 
             The compressionLevel can be between 0 (no compression), and 9 (maximum compression).
@@ -194,7 +200,22 @@ public:
             will be stored for this file.
         */
         void addFile (const File& fileToAdd, int compressionLevel,
-                      const String& storedPathName = String::empty);
+                      const String& storedPathName = String());
+
+        /** Adds a stream to the list of items which will be added to the archive.
+
+            @param streamToRead this stream isn't read immediately - a pointer to the stream is
+                                stored, then used later when the writeToStream() method is called, and
+                                deleted by the Builder object when no longer needed, so be very careful
+                                about its lifetime and the lifetime of any objects on which it depends!
+                                This must not be null.
+            @param compressionLevel     this can be between 0 (no compression), and 9 (maximum compression).
+            @param storedPathName       the partial pathname that will be stored for this file
+            @param fileModificationTime the timestamp that will be stored as the last modification time
+                                        of this entry
+        */
+        void addEntry (InputStream* streamToRead, int compressionLevel,
+                       const String& storedPathName, Time fileModificationTime);
 
         /** Generates the zip file, writing it to the specified stream.
             If the progress parameter is non-null, it will be updated with an approximate
@@ -218,11 +239,11 @@ private:
     friend class ZipInputStream;
     friend class ZipEntryHolder;
 
-    OwnedArray <ZipEntryHolder> entries;
+    OwnedArray<ZipEntryHolder> entries;
     CriticalSection lock;
     InputStream* inputStream;
-    ScopedPointer <InputStream> streamToDelete;
-    ScopedPointer <InputSource> inputSource;
+    ScopedPointer<InputStream> streamToDelete;
+    ScopedPointer<InputSource> inputSource;
 
    #if JUCE_DEBUG
     struct OpenStreamCounter

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -51,14 +51,23 @@ public:
     */
     ~ChildProcess();
 
+    /** These flags are used by the start() methods. */
+    enum StreamFlags
+    {
+        wantStdOut = 1,
+        wantStdErr = 2
+    };
+
     /** Attempts to launch a child process command.
 
         The command should be the name of the executable file, followed by any arguments
         that are required.
         If the process has already been launched, this will launch it again. If a problem
         occurs, the method will return false.
+        The streamFlags is a combinations of values to indicate which of the child's output
+        streams should be read and returned by readProcessOutput().
     */
-    bool start (const String& command);
+    bool start (const String& command, int streamFlags = wantStdOut | wantStdErr);
 
     /** Attempts to launch a child process command.
 
@@ -66,8 +75,10 @@ public:
         arguments that are needed.
         If the process has already been launched, this will launch it again. If a problem
         occurs, the method will return false.
+        The streamFlags is a combinations of values to indicate which of the child's output
+        streams should be read and returned by readProcessOutput().
     */
-    bool start (const StringArray& arguments);
+    bool start (const StringArray& arguments, int streamFlags = wantStdOut | wantStdErr);
 
     /** Returns true if the child process is alive. */
     bool isRunning() const;
@@ -85,6 +96,9 @@ public:
 
     /** Blocks until the process is no longer running. */
     bool waitForProcessToFinish (int timeoutMs) const;
+
+    /** If the process has finished, this returns its exit code. */
+    uint32 getExitCode() const;
 
     /** Attempts to kill the child process.
         Returns true if it succeeded. Trying to read from the process after calling this may

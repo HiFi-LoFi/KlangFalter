@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -77,6 +77,8 @@ public:
         errorMessage string.
     */
     AudioPluginInstance* createPluginInstance (const PluginDescription& description,
+                                               double initialSampleRate,
+                                               int initialBufferSize,
                                                String& errorMessage) const;
 
     /** Checks that the file or component for this plugin actually still exists.
@@ -87,7 +89,7 @@ public:
 
 private:
     //==============================================================================
-    OwnedArray <AudioPluginFormat> formats;
+    OwnedArray<AudioPluginFormat> formats;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginFormatManager)
 };

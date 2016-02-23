@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -158,7 +158,7 @@ public:
     void drawText (const String& text,
                    int x, int y, int width, int height,
                    Justification justificationType,
-                   bool useEllipsesIfTooBig) const;
+                   bool useEllipsesIfTooBig = true) const;
 
     /** Draws a line of text within a specified rectangle.
 
@@ -172,7 +172,21 @@ public:
     void drawText (const String& text,
                    const Rectangle<int>& area,
                    Justification justificationType,
-                   bool useEllipsesIfTooBig) const;
+                   bool useEllipsesIfTooBig = true) const;
+
+    /** Draws a line of text within a specified rectangle.
+
+        The text will be positioned within the rectangle based on the justification
+        flags passed-in. If the string is too long to fit inside the rectangle, it will
+        either be truncated or will have ellipsis added to its end (if the useEllipsesIfTooBig
+        flag is true).
+
+        @see drawSingleLineText, drawFittedText, drawMultiLineText, GlyphArrangement::addJustifiedText
+    */
+    void drawText (const String& text,
+                   const Rectangle<float>& area,
+                   Justification justificationType,
+                   bool useEllipsesIfTooBig = true) const;
 
     /** Tries to draw a text string inside a given space.
 
@@ -189,7 +203,7 @@ public:
 
         The minimumHorizontalScale parameter specifies how much the text can be squashed horizontally
         to try to squeeze it into the space. If you don't want any horizontal scaling to occur, you
-        can set this value to 1.0f.
+        can set this value to 1.0f. Pass 0 if you want it to use a default value.
 
         @see GlyphArrangement::addFittedText
     */
@@ -197,7 +211,7 @@ public:
                          int x, int y, int width, int height,
                          Justification justificationFlags,
                          int maximumNumberOfLines,
-                         float minimumHorizontalScale = 0.7f) const;
+                         float minimumHorizontalScale = 0.0f) const;
 
     /** Tries to draw a text string inside a given space.
 
@@ -214,7 +228,7 @@ public:
 
         The minimumHorizontalScale parameter specifies how much the text can be squashed horizontally
         to try to squeeze it into the space. If you don't want any horizontal scaling to occur, you
-        can set this value to 1.0f.
+        can set this value to 1.0f. Pass 0 if you want it to use a default value.
 
         @see GlyphArrangement::addFittedText
     */
@@ -222,7 +236,7 @@ public:
                          const Rectangle<int>& area,
                          Justification justificationFlags,
                          int maximumNumberOfLines,
-                         float minimumHorizontalScale = 0.7f) const;
+                         float minimumHorizontalScale = 0.0f) const;
 
     //==============================================================================
     /** Fills the context's entire clip region with the current colour or brush.
@@ -266,6 +280,13 @@ public:
         multiple times.
     */
     void fillRectList (const RectangleList<float>& rectangles) const;
+
+    /** Fills a set of rectangles using the current colour or brush.
+        If you have a lot of rectangles to draw, it may be more efficient
+        to create a RectangleList and use this method than to call fillRect()
+        multiple times.
+    */
+    void fillRectList (const RectangleList<int>& rectangles) const;
 
     /** Uses the current colour or brush to fill a rectangle with rounded corners.
         @see drawRoundedRectangle, Path::addRoundedRectangle
@@ -345,24 +366,37 @@ public:
     void drawEllipse (float x, float y, float width, float height,
                       float lineThickness) const;
 
+    /** Draws an elliptical stroke using the current colour or brush.
+        @see fillEllipse, Path::addEllipse
+    */
+    void drawEllipse (const Rectangle<float>& area, float lineThickness) const;
+
     //==============================================================================
     /** Draws a line between two points.
         The line is 1 pixel wide and drawn with the current colour or brush.
+        TIP: If you're trying to draw horizontal or vertical lines, don't use this -
+        it's better to use fillRect() instead unless you really need an angled line.
     */
     void drawLine (float startX, float startY, float endX, float endY) const;
 
     /** Draws a line between two points with a given thickness.
+        TIP: If you're trying to draw horizontal or vertical lines, don't use this -
+        it's better to use fillRect() instead unless you really need an angled line.
         @see Path::addLineSegment
     */
     void drawLine (float startX, float startY, float endX, float endY, float lineThickness) const;
 
     /** Draws a line between two points.
         The line is 1 pixel wide and drawn with the current colour or brush.
+        TIP: If you're trying to draw horizontal or vertical lines, don't use this -
+        it's better to use fillRect() instead unless you really need an angled line.
     */
     void drawLine (const Line<float>& line) const;
 
     /** Draws a line between two points with a given thickness.
         @see Path::addLineSegment
+        TIP: If you're trying to draw horizontal or vertical lines, don't use this -
+        it's better to use fillRect() instead unless you really need an angled line.
     */
     void drawLine (const Line<float>& line, float lineThickness) const;
 
@@ -402,13 +436,15 @@ public:
 
     //==============================================================================
     /** Fills a path using the currently selected colour or brush. */
-    void fillPath (const Path& path,
-                   const AffineTransform& transform = AffineTransform::identity) const;
+    void fillPath (const Path& path) const;
+
+    /** Fills a path using the currently selected colour or brush, and adds a transform. */
+    void fillPath (const Path& path, const AffineTransform& transform) const;
 
     /** Draws a path's outline using the currently selected colour or brush. */
     void strokePath (const Path& path,
                      const PathStrokeType& strokeType,
-                     const AffineTransform& transform = AffineTransform::identity) const;
+                     const AffineTransform& transform = AffineTransform()) const;
 
     /** Draws a line with an arrowhead at its end.
 
@@ -573,7 +609,7 @@ public:
         @returns true if the resulting clipping region is non-zero in size
         @see reduceClipRegion
     */
-    bool reduceClipRegion (const Path& path, const AffineTransform& transform = AffineTransform::identity);
+    bool reduceClipRegion (const Path& path, const AffineTransform& transform = AffineTransform());
 
     /** Intersects the current clipping region with an image's alpha-channel.
 

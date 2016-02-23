@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -39,8 +39,17 @@
     - Either JUCE_32BIT or JUCE_64BIT, depending on the architecture.
     - Either JUCE_LITTLE_ENDIAN or JUCE_BIG_ENDIAN.
     - Either JUCE_INTEL or JUCE_PPC
-    - Either JUCE_GCC or JUCE_MSVC
+    - Either JUCE_GCC or JUCE_CLANG or JUCE_MSVC
 */
+
+//==============================================================================
+#ifdef JUCE_APP_CONFIG_HEADER
+ #include JUCE_APP_CONFIG_HEADER
+#else
+ // Your project must contain an AppConfig.h file with your project-specific settings in it,
+ // and your header search path must make it accessible to the module's files.
+ #include "AppConfig.h"
+#endif
 
 //==============================================================================
 #if (defined (_WIN32) || defined (_WIN64))
@@ -52,11 +61,8 @@
 #elif defined (LINUX) || defined (__linux__)
   #define     JUCE_LINUX 1
 #elif defined (__APPLE_CPP__) || defined(__APPLE_CC__)
-  #define Point CarbonDummyPointName // (workaround to avoid definition of "Point" by old Carbon headers)
-  #define Component CarbonDummyCompName
   #include <CoreFoundation/CoreFoundation.h> // (needed to find out what platform we're using)
-  #undef Point
-  #undef Component
+  #include "../native/juce_mac_ClangBugWorkaround.h"
 
   #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
     #define     JUCE_IPHONE 1
@@ -115,17 +121,6 @@
   #else
     #define JUCE_BIG_ENDIAN 1
   #endif
-#endif
-
-#if JUCE_MAC
-
-  #if defined (__ppc__) || defined (__ppc64__)
-    #define JUCE_PPC 1
-  #elif defined (__arm__)
-    #define JUCE_ARM 1
-  #else
-    #define JUCE_INTEL 1
-  #endif
 
   #ifdef __LP64__
     #define JUCE_64BIT 1
@@ -133,14 +128,21 @@
     #define JUCE_32BIT 1
   #endif
 
-  #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
-    #error "Building for OSX 10.3 is no longer supported!"
+  #if defined (__ppc__) || defined (__ppc64__)
+    #define JUCE_PPC 1
+  #elif defined (__arm__) || defined (__arm64__)
+    #define JUCE_ARM 1
+  #else
+    #define JUCE_INTEL 1
   #endif
 
-  #ifndef MAC_OS_X_VERSION_10_5
-    #error "To build with 10.4 compatibility, use a 10.5 or 10.6 SDK and set the deployment target to 10.4"
+  #if JUCE_MAC && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
+    #error "Building for OSX 10.4 is no longer supported!"
   #endif
 
+  #if JUCE_MAC && ! defined (MAC_OS_X_VERSION_10_6)
+    #error "To build with 10.5 compatibility, use a later SDK and set the deployment target to 10.5"
+  #endif
 #endif
 
 //==============================================================================
@@ -159,13 +161,13 @@
     #define JUCE_BIG_ENDIAN 1
   #endif
 
-  #if defined (__LP64__) || defined (_LP64)
+  #if defined (__LP64__) || defined (_LP64) || defined (__arm64__)
     #define JUCE_64BIT 1
   #else
     #define JUCE_32BIT 1
   #endif
 
-  #ifdef __arm__
+  #if defined (__arm__) || defined (__arm64__)
     #define JUCE_ARM 1
   #elif __MMX__ || __SSE__ || __amd64__
     #define JUCE_INTEL 1
@@ -177,7 +179,6 @@
 
 #ifdef __clang__
  #define JUCE_CLANG 1
- #define JUCE_GCC 1
 #elif defined (__GNUC__)
   #define JUCE_GCC 1
 #elif defined (_MSC_VER)
@@ -196,7 +197,7 @@
   #endif
 
   #if JUCE_64BIT || ! JUCE_VC7_OR_EARLIER
-    #define JUCE_USE_INTRINSICS 1
+    #define JUCE_USE_MSVC_INTRINSICS 1
   #endif
 #else
   #error unknown compiler

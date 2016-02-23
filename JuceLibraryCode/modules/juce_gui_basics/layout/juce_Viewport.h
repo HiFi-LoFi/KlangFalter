@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -131,9 +131,11 @@ public:
     */
     bool autoScroll (int mouseX, int mouseY, int distanceFromEdge, int maximumSpeed);
 
-    /** Returns the position within the child component of the top-left of its visible area.
-    */
+    /** Returns the position within the child component of the top-left of its visible area. */
     Point<int> getViewPosition() const noexcept             { return lastVisibleArea.getPosition(); }
+
+    /** Returns the visible area of the child component, relative to its top-left */
+    Rectangle<int> getViewArea() const noexcept             { return lastVisibleArea; }
 
     /** Returns the position within the child component of the top-left of its visible area.
         @see getViewWidth, setViewPosition
@@ -189,9 +191,15 @@ public:
 
         If set to false, the scrollbars won't ever appear. When true (the default)
         they will appear only when needed.
+
+        The allowVerticalScrollingWithoutScrollbar parameters allow you to enable
+        mouse-wheel scrolling even when there the scrollbars are hidden. When the
+        scrollbars are visible, these parameters are ignored.
     */
     void setScrollBarsShown (bool showVerticalScrollbarIfNeeded,
-                             bool showHorizontalScrollbarIfNeeded);
+                             bool showHorizontalScrollbarIfNeeded,
+                             bool allowVerticalScrollingWithoutScrollbar = false,
+                             bool allowHorizontalScrollingWithoutScrollbar = false);
 
     /** True if the vertical scrollbar is enabled.
         @see setScrollBarsShown
@@ -245,6 +253,8 @@ public:
     /** @internal */
     void componentMovedOrResized (Component&, bool wasMoved, bool wasResized) override;
     /** @internal */
+    void lookAndFeelChanged() override;
+    /** @internal */
     bool useMouseWheelMoveIfNeeded (const MouseEvent&, const MouseWheelDetails&);
     /** @internal */
     static bool respondsToKey (const KeyPress&);
@@ -256,13 +266,15 @@ private:
     int scrollBarThickness;
     int singleStepX, singleStepY;
     bool showHScrollbar, showVScrollbar, deleteContent;
+    bool customScrollBarThickness;
+    bool allowScrollingWithoutScrollbarV, allowScrollingWithoutScrollbarH;
     Component contentHolder;
-    ScrollBar verticalScrollBar;
-    ScrollBar horizontalScrollBar;
+    ScrollBar verticalScrollBar, horizontalScrollBar;
+
     Point<int> viewportPosToCompPos (Point<int>) const;
 
     void updateVisibleArea();
-    void deleteContentComp();
+    void deleteOrRemoveContentComp();
 
    #if JUCE_CATCH_DEPRECATED_CODE_MISUSE
     // If you get an error here, it's because this method's parameters have changed! See the new definition above..

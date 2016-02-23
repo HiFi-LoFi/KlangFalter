@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -39,12 +39,17 @@ void MACAddress::findAllAddresses (Array<MACAddress>& result)
             {
                 const sockaddr_dl* const sadd = (const sockaddr_dl*) cursor->ifa_addr;
 
-                #ifndef IFT_ETHER
-                 #define IFT_ETHER 6
-                #endif
+               #ifndef IFT_ETHER
+                enum { IFT_ETHER = 6 };
+               #endif
 
                 if (sadd->sdl_type == IFT_ETHER)
-                    result.addIfNotAlreadyThere (MACAddress (((const uint8*) sadd->sdl_data) + sadd->sdl_nlen));
+                {
+                    MACAddress ma (MACAddress (((const uint8*) sadd->sdl_data) + sadd->sdl_nlen));
+
+                    if (! ma.isNull())
+                        result.addIfNotAlreadyThere (ma);
+                }
             }
         }
 
@@ -59,6 +64,8 @@ bool JUCE_CALLTYPE Process::openEmailWithAttachments (const String& targetEmailA
                                                       const StringArray& filesToAttach)
 {
   #if JUCE_IOS
+    ignoreUnused (targetEmailAddress, emailSubject, bodyText, filesToAttach);
+
     //xxx probably need to use MFMailComposeViewController
     jassertfalse;
     return false;
@@ -105,7 +112,7 @@ bool JUCE_CALLTYPE Process::openEmailWithAttachments (const String& targetEmailA
 class URLConnectionState   : public Thread
 {
 public:
-    URLConnectionState (NSURLRequest* req)
+    URLConnectionState (NSURLRequest* req, const int maxRedirects)
         : Thread ("http connection"),
           contentLength (-1),
           delegate (nil),
@@ -113,9 +120,13 @@ public:
           connection (nil),
           data ([[NSMutableData data] retain]),
           headers (nil),
+          statusCode (0),
           initialised (false),
           hasFailed (false),
-          hasFinished (false)
+          hasFinished (false),
+          numRedirectsToFollow (maxRedirects),
+          numRedirects (0),
+          latestTotalBytes (0)
     {
         static DelegateClass cls;
         delegate = [cls.createInstance() init];
@@ -139,7 +150,7 @@ public:
         while (isThreadRunning() && ! initialised)
         {
             if (callback != nullptr)
-                callback (context, -1, (int) [[request HTTPBody] length]);
+                callback (context, latestTotalBytes, (int) [[request HTTPBody] length]);
 
             Thread::sleep (1);
         }
@@ -190,19 +201,37 @@ public:
             [data setLength: 0];
         }
 
-        initialised = true;
         contentLength = [response expectedContentLength];
 
         [headers release];
         headers = nil;
 
         if ([response isKindOfClass: [NSHTTPURLResponse class]])
-            headers = [[((NSHTTPURLResponse*) response) allHeaderFields] retain];
+        {
+            NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*) response;
+            headers = [[httpResponse allHeaderFields] retain];
+            statusCode = (int) [httpResponse statusCode];
+        }
+
+        initialised = true;
+    }
+
+    NSURLRequest* willSendRequest (NSURLRequest* newRequest, NSURLResponse* redirectResponse)
+    {
+        if (redirectResponse != nullptr)
+        {
+            if (numRedirects >= numRedirectsToFollow)
+                return nil;  // Cancel redirect and allow connection to continue
+
+            ++numRedirects;
+        }
+
+        return newRequest;
     }
 
     void didFailWithError (NSError* error)
     {
-        DBG (nsStringToJuce ([error description])); (void) error;
+        DBG (nsStringToJuce ([error description])); ignoreUnused (error);
         hasFailed = true;
         initialised = true;
         signalThreadShouldExit();
@@ -215,8 +244,9 @@ public:
         initialised = true;
     }
 
-    void didSendBodyData (int /*totalBytesWritten*/, int /*totalBytesExpected*/)
+    void didSendBodyData (NSInteger totalBytesWritten, NSInteger /*totalBytesExpected*/)
     {
+        latestTotalBytes = static_cast<int> (totalBytesWritten);
     }
 
     void finishedLoading()
@@ -246,22 +276,27 @@ public:
     NSURLConnection* connection;
     NSMutableData* data;
     NSDictionary* headers;
+    int statusCode;
     bool initialised, hasFailed, hasFinished;
+    const int numRedirectsToFollow;
+    int numRedirects;
+    int latestTotalBytes;
 
 private:
     //==============================================================================
-    struct DelegateClass  : public ObjCClass <NSObject>
+    struct DelegateClass  : public ObjCClass<NSObject>
     {
-        DelegateClass()  : ObjCClass <NSObject> ("JUCEAppDelegate_")
+        DelegateClass()  : ObjCClass<NSObject> ("JUCEAppDelegate_")
         {
-            addIvar <URLConnectionState*> ("state");
+            addIvar<URLConnectionState*> ("state");
 
-            addMethod (@selector (connection:didReceiveResponse:), didReceiveResponse,         "v@:@@");
-            addMethod (@selector (connection:didFailWithError:),   didFailWithError,           "v@:@@");
-            addMethod (@selector (connection:didReceiveData:),     didReceiveData,             "v@:@@");
-            addMethod (@selector (connection:didSendBodyData:totalBytesWritten:totalBytesExpectedToWrite:totalBytesExpectedToWrite:),
-                                                                   connectionDidSendBodyData,  "v@:@iii");
-            addMethod (@selector (connectionDidFinishLoading:),    connectionDidFinishLoading, "v@:@");
+            addMethod (@selector (connection:didReceiveResponse:), didReceiveResponse,            "v@:@@");
+            addMethod (@selector (connection:didFailWithError:),   didFailWithError,              "v@:@@");
+            addMethod (@selector (connection:didReceiveData:),     didReceiveData,                "v@:@@");
+            addMethod (@selector (connection:didSendBodyData:totalBytesWritten:totalBytesExpectedToWrite:),
+                                                                   connectionDidSendBodyData,     "v@:@iii");
+            addMethod (@selector (connectionDidFinishLoading:),    connectionDidFinishLoading,    "v@:@");
+            addMethod (@selector (connection:willSendRequest:redirectResponse:), willSendRequest, "@@:@@@");
 
             registerClass();
         }
@@ -285,6 +320,11 @@ private:
             getState (self)->didReceiveData (newData);
         }
 
+        static NSURLRequest* willSendRequest (id self, SEL, NSURLConnection*, NSURLRequest* request, NSURLResponse* response)
+        {
+            return getState (self)->willSendRequest (request, response);
+        }
+
         static void connectionDidSendBodyData (id self, SEL, NSURLConnection*, NSInteger, NSInteger totalBytesWritten, NSInteger totalBytesExpected)
         {
             getState (self)->didSendBodyData (totalBytesWritten, totalBytesExpected);
@@ -306,22 +346,28 @@ class WebInputStream  : public InputStream
 public:
     WebInputStream (const String& address_, bool isPost_, const MemoryBlock& postData_,
                     URL::OpenStreamProgressCallback* progressCallback, void* progressCallbackContext,
-                    const String& headers_, int timeOutMs_, StringPairArray* responseHeaders)
-      : address (address_), headers (headers_), postData (postData_), position (0),
-        finished (false), isPost (isPost_), timeOutMs (timeOutMs_)
+                    const String& headers_, int timeOutMs_, StringPairArray* responseHeaders,
+                    const int numRedirectsToFollow_, const String& httpRequestCmd_)
+      : statusCode (0), address (address_), headers (headers_), postData (postData_), position (0),
+        finished (false), isPost (isPost_), timeOutMs (timeOutMs_),
+        numRedirectsToFollow (numRedirectsToFollow_), httpRequestCmd (httpRequestCmd_)
     {
         JUCE_AUTORELEASEPOOL
         {
             createConnection (progressCallback, progressCallbackContext);
 
-            if (responseHeaders != nullptr && connection != nullptr && connection->headers != nil)
+            if (connection != nullptr && connection->headers != nil)
             {
-                NSEnumerator* enumerator = [connection->headers keyEnumerator];
-                NSString* key;
+                statusCode = connection->statusCode;
 
-                while ((key = [enumerator nextObject]) != nil)
-                    responseHeaders->set (nsStringToJuce (key),
-                                          nsStringToJuce ((NSString*) [connection->headers objectForKey: key]));
+                if (responseHeaders != nullptr)
+                {
+                    NSEnumerator* enumerator = [connection->headers keyEnumerator];
+
+                    while (NSString* key = [enumerator nextObject])
+                        responseHeaders->set (nsStringToJuce (key),
+                                              nsStringToJuce ((NSString*) [connection->headers objectForKey: key]));
+                }
             }
         }
     }
@@ -341,7 +387,7 @@ public:
 
         JUCE_AUTORELEASEPOOL
         {
-            const int bytesRead = connection->read (static_cast <char*> (buffer), bytesToRead);
+            const int bytesRead = connection->read (static_cast<char*> (buffer), bytesToRead);
             position += bytesRead;
 
             if (bytesRead == 0)
@@ -370,6 +416,8 @@ public:
         return true;
     }
 
+    int statusCode;
+
 private:
     ScopedPointer<URLConnectionState> connection;
     String address, headers;
@@ -378,9 +426,10 @@ private:
     bool finished;
     const bool isPost;
     const int timeOutMs;
+    const int numRedirectsToFollow;
+    String httpRequestCmd;
 
-    void createConnection (URL::OpenStreamProgressCallback* progressCallback,
-                           void* progressCallbackContext)
+    void createConnection (URL::OpenStreamProgressCallback* progressCallback, void* progressCallbackContext)
     {
         jassert (connection == nullptr);
 
@@ -390,7 +439,7 @@ private:
 
         if (req != nil)
         {
-            [req setHTTPMethod: nsStringLiteral (isPost ? "POST" : "GET")];
+            [req setHTTPMethod: [NSString stringWithUTF8String: httpRequestCmd.toRawUTF8()]];
             //[req setCachePolicy: NSURLRequestReloadIgnoringLocalAndRemoteCacheData];
 
             StringArray headerLines;
@@ -410,7 +459,7 @@ private:
                 [req setHTTPBody: [NSData dataWithBytes: postData.getData()
                                                  length: postData.getSize()]];
 
-            connection = new URLConnectionState (req);
+            connection = new URLConnectionState (req, numRedirectsToFollow);
 
             if (! connection->start (progressCallback, progressCallbackContext))
                 connection = nullptr;
@@ -419,14 +468,3 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WebInputStream)
 };
-
-InputStream* URL::createNativeStream (const String& address, bool isPost, const MemoryBlock& postData,
-                                      OpenStreamProgressCallback* progressCallback, void* progressCallbackContext,
-                                      const String& headers, const int timeOutMs, StringPairArray* responseHeaders)
-{
-    ScopedPointer <WebInputStream> wi (new WebInputStream (address, isPost, postData,
-                                                           progressCallback, progressCallbackContext,
-                                                           headers, timeOutMs, responseHeaders));
-
-    return wi->isError() ? nullptr : wi.release();
-}

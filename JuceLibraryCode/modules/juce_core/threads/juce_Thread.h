@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -53,8 +53,14 @@ public:
 
         When first created, the thread is not running. Use the startThread()
         method to start it.
+
+        @param threadName       The name of the thread which typically appears in
+                                debug logs and profiles.
+        @param threadStackSize  The size of the stack of the thread. If this value
+                                is zero then the default stack size of the OS will
+                                be used.
     */
-    explicit Thread (const String& threadName);
+    explicit Thread (const String& threadName, size_t threadStackSize = 0);
 
     /** Destructor.
 
@@ -235,7 +241,7 @@ public:
     /** Finds the thread object that is currently running.
 
         Note that the main UI thread (or other non-Juce threads) don't have a Thread
-        object associated with them, so this will return 0.
+        object associated with them, so this will return nullptr.
     */
     static Thread* JUCE_CALLTYPE getCurrentThread();
 
@@ -270,6 +276,7 @@ private:
     CriticalSection startStopLock;
     WaitableEvent startSuspensionEvent, defaultEvent;
     int threadPriority;
+    size_t threadStackSize;
     uint32 affinityMask;
     bool volatile shouldExit;
 

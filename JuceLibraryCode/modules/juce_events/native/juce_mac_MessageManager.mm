@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission is granted to use this software under the terms of either:
    a) the GPL v2 (or any later version)
@@ -53,7 +53,7 @@ public:
 
             [[NSDistributedNotificationCenter defaultCenter] addObserver: delegate
                                                                 selector: @selector (broadcastMessageCallback:)
-                                                                    name: getBroacastEventName()
+                                                                    name: getBroadcastEventName()
                                                                   object: nil];
         }
         else
@@ -79,14 +79,14 @@ public:
             [NSApp setDelegate: nil];
 
             [[NSDistributedNotificationCenter defaultCenter] removeObserver: delegate
-                                                                       name: getBroacastEventName()
+                                                                       name: getBroadcastEventName()
                                                                      object: nil];
         }
 
         [delegate release];
     }
 
-    static NSString* getBroacastEventName()
+    static NSString* getBroadcastEventName()
     {
         return juceStringToNS ("juce_" + String::toHexString (File::getSpecialLocation (File::currentExecutableFile).hashCode64()));
     }
@@ -96,26 +96,36 @@ public:
 
 private:
     //==============================================================================
-    struct AppDelegateClass   : public ObjCClass <NSObject>
+    struct AppDelegateClass   : public ObjCClass<NSObject>
     {
-        AppDelegateClass()  : ObjCClass <NSObject> ("JUCEAppDelegate_")
+        AppDelegateClass()  : ObjCClass<NSObject> ("JUCEAppDelegate_")
         {
-            addMethod (@selector (applicationShouldTerminate:),   applicationShouldTerminate, "I@:@");
-            addMethod (@selector (applicationWillTerminate:),     applicationWillTerminate,   "v@:@");
-            addMethod (@selector (application:openFile:),         application_openFile,       "c@:@@");
-            addMethod (@selector (application:openFiles:),        application_openFiles,      "v@:@@");
-            addMethod (@selector (applicationDidBecomeActive:),   applicationDidBecomeActive, "v@:@");
-            addMethod (@selector (applicationDidResignActive:),   applicationDidResignActive, "v@:@");
-            addMethod (@selector (applicationWillUnhide:),        applicationWillUnhide,      "v@:@");
-            addMethod (@selector (broadcastMessageCallback:),     broadcastMessageCallback,   "v@:@");
-            addMethod (@selector (mainMenuTrackingBegan:),        mainMenuTrackingBegan,      "v@:@");
-            addMethod (@selector (mainMenuTrackingEnded:),        mainMenuTrackingEnded,      "v@:@");
-            addMethod (@selector (dummyMethod),                   dummyMethod,                "v@:");
+            addMethod (@selector (applicationWillFinishLaunching:), applicationWillFinishLaunching, "v@:@@");
+            addMethod (@selector (getUrl:withReplyEvent:),          getUrl_withReplyEvent,          "v@:@@");
+            addMethod (@selector (applicationShouldTerminate:),     applicationShouldTerminate,     "I@:@");
+            addMethod (@selector (applicationWillTerminate:),       applicationWillTerminate,       "v@:@");
+            addMethod (@selector (application:openFile:),           application_openFile,           "c@:@@");
+            addMethod (@selector (application:openFiles:),          application_openFiles,          "v@:@@");
+            addMethod (@selector (applicationDidBecomeActive:),     applicationDidBecomeActive,     "v@:@");
+            addMethod (@selector (applicationDidResignActive:),     applicationDidResignActive,     "v@:@");
+            addMethod (@selector (applicationWillUnhide:),          applicationWillUnhide,          "v@:@");
+            addMethod (@selector (broadcastMessageCallback:),       broadcastMessageCallback,       "v@:@");
+            addMethod (@selector (mainMenuTrackingBegan:),          mainMenuTrackingBegan,          "v@:@");
+            addMethod (@selector (mainMenuTrackingEnded:),          mainMenuTrackingEnded,          "v@:@");
+            addMethod (@selector (dummyMethod),                     dummyMethod,                    "v@:");
 
             registerClass();
         }
 
     private:
+        static void applicationWillFinishLaunching (id self, SEL, NSApplication*, NSNotification*)
+        {
+            [[NSAppleEventManager sharedAppleEventManager] setEventHandler: self
+                                                               andSelector: @selector (getUrl:withReplyEvent:)
+                                                             forEventClass: kInternetEventClass
+                                                                andEventID: kAEGetURL];
+        }
+
         static NSApplicationTerminateReply applicationShouldTerminate (id /*self*/, SEL, NSApplication*)
         {
             if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
@@ -150,8 +160,9 @@ private:
             if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
             {
                 StringArray files;
-                for (unsigned int i = 0; i < [filenames count]; ++i)
-                    files.add (quotedIfContainsSpaces ((NSString*) [filenames objectAtIndex: i]));
+
+                for (NSString* f in filenames)
+                    files.add (quotedIfContainsSpaces (f));
 
                 if (files.size() > 0)
                     app->anotherInstanceStarted (files.joinIntoString (" "));
@@ -183,11 +194,16 @@ private:
 
         static void dummyMethod (id /*self*/, SEL) {}   // (used as a way of running a dummy thread)
 
-    private:
         static void focusChanged()
         {
             if (appFocusChangeCallback != nullptr)
                 (*appFocusChangeCallback)();
+        }
+
+        static void getUrl_withReplyEvent (id /*self*/, SEL, NSAppleEventDescriptor* event, NSAppleEventDescriptor*)
+        {
+            if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
+                app->anotherInstanceStarted (quotedIfContainsSpaces ([[event paramDescriptorForKeyword: keyDirectObject] stringValue]));
         }
 
         static String quotedIfContainsSpaces (NSString* file)
@@ -223,7 +239,7 @@ void MessageManager::runDispatchLoop()
             {
                 // An AppKit exception will kill the app, but at least this provides a chance to log it.,
                 std::runtime_error ex (std::string ("NSException: ") + [[e name] UTF8String] + ", Reason:" + [[e reason] UTF8String]);
-                JUCEApplication::sendUnhandledException (&ex, __FILE__, __LINE__);
+                JUCEApplicationBase::sendUnhandledException (&ex, __FILE__, __LINE__);
             }
             @finally
             {
@@ -236,15 +252,34 @@ void MessageManager::runDispatchLoop()
     }
 }
 
-void MessageManager::stopDispatchLoop()
+static void shutdownNSApp()
 {
-    jassert (isThisTheMessageThread()); // must only be called by the message thread
-
-    quitMessagePosted = true;
-   #if ! JUCE_PROJUCER_LIVE_BUILD
     [NSApp stop: nil];
     [NSApp activateIgnoringOtherApps: YES]; // (if the app is inactive, it sits there and ignores the quit request until the next time it gets activated)
-    [NSEvent startPeriodicEventsAfterDelay: 0 withPeriod: 0.1];
+    [NSEvent startPeriodicEventsAfterDelay: 0  withPeriod: 0.1];
+}
+
+void MessageManager::stopDispatchLoop()
+{
+   #if JUCE_PROJUCER_LIVE_BUILD
+    quitMessagePosted = true;
+   #else
+
+    if (isThisTheMessageThread())
+    {
+        quitMessagePosted = true;
+        shutdownNSApp();
+    }
+    else
+    {
+        struct QuitCallback  : public CallbackMessage
+        {
+            QuitCallback() {}
+            void messageCallback() override    { MessageManager::getInstance()->stopDispatchLoop(); }
+        };
+
+        (new QuitCallback())->post();
+    }
    #endif
 }
 
@@ -295,14 +330,6 @@ void MessageManager::doPlatformSpecificInitialisation()
 {
     if (appDelegate == nil)
         appDelegate = new AppDelegate();
-
-   #if ! (defined (MAC_OS_X_VERSION_10_5) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
-    // This launches a dummy thread, which forces Cocoa to initialise NSThreads correctly (needed prior to 10.5)
-    if (! [NSThread isMultiThreaded])
-        [NSThread detachNewThreadSelector: @selector (dummyMethod)
-                                 toTarget: appDelegate->delegate
-                               withObject: nil];
-   #endif
 }
 
 void MessageManager::doPlatformSpecificShutdown()
@@ -323,7 +350,78 @@ void MessageManager::broadcastMessage (const String& message)
     NSDictionary* info = [NSDictionary dictionaryWithObject: juceStringToNS (message)
                                                      forKey: nsStringLiteral ("message")];
 
-    [[NSDistributedNotificationCenter defaultCenter] postNotificationName: AppDelegate::getBroacastEventName()
+    [[NSDistributedNotificationCenter defaultCenter] postNotificationName: AppDelegate::getBroadcastEventName()
                                                                    object: nil
                                                                  userInfo: info];
 }
+
+// Special function used by some plugin classes to re-post carbon events
+void repostCurrentNSEvent();
+void repostCurrentNSEvent()
+{
+    struct EventReposter  : public CallbackMessage
+    {
+        EventReposter() : e ([[NSApp currentEvent] retain])  {}
+        ~EventReposter()  { [e release]; }
+
+        void messageCallback() override
+        {
+            [NSApp postEvent: e atStart: YES];
+        }
+
+        NSEvent* e;
+    };
+
+    (new EventReposter())->post();
+}
+
+
+//==============================================================================
+#if JUCE_MAC
+struct MountedVolumeListChangeDetector::Pimpl
+{
+    Pimpl (MountedVolumeListChangeDetector& d)  : owner (d)
+    {
+        static ObserverClass cls;
+        delegate = [cls.createInstance() init];
+        ObserverClass::setOwner (delegate, this);
+
+        NSNotificationCenter* nc = [[NSWorkspace sharedWorkspace] notificationCenter];
+
+        [nc addObserver: delegate selector: @selector (changed:) name: NSWorkspaceDidMountNotification   object: nil];
+        [nc addObserver: delegate selector: @selector (changed:) name: NSWorkspaceDidUnmountNotification object: nil];
+    }
+
+    ~Pimpl()
+    {
+        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver: delegate];
+        [delegate release];
+    }
+
+private:
+    MountedVolumeListChangeDetector& owner;
+    id delegate;
+
+    struct ObserverClass   : public ObjCClass<NSObject>
+    {
+        ObserverClass()  : ObjCClass<NSObject> ("JUCEDriveObserver_")
+        {
+            addIvar<Pimpl*> ("owner");
+            addMethod (@selector (changed:), changed, "v@:@");
+            addProtocol (@protocol (NSTextInput));
+            registerClass();
+        }
+
+        static Pimpl* getOwner (id self)                { return getIvar<Pimpl*> (self, "owner"); }
+        static void setOwner (id self, Pimpl* owner)    { object_setInstanceVariable (self, "owner", owner); }
+
+        static void changed (id self, SEL, NSNotification*)
+        {
+            getOwner (self)->owner.mountedVolumeListChanged();
+        }
+    };
+};
+
+MountedVolumeListChangeDetector::MountedVolumeListChangeDetector()  { pimpl = new Pimpl (*this); }
+MountedVolumeListChangeDetector::~MountedVolumeListChangeDetector() {}
+#endif

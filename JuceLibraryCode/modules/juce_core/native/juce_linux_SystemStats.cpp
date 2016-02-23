@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the juce_core module of the JUCE library.
-   Copyright (c) 2013 - Raw Material Software Ltd.
+   Copyright (c) 2015 - ROLI Ltd.
 
    Permission to use, copy, modify, and/or distribute this software for any purpose with
    or without fee is hereby granted, provided that the above copyright notice and this
@@ -55,22 +55,37 @@ bool SystemStats::isOperatingSystem64Bit()
 //==============================================================================
 namespace LinuxStatsHelpers
 {
-    String getCpuInfo (const char* const key)
+    String getConfigFileValue (const char* file, const char* const key)
     {
         StringArray lines;
-        File ("/proc/cpuinfo").readLines (lines);
+        File (file).readLines (lines);
 
         for (int i = lines.size(); --i >= 0;) // (NB - it's important that this runs in reverse order)
-            if (lines[i].startsWithIgnoreCase (key))
+            if (lines[i].upToFirstOccurrenceOf (":", false, false).trim().equalsIgnoreCase (key))
                 return lines[i].fromFirstOccurrenceOf (":", false, false).trim();
 
-        return String::empty;
+        return String();
     }
+
+    String getCpuInfo (const char* key)
+    {
+        return getConfigFileValue ("/proc/cpuinfo", key);
+    }
+}
+
+String SystemStats::getDeviceDescription()
+{
+    return LinuxStatsHelpers::getCpuInfo ("Hardware");
 }
 
 String SystemStats::getCpuVendor()
 {
-    return LinuxStatsHelpers::getCpuInfo ("vendor_id");
+    String v (LinuxStatsHelpers::getCpuInfo ("vendor_id"));
+
+    if (v.isEmpty())
+        v = LinuxStatsHelpers::getCpuInfo ("model name");
+
+    return v;
 }
 
 int SystemStats::getCpuSpeedInMegaherz()
@@ -83,26 +98,26 @@ int SystemStats::getMemorySizeInMegabytes()
     struct sysinfo sysi;
 
     if (sysinfo (&sysi) == 0)
-        return sysi.totalram * sysi.mem_unit / (1024 * 1024);
+        return (int) (sysi.totalram * sysi.mem_unit / (1024 * 1024));
 
     return 0;
 }
 
 int SystemStats::getPageSize()
 {
-    return sysconf (_SC_PAGESIZE);
+    return (int) sysconf (_SC_PAGESIZE);
 }
 
 //==============================================================================
 String SystemStats::getLogonName()
 {
-    const char* user = getenv ("USER");
+    if (const char* user = getenv ("USER"))
+        return CharPointer_UTF8 (user);
 
-    if (user == nullptr)
-        if (passwd* const pw = getpwuid (getuid()))
-            user = pw->pw_name;
+    if (struct passwd* const pw = getpwuid (getuid()))
+        return CharPointer_UTF8 (pw->pw_name);
 
-    return CharPointer_UTF8 (user);
+    return String();
 }
 
 String SystemStats::getFullUserName()
@@ -116,7 +131,7 @@ String SystemStats::getComputerName()
     if (gethostname (name, sizeof (name) - 1) == 0)
         return name;
 
-    return String::empty;
+    return String();
 }
 
 static String getLocaleValue (nl_item key)
@@ -129,7 +144,7 @@ static String getLocaleValue (nl_item key)
 
 String SystemStats::getUserLanguage()    { return getLocaleValue (_NL_IDENTIFICATION_LANGUAGE); }
 String SystemStats::getUserRegion()      { return getLocaleValue (_NL_IDENTIFICATION_TERRITORY); }
-String SystemStats::getDisplayLanguage() { return getUserLanguage(); }
+String SystemStats::getDisplayLanguage() { return getUserLanguage() + "-" + getUserRegion(); }
 
 //==============================================================================
 void CPUInformation::initialise() noexcept
@@ -140,6 +155,11 @@ void CPUInformation::initialise() noexcept
     hasSSE2  = flags.contains ("sse2");
     hasSSE3  = flags.contains ("sse3");
     has3DNow = flags.contains ("3dnow");
+    hasSSSE3 = flags.contains ("ssse3");
+    hasSSE41 = flags.contains ("sse4_1");
+    hasSSE42 = flags.contains ("sse4_2");
+    hasAVX   = flags.contains ("avx");
+    hasAVX2  = flags.contains ("avx2");
 
     numCpus = LinuxStatsHelpers::getCpuInfo ("processor").getIntValue() + 1;
 }
@@ -150,7 +170,7 @@ uint32 juce_millisecondsSinceStartup() noexcept
     timespec t;
     clock_gettime (CLOCK_MONOTONIC, &t);
 
-    return t.tv_sec * 1000 + t.tv_nsec / 1000000;
+    return (uint32) (t.tv_sec * 1000 + t.tv_nsec / 1000000);
 }
 
 int64 Time::getHighResolutionTicks() noexcept
@@ -178,4 +198,14 @@ bool Time::setSystemTimeToThisTime() const
     t.tv_usec = (millisSinceEpoch - t.tv_sec * 1000) * 1000;
 
     return settimeofday (&t, 0) == 0;
+}
+
+JUCE_API bool JUCE_CALLTYPE juce_isRunningUnderDebugger() noexcept
+{
+   #if JUCE_BSD
+    return false;
+   #else
+    return LinuxStatsHelpers::getConfigFileValue ("/proc/self/status", "TracerPid")
+             .getIntValue() > 0;
+   #endif
 }
