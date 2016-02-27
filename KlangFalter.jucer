@@ -13,7 +13,7 @@
               buildVST3="0" pluginIsMidiEffectPlugin="0" includeBinaryInAppConfig="1">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" extraCompilerFlags=""
-               extraFrameworks="Accelerate" extraDefs="BLA_AUDIOFFT_APPLE_ACCELERATE=1">
+               extraFrameworks="Accelerate" extraDefs="AUDIOFFT_APPLE_ACCELERATE=1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="KlangFalter"
                        osxSDK="default" osxCompatibility="default" osxArchitecture="default"
