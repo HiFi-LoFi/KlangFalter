@@ -209,6 +209,9 @@ public:
     */
     int getKeyStartPosition (int midiNoteNumber) const;
 
+    /** Returns the total width needed to fit all the keys in the available range. */
+    int getTotalKeyboardWidth() const noexcept;
+
     /** Returns the key at a given coordinate. */
     int getNoteAtPosition (Point<int> position);
 
@@ -359,7 +362,7 @@ protected:
     */
     virtual void mouseUpOnKey (int midiNoteNumber, const MouseEvent& e);
 
-    /** Calculates the positon of a given midi-note.
+    /** Calculates the position of a given midi-note.
 
         This can be overridden to create layouts with custom key-widths.
 

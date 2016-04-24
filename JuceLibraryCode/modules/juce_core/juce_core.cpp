@@ -43,6 +43,7 @@
 
 #include <locale>
 #include <cctype>
+#include <cstdarg>
 
 #if ! JUCE_ANDROID
  #include <sys/timeb.h>
@@ -117,7 +118,7 @@
 
 //==============================================================================
 #ifndef    JUCE_STANDALONE_APPLICATION
- JUCE_COMPILER_WARNING ("Please re-save your Introjucer project with the latest Introjucer version to avoid this warning")
+ JUCE_COMPILER_WARNING ("Please re-save your project with the latest Projucer version to avoid this warning")
  #define   JUCE_STANDALONE_APPLICATION 0
 #endif
 
@@ -144,6 +145,7 @@ namespace juce
 #include "maths/juce_Expression.cpp"
 #include "maths/juce_Random.cpp"
 #include "memory/juce_MemoryBlock.cpp"
+#include "misc/juce_RuntimePermissions.cpp"
 #include "misc/juce_Result.cpp"
 #include "misc/juce_Uuid.cpp"
 #include "network/juce_MACAddress.cpp"
@@ -228,6 +230,7 @@ namespace juce
 #include "native/juce_android_Network.cpp"
 #include "native/juce_android_SystemStats.cpp"
 #include "native/juce_android_Threads.cpp"
+#include "native/juce_android_RuntimePermissions.cpp"
 
 #endif
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="guiapp" version="2013.08.31"
-              bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="4.1.0"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="guiapp" version="2016.04.24"
+              bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="4.2.1"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
               pluginManufacturerCode="HiLo" pluginCode="HLKF" pluginChannelConfigs="{1, 1}, {2, 2}, {1, 2}"
@@ -135,4 +135,7 @@
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
   </MODULES>
   <JUCEOPTIONS/>
+  <LIVE_SETTINGS>
+    <OSX/>
+  </LIVE_SETTINGS>
 </JUCERPROJECT>
