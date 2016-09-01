@@ -39,8 +39,8 @@
 namespace ProjectInfo
 {
     const char* const  projectName    = "KlangFalter";
-    const char* const  versionString  = "2016.04.24";
-    const int          versionNumber  = 0x7e00418;
+    const char* const  versionString  = "2016.09.01";
+    const int          versionNumber  = 0x7e00901;
 }
 #endif
 
