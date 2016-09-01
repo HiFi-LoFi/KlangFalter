@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="guiapp" version="2016.09.01"
+<JUCERPROJECT id="IRcjcT" name="KlangFalter" projectType="audioplug" version="2016.09.01"
               bundleIdentifier="com.hifi-lofi.KlangFalter" jucerVersion="4.2.3"
               buildVST="0" buildRTAS="0" buildAU="1" pluginName="KlangFalter"
               pluginDesc="Simple Audio Convolution Plugin" pluginManufacturer="HiFi-LoFi"
@@ -10,7 +10,8 @@
               pluginAUExportPrefix="KlangFalterAU" pluginAUViewClass="KlangFalterAU_V1"
               pluginRTASCategory="" companyName="HiFi-LoFi" aaxIdentifier="com.hifi-lofi.KlangFalter"
               pluginAAXCategory="AAX_ePlugInCategory_Dynamics" buildAAX="0"
-              buildVST3="0" pluginIsMidiEffectPlugin="0" includeBinaryInAppConfig="1">
+              buildVST3="0" pluginIsMidiEffectPlugin="0" includeBinaryInAppConfig="1"
+              buildAUv3="0">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" objCExtraSuffix="C54DO8" extraCompilerFlags=""
                extraFrameworks="Accelerate" extraDefs="AUDIOFFT_APPLE_ACCELERATE=1">
@@ -34,6 +35,7 @@
         <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
         <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
@@ -125,6 +127,7 @@
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
