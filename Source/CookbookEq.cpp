@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 
 
 CookbookEq::CookbookEq (CookbookEq::Type type, float freq, float q) :
