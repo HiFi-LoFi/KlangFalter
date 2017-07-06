@@ -30,8 +30,8 @@ in the really great [distrho](http://distrho.sourceforge.net) distrho project.
 ## Very Short Tutorial: ##
 
 #### Loading impulse responses ####
-- Click on the "Settings" button to adjust the folder which contains your impulse respone files.
-- Click on "Show Browser" and select some impulse response file.
+- Click on the "Settings" button to adjust the folder which contains your impulse response files.
+- Click on "Show Browser" and select some impulse response files.
 - KlangFalter tries to find matching impulse response files automatically by searching for matching file names (e.g. left/right and true stereo).
 - You can load impulse response files for specific channel connections by clicking on the file name beneath the wave form display of the according tab.  
 - You can clear the impulse response of a specific channel connection by clicking on the "X" button of the according tab.
