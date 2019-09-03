@@ -68,9 +68,9 @@ void ChangeNotifier::removeNotificationListener(ChangeNotifier::Listener* listen
 
 void ChangeNotifier::timerCallback()
 {  
-  int zero = 0;
-  const int one = 1;
-  if (_changePending.compare_exchange_strong(zero, one))
+  int one = 1;
+  const int zero = 0;
+  if (_changePending.compare_exchange_strong(one, zero))
   {
     juce::ScopedLock lock(_listenersMutex);    
     // Some "juggling" with a copy to make sure that the callback can add/remove listeners...
