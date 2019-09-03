@@ -40,10 +40,10 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class IRComponent  : public Component,
-                     public ChangeNotifier::Listener,
-                     public ButtonListener,
-                     public ComboBoxListener
+class IRComponent	: public Component,
+					  public ChangeNotifier::Listener,
+					   public Button::Listener,
+					   public ComboBox::Listener
 {
 public:
     //==============================================================================

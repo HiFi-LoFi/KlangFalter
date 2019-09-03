@@ -10,8 +10,7 @@
 
 */
 
-#ifndef __APPHEADERFILE_IRCJCT__
-#define __APPHEADERFILE_IRCJCT__
+#pragma once
 
 #include "AppConfig.h"
 
@@ -40,9 +39,8 @@
 namespace ProjectInfo
 {
     const char* const  projectName    = "KlangFalter";
+    const char* const  companyName    = "HiFi-LoFi";
     const char* const  versionString  = "2016.09.01";
     const int          versionNumber  = 0x7e00901;
 }
 #endif
-
-#endif   // __APPHEADERFILE_IRCJCT__

@@ -39,7 +39,7 @@
                                                                     //[/Comments]
 */
 class SettingsDialogComponent  : public Component,
-                                 public ButtonListener
+	public Button::Listener
 {
 public:
     //==============================================================================

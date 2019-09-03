@@ -47,7 +47,7 @@ public:
         return;
       }
       _convolver.doBackgroundProcessing();
-      _convolver._backgroundProcessingFinished.set(1);
+      _convolver._backgroundProcessingFinished.store(1);
       _convolver._backgroundProcessingFinishedEvent.signal();
     }
   }
@@ -81,7 +81,7 @@ Convolver::~Convolver()
 
 void Convolver::startBackgroundProcessing()
 {
-  _backgroundProcessingFinished.set(0);
+  _backgroundProcessingFinished.store(0);
   _backgroundProcessingFinishedEvent.reset();
   _thread->notify();
 }

@@ -17,7 +17,6 @@
 
 #include "WaveformComponent.h"
 
-#include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"
 #include "../Processor.h"
 
@@ -54,8 +53,7 @@ void WaveformComponent::resized()
 
 void WaveformComponent::updateArea()
 {
-  const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
-  const juce::Font scaleFont = customLookAndFeel.getScaleFont();
+  const juce::Font scaleFont = customLookAndFeel->getScaleFont();
 
   const int marginTop = 0;
   const int widthDbScale = scaleFont.getStringWidth("-XXdB") + 4;
@@ -76,12 +74,11 @@ void WaveformComponent::paint(Graphics& g)
   const int width = getWidth();
   const int height = getHeight();
   
-  const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
-  const juce::Font scaleFont = customLookAndFeel.getScaleFont();
-  const juce::Colour scaleColour = customLookAndFeel.getScaleColour();
+  const juce::Font scaleFont = customLookAndFeel->getScaleFont();
+  const juce::Colour scaleColour = customLookAndFeel->getScaleColour();
   
   // Something to paint?
-  if (!_irAgent || _irAgent->getFile() == juce::File::nonexistent)
+  if (!_irAgent || !_irAgent->getFile().existsAsFile())
   {
     g.setColour(scaleColour);
     g.drawText("No Impulse Response", 0, 0, width, height, Justification(Justification::centred), false);
@@ -91,7 +88,7 @@ void WaveformComponent::paint(Graphics& g)
   const float w = static_cast<float>(width);
   
   // Background
-  g.setColour(customLookAndFeel.getWaveformBackgroundColour());
+  g.setColour(customLookAndFeel->getWaveformBackgroundColour());
   g.fillRect(_area);
   
   // Timeline
@@ -210,7 +207,7 @@ void WaveformComponent::paint(Graphics& g)
   // Waveform
   const size_t xLen = std::min(static_cast<size_t>(w), _maximaDecibels.size());
   const float bottom = static_cast<float>(_area.getBottom());
-  g.setColour(customLookAndFeel.getWaveformColour());
+  g.setColour(customLookAndFeel->getWaveformColour());
   for (size_t x=0; x<xLen; ++x)
   {
     const float top = bottom - (_pxPerDecibel * (_maximaDecibels[x]-DecibelScaling::MinScaleDb()));
@@ -230,7 +227,7 @@ void WaveformComponent::paint(Graphics& g)
     }
     const float envelopeTop = static_cast<float>(_area.getY());
     const int envelopeX = static_cast<int>(predelayPx) + _area.getX() + 1;
-    g.setColour(customLookAndFeel.getEnvelopeRestrictionColour());    
+    g.setColour(customLookAndFeel->getEnvelopeRestrictionColour());    
     g.fillRect(static_cast<float>(_area.getX()+1), envelopeTop, static_cast<float>(predelayPx), static_cast<float>(_area.getHeight()-1));
     for (size_t x=0; x<envelope.size(); ++x)
     {    
@@ -242,7 +239,7 @@ void WaveformComponent::paint(Graphics& g)
   }
   else
   {
-    g.setColour(customLookAndFeel.getEnvelopeRestrictionColour());    
+    g.setColour(customLookAndFeel->getEnvelopeRestrictionColour());    
     g.fillRect(static_cast<float>(_area.getX()+1), static_cast<float>(_area.getY()), w, static_cast<float>(_area.getHeight()-1));
   }
 }

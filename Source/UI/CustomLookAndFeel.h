@@ -25,8 +25,6 @@ class CustomLookAndFeel : public juce::LookAndFeel_V3
 public:
   CustomLookAndFeel();
 
-  static const CustomLookAndFeel& GetCustomLookAndFeel(juce::Component* component);
-
   // Scales
   juce::Font getScaleFont() const;
   juce::Colour getScaleColour() const;
@@ -42,10 +40,6 @@ public:
   // Envelope
   juce::Colour getEnvelopeRestrictionColour() const;
   juce::Colour getEnvelopeNodeColour(bool highlighted) const;
-  
-private:
-  CustomLookAndFeel(const CustomLookAndFeel&) = delete;
-  CustomLookAndFeel& operator=(const CustomLookAndFeel&) = delete;
 };
 
 

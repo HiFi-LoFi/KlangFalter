@@ -38,7 +38,7 @@ public:
   
 private:
   float _decay;
-  juce::Atomic<float> _level;
+  std::atomic<float> _level;
 };
 
 

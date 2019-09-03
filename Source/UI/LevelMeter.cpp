@@ -17,7 +17,6 @@
 
 #include "LevelMeter.h"
 
-#include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"
 
 
@@ -39,7 +38,7 @@ void LevelMeter::paint(Graphics& g)
   if (!_levels.empty())
   {
     const int h = getHeight();
-    g.setColour(CustomLookAndFeel::GetCustomLookAndFeel(this).getScaleColour());
+    g.setColour(customLookAndFeel->getScaleColour());
     const int levelStripWidth = 6;
     for (size_t channel=0; channel<_levels.size(); ++channel)
     {
@@ -61,16 +60,15 @@ void LevelMeter::paint(Graphics& g)
 
 void LevelMeter::resized()
 {
-  const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
   const float h = static_cast<float>(getHeight());
   const double scalePosZeroDb = static_cast<double>(DecibelScaling::Db2Scale(0.0f));
   const double scalePosMinus40Db = static_cast<double>(DecibelScaling::Db2Scale(-40.0f));
-  _colourGradient = ColourGradient(customLookAndFeel.getLevelColourClipping(), 0.0f, 0.0f,
-                                   customLookAndFeel.getLevelColourMinusInfDb(), 0.0f, h-1.0f,
+  _colourGradient = ColourGradient(customLookAndFeel->getLevelColourClipping(), 0.0f, 0.0f,
+                                   customLookAndFeel->getLevelColourMinusInfDb(), 0.0f, h-1.0f,
                                    false);  
-  _colourGradient.addColour(0.999999 - scalePosZeroDb, customLookAndFeel.getLevelColourClipping());
-  _colourGradient.addColour(1.000000 - scalePosZeroDb, customLookAndFeel.getLevelColourZeroDb());
-  _colourGradient.addColour(1.000000 - scalePosMinus40Db, customLookAndFeel.getLevelColourMinus40Db());
+  _colourGradient.addColour(0.999999 - scalePosZeroDb, customLookAndFeel->getLevelColourClipping());
+  _colourGradient.addColour(1.000000 - scalePosZeroDb, customLookAndFeel->getLevelColourZeroDb());
+  _colourGradient.addColour(1.000000 - scalePosMinus40Db, customLookAndFeel->getLevelColourMinus40Db());
 }
 
 

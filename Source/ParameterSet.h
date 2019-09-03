@@ -305,7 +305,7 @@ public:
   template<typename T>
   T getParameter(const TypedParameterDescriptor<T>& parameter) const
   {
-    return parameter.convertFromNormalized(_parameters.find(parameter.getIndex())->second.second.get());
+    return parameter.convertFromNormalized(_parameters.find(parameter.getIndex())->second.second.load());
   }
   
   template<typename T>
@@ -316,7 +316,7 @@ public:
   
   float getNormalizedParameter(int index) const
   {
-    return _parameters.find(index)->second.second.get();
+    return _parameters.find(index)->second.second.load();
   }
   
   bool setNormalizedParameter(int index, float normalizedVal)
@@ -329,7 +329,7 @@ public:
   juce::String getFormattedParameterValue(int index) const
   {
     ParameterMap::const_iterator it = _parameters.find(index);
-    return it->second.first->formatFromNormalized(it->second.second.get());
+    return it->second.first->formatFromNormalized(it->second.second.load());
   }
   
   const ParameterDescriptor& getParameterDescriptor(int index) const
@@ -343,7 +343,7 @@ public:
   }
   
 private:  
-  typedef std::map<int, std::pair<const ParameterDescriptor*, juce::Atomic<float> > > ParameterMap;
+  typedef std::map<int, std::pair<const ParameterDescriptor*, std::atomic<float> > > ParameterMap;
   ParameterMap _parameters;
   
   // Prevent uncontrolled usage

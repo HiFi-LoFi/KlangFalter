@@ -48,8 +48,8 @@ class KlangFalterEditor  : public AudioProcessorEditor,
                            public ChangeNotifier::Listener,
                            public ChangeListener,
                            public Timer,
-                           public SliderListener,
-                           public ButtonListener
+                           public Slider::Listener,
+	                       public Button::Listener
 {
 public:
     //==============================================================================
@@ -76,7 +76,7 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-    CustomLookAndFeel _customLookAndFeel;
+    SharedResourcePointer<CustomLookAndFeel> customLookAndFeel;
     Processor& _processor;
     juce::Component::SafePointer<juce::DialogWindow> _settingsDialogWindow;
     std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents;

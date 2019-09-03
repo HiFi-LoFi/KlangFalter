@@ -41,7 +41,7 @@ private:
   friend class ConvolverBackgroundThread;
   
   juce::ScopedPointer<juce::Thread> _thread;
-  juce::Atomic<uint32> _backgroundProcessingFinished;
+  std::atomic<uint32> _backgroundProcessingFinished;
   juce::WaitableEvent _backgroundProcessingFinishedEvent;
 };
 

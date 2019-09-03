@@ -21,6 +21,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"
 
 
@@ -28,6 +29,9 @@ class DecibelScale : public Component
 {
 public:
   virtual void paint(Graphics& g);
+
+private:
+  SharedResourcePointer<CustomLookAndFeel> customLookAndFeel;
 };
 
 

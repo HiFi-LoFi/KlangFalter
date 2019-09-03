@@ -181,7 +181,7 @@ private:
   SmoothValue<float> _wetOn;
   SmoothValue<float> _dryGain;
   SmoothValue<float> _wetGain;
-  juce::Atomic<float> _beatsPerMinute;
+  std::atomic<float> _beatsPerMinute;
 
   mutable juce::CriticalSection _irCalculationMutex;
   juce::ScopedPointer<juce::Thread> _irCalculation;
