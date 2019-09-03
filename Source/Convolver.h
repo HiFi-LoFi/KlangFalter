@@ -21,7 +21,7 @@
 // We need to include this before the Juce includes due to some
 // name clashes with Apple system headers, for more information see:
 // http://www.juce.com/forum/topic/reference-point-ambiguous
-#include "fftconvolver/TwoStageFFTConvolver.h"
+#include "FFTConvolver/TwoStageFFTConvolver.h"
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
