@@ -59,25 +59,25 @@ void IRBrowserComponent::init(Processor* processor)
 
   if (!_timeSliceThread)
   {
-    _timeSliceThread = new juce::TimeSliceThread("IRBrowserThread");
+    _timeSliceThread.reset(new juce::TimeSliceThread("IRBrowserThread"));
     _timeSliceThread->startThread();
   }
   
   juce::AudioFormatManager formatManager;
   formatManager.registerBasicFormats();
-  _fileFilter = new juce::WildcardFileFilter(formatManager.getWildcardForAllFormats(),
+  _fileFilter.reset(new juce::WildcardFileFilter(formatManager.getWildcardForAllFormats(),
                                                                       "*",
-                                                                      "Audio Files");
+                                                                      "Audio Files"));
   
-  _directoryContent = new juce::DirectoryContentsList(_fileFilter, *_timeSliceThread);
+  _directoryContent.reset(new juce::DirectoryContentsList(_fileFilter.get(), *_timeSliceThread));
   _directoryContent->setDirectory(settings ? settings->getImpulseResponseDirectory() : juce::File(), true, true);
   
-  _fileTreeComponent = new juce::FileTreeComponent(*_directoryContent);
+  _fileTreeComponent.reset(new juce::FileTreeComponent(*_directoryContent));
   _fileTreeComponent->addListener(this);
-  addAndMakeVisible(_fileTreeComponent);
+  addAndMakeVisible(_fileTreeComponent.get());
   
-  _infoLabel = new juce::Label();
-  addAndMakeVisible(_infoLabel);
+  _infoLabel.reset(new juce::Label());
+  addAndMakeVisible(_infoLabel.get());
 
   updateLayout();
 }
@@ -287,7 +287,7 @@ bool IRBrowserComponent::readAudioFileInfo(const juce::File& file, size_t& chann
 {
   juce::AudioFormatManager formatManager;
   formatManager.registerBasicFormats();
-  juce::ScopedPointer<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
+  std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
   if (reader)
   {
     channelCount = static_cast<size_t>(reader->numChannels);

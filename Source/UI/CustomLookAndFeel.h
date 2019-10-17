@@ -18,7 +18,7 @@
 #ifndef _CUSTOMLOOKANDFEEL_H
 #define _CUSTOMLOOKANDFEEL_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 class CustomLookAndFeel : public juce::LookAndFeel_V3
 {

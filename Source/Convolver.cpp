@@ -68,7 +68,7 @@ Convolver::Convolver() :
   _backgroundProcessingFinished(1),
   _backgroundProcessingFinishedEvent(true)
 {
-  _thread = new ConvolverBackgroundThread(*this);
+  _thread.reset(new ConvolverBackgroundThread(*this));
   _backgroundProcessingFinishedEvent.signal();
 }
 

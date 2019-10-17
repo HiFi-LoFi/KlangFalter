@@ -23,7 +23,7 @@
 #define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_F5E4498E__
 
 //[Headers]     -- You can add your own extra header files here --
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "CustomLookAndFeel.h"
 #include "DecibelScale.h"

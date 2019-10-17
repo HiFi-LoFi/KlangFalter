@@ -18,7 +18,7 @@
 #ifndef _SETTINGS_H
 #define _SETTINGS_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 
 class Settings

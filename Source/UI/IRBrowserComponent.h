@@ -19,7 +19,7 @@
 #define _IRBROWSERCOMPONENT_H
 
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "../Processor.h"
 #include "../Settings.h"
@@ -59,11 +59,11 @@ private:
                                          const size_t sampleCount,
                                          const double sampleRate) const;
 
-  juce::ScopedPointer<juce::TimeSliceThread> _timeSliceThread;
-  juce::ScopedPointer<juce::FileFilter> _fileFilter;
-  juce::ScopedPointer<juce::DirectoryContentsList> _directoryContent;
-  juce::ScopedPointer<juce::FileTreeComponent> _fileTreeComponent;
-  juce::ScopedPointer<juce::Label> _infoLabel;
+  std::unique_ptr<juce::TimeSliceThread> _timeSliceThread;
+  std::unique_ptr<juce::FileFilter> _fileFilter;
+  std::unique_ptr<juce::DirectoryContentsList> _directoryContent;
+  std::unique_ptr<juce::FileTreeComponent> _fileTreeComponent;
+  std::unique_ptr<juce::Label> _infoLabel;
   Processor* _processor;
   
   IRBrowserComponent(const IRBrowserComponent&);

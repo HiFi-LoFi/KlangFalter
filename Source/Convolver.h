@@ -23,7 +23,7 @@
 // http://www.juce.com/forum/topic/reference-point-ambiguous
 #include "FFTConvolver/TwoStageFFTConvolver.h"
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 
 
@@ -40,7 +40,7 @@ protected:
 private:
   friend class ConvolverBackgroundThread;
   
-  juce::ScopedPointer<juce::Thread> _thread;
+  std::unique_ptr<juce::Thread> _thread;
   std::atomic<uint32> _backgroundProcessingFinished;
   juce::WaitableEvent _backgroundProcessingFinishedEvent;
 };

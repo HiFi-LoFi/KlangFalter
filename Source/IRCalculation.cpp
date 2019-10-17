@@ -227,10 +227,10 @@ void IRCalculation::run()
   _processor.setParameter(Parameters::AutoGainDecibels, DecibelScaling::Gain2Db(autoGain));
   for (size_t i=0; i<agents.size(); ++i)
   {
-    juce::ScopedPointer<Convolver> convolver(new Convolver());
+    std::unique_ptr<Convolver> convolver(new Convolver());
     if (buffers[i] != nullptr && buffers[i]->getSize() > 0)
     {        
-      convolver = new Convolver();
+      convolver.reset(new Convolver());
       const bool successInit = convolver->init(headBlockSize, tailBlockSize, buffers[i]->data(), buffers[i]->getSize());
       if (!successInit || threadShouldExit())
       {

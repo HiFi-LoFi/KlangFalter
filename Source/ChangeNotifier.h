@@ -18,7 +18,7 @@
 #ifndef _CHANGENOTIFIER_H
 #define _CHANGENOTIFIER_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include <set>
 

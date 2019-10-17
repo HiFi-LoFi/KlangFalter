@@ -189,13 +189,15 @@ SettingsDialogComponent::SettingsDialogComponent (Processor& processor)
 
     //[UserPreSize]
     const juce::File irDirectory = _processor.getSettings().getImpulseResponseDirectory();
-    _irDirectoryBrowserComponent = new juce::FileBrowserComponent(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories | juce::FileBrowserComponent::filenameBoxIsReadOnly,
-        irDirectory,
-        nullptr,
-        nullptr);
+    _irDirectoryBrowserComponent.reset(new juce::FileBrowserComponent(juce::FileBrowserComponent::openMode |
+                                                                      juce::FileBrowserComponent::canSelectDirectories |
+                                                                      juce::FileBrowserComponent::filenameBoxIsReadOnly,
+                                                                      irDirectory,
+                                                                      nullptr,
+                                                                      nullptr));
     _irDirectoryBrowserComponent->setFilenameBoxLabel(juce::String("Folder:"));
     _irDirectoryBrowserComponent->setFileName(irDirectory.getFullPathName());
-    _irDirectoryGroupComponent->addAndMakeVisible(_irDirectoryBrowserComponent);
+    _irDirectoryGroupComponent->addAndMakeVisible(_irDirectoryBrowserComponent.get());
     //[/UserPreSize]
 
     setSize(504, 580);

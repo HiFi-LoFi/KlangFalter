@@ -18,7 +18,7 @@
 #ifndef _IRAGENT_H
 #define _IRAGENT_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "ChangeNotifier.h"
 #include "CookbookEq.h"

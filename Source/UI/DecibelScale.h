@@ -19,7 +19,7 @@
 #define _DECIBELSCALE_H
 
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"

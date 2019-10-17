@@ -18,7 +18,7 @@
 #ifndef _PARAMETERS_H
 #define _PARAMETERS_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "ParameterSet.h"
 

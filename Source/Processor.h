@@ -18,7 +18,7 @@
 #ifndef _PROCESSOR_H
 #define _PROCESSOR_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "ChangeNotifier.h"
 #include "IRAgent.h"
@@ -184,7 +184,7 @@ private:
   std::atomic<float> _beatsPerMinute;
 
   mutable juce::CriticalSection _irCalculationMutex;
-  juce::ScopedPointer<juce::Thread> _irCalculation;
+  std::unique_ptr<juce::Thread> _irCalculation;
 
   //==============================================================================
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Processor);

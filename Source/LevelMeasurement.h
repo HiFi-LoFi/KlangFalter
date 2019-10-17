@@ -18,7 +18,7 @@
 #ifndef _LEVELMEASUREMENT_H
 #define _LEVELMEASUREMENT_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include <cstddef>
 

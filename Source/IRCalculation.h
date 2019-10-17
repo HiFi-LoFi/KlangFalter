@@ -18,7 +18,7 @@
 #ifndef _IRMANAGER_H
 #define _IRMANAGER_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "Processor.h"
 

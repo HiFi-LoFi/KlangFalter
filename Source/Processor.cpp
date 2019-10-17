@@ -426,7 +426,7 @@ AudioProcessorEditor* Processor::createEditor()
 void Processor::getStateInformation (MemoryBlock& destData)
 {
   const juce::File irDirectory = _settings.getImpulseResponseDirectory();
-  juce::ScopedPointer<juce::XmlElement> element(SaveState(irDirectory, *this));
+  std::unique_ptr<juce::XmlElement> element(SaveState(irDirectory, *this));
   if (element)
   {
     copyXmlToBinary(*element, destData);
@@ -841,7 +841,7 @@ void Processor::updateConvolvers()
     _irCalculation->stopThread(-1);
     _irCalculation = nullptr;
   }
-  _irCalculation = new IRCalculation(*this);
+  _irCalculation.reset(new IRCalculation(*this));
 }
 
 
