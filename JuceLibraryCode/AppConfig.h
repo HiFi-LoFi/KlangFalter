@@ -40,12 +40,14 @@
 #endif
 
 #ifndef JUCE_REPORT_APP_USAGE
- #define JUCE_REPORT_APP_USAGE 0
+ #define JUCE_REPORT_APP_USAGE 1
 #endif
 
 // END SECTION A
 
 #define JUCE_USE_DARK_SPLASH_SCREEN 1
+
+#define JUCE_PROJUCER_VERSION 0x50405
 
 //==============================================================================
 #define JUCE_MODULE_AVAILABLE_juce_audio_basics             1
@@ -315,7 +317,7 @@
  #define JucePlugin_Build_AAX              0
 #endif
 #ifndef  JucePlugin_Build_Standalone
- #define JucePlugin_Build_Standalone       0
+ #define JucePlugin_Build_Standalone       1
 #endif
 #ifndef  JucePlugin_Build_Unity
  #define JucePlugin_Build_Unity            0
