@@ -66,4 +66,4 @@ KlangFalter doesn't come with any impulse respones, but you can find many free a
 - SSE optimized algorithm
 - Multithreaded convolution engine
 - Written in C++
-- Based on the great [JUCE](http://www.rawmaterialsoftware.com) framework
+- Based on the great [JUCE](http://www.juce.com) framework, updated for JUCE v5.4.4

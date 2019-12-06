@@ -23,7 +23,7 @@
 #define __JUCER_HEADER_SETTINGSDIALOGCOMPONENT_SETTINGSDIALOGCOMPONENT_9545D2EA__
 
 //[Headers]     -- You can add your own extra header files here --
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "../Processor.h"
 //[/Headers]
@@ -39,7 +39,7 @@
                                                                     //[/Comments]
 */
 class SettingsDialogComponent  : public Component,
-                                 public ButtonListener
+	public Button::Listener
 {
 public:
     //==============================================================================
@@ -65,7 +65,7 @@ public:
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     Processor& _processor;
-    juce::ScopedPointer<juce::FileBrowserComponent> _irDirectoryBrowserComponent;
+    std::unique_ptr<juce::FileBrowserComponent> _irDirectoryBrowserComponent;
     //[/UserVariables]
 
     //==============================================================================

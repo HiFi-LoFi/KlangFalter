@@ -18,14 +18,12 @@
 #ifndef _CUSTOMLOOKANDFEEL_H
 #define _CUSTOMLOOKANDFEEL_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 class CustomLookAndFeel : public juce::LookAndFeel_V3
 {
 public:
   CustomLookAndFeel();
-
-  static const CustomLookAndFeel& GetCustomLookAndFeel(juce::Component* component);
 
   // Scales
   juce::Font getScaleFont() const;
@@ -42,10 +40,6 @@ public:
   // Envelope
   juce::Colour getEnvelopeRestrictionColour() const;
   juce::Colour getEnvelopeNodeColour(bool highlighted) const;
-  
-private:
-  CustomLookAndFeel(const CustomLookAndFeel&) = delete;
-  CustomLookAndFeel& operator=(const CustomLookAndFeel&) = delete;
 };
 
 

@@ -19,7 +19,7 @@
 #define _DECIBELSCALING_H
 
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 
 struct DecibelScaling

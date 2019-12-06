@@ -19,7 +19,7 @@
 #define _PERSISTENCE_H
 
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 #include "Processor.h"
 
 

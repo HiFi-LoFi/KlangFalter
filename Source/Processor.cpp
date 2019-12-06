@@ -204,7 +204,7 @@ void Processor::setCurrentProgram (int /*index*/)
 
 const String Processor::getProgramName (int /*index*/)
 {
-  return String::empty;
+  return {};
 }
 
 void Processor::changeProgramName (int /*index*/, const String& /*newName*/)
@@ -251,7 +251,7 @@ void Processor::releaseResources()
 {
   _wetBuffer.setSize(1, 0, false, true, false);
   _convolutionBuffer.clear();
-  _beatsPerMinute.set(0);
+  _beatsPerMinute.store(0);
   notifyAboutChange();
 }
 
@@ -426,7 +426,7 @@ AudioProcessorEditor* Processor::createEditor()
 void Processor::getStateInformation (MemoryBlock& destData)
 {
   const juce::File irDirectory = _settings.getImpulseResponseDirectory();
-  juce::ScopedPointer<juce::XmlElement> element(SaveState(irDirectory, *this));
+  std::unique_ptr<juce::XmlElement> element(SaveState(irDirectory, *this));
   if (element)
   {
     copyXmlToBinary(*element, destData);
@@ -436,7 +436,7 @@ void Processor::getStateInformation (MemoryBlock& destData)
 
 void Processor::setStateInformation (const void* data, int sizeInBytes)
 {
-  juce::ScopedPointer<juce::XmlElement> element(getXmlFromBinary(data, sizeInBytes));
+  auto element = getXmlFromBinary(data, sizeInBytes);
   if (element)
   {
     const juce::File irDirectory = _settings.getImpulseResponseDirectory();
@@ -824,7 +824,7 @@ bool Processor::irAvailable() const
 {
   for (auto it=_agents.begin(); it!=_agents.end(); ++it)
   {
-    if ((*it)->getFile() != File::nonexistent)
+    if ((*it)->getFile().existsAsFile())
     {
       return true;
     }
@@ -841,11 +841,11 @@ void Processor::updateConvolvers()
     _irCalculation->stopThread(-1);
     _irCalculation = nullptr;
   }
-  _irCalculation = new IRCalculation(*this);
+  _irCalculation.reset(new IRCalculation(*this));
 }
 
 
 float Processor::getBeatsPerMinute() const
 {
-  return _beatsPerMinute.get();
+  return _beatsPerMinute.load();
 }

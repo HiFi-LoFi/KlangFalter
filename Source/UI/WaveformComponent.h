@@ -19,8 +19,9 @@
 #define _WAVEFORMCOMPONENT_H
 
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
+#include "CustomLookAndFeel.h"
 #include "../Envelope.h"
 #include "../IRAgent.h"
 
@@ -47,6 +48,7 @@ protected:
   void updateArea();
   
 private:
+  SharedResourcePointer<CustomLookAndFeel> customLookAndFeel;
   IRAgent* _irAgent;
   std::vector<float> _maximaDecibels;
   size_t _irFingerprint;

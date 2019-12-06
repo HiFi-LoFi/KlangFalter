@@ -15,12 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ==================================================================================
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
-
-// This is a dirty trick for switching easily between
-// plug-in builds and development application builds
-#ifndef JucePlugin_Name
+#include "JuceHeader.h"
 
 
 #include "Processor.h"
@@ -159,17 +154,17 @@ public:
       if (reader)
       { 
         // Audio file
-        _audioFileSource = new AudioFormatReaderSource(reader, true);
+        _audioFileSource.reset(new AudioFormatReaderSource(reader, true));
 
         // Audio processor
-        _audioProcessor = createPluginFilter();
+        _audioProcessor.reset(createPluginFilter());
         if (_audioProcessor)
         {
           // UI
-          _editor = dynamic_cast<KlangFalterEditor*>(_audioProcessor->createEditor());
+          _editor.reset(dynamic_cast<KlangFalterEditor*>(_audioProcessor->createEditor()));
           if (_editor)
           {
-            setContentNonOwned(_editor, true);  
+            setContentNonOwned(_editor.get(), true);  
           }
 
           _deviceManager.initialise(2, 2, nullptr, true);
@@ -187,7 +182,7 @@ public:
               }
             }
           }        
-          _audioSourceProcessorPlayer.init(_audioFileSource, _audioProcessor);
+          _audioSourceProcessorPlayer.init(_audioFileSource.get(), _audioProcessor.get());
           _deviceManager.addAudioCallback(&_audioSourceProcessorPlayer);
 
           // Try to reload last session
@@ -231,10 +226,10 @@ public:
   }
 
 private:
-  juce::ScopedPointer<KlangFalterEditor> _editor;  
+  std::unique_ptr<KlangFalterEditor> _editor;  
   AudioDeviceManager _deviceManager;  
-  juce::ScopedPointer<AudioFormatReaderSource> _audioFileSource;
-  juce::ScopedPointer<AudioProcessor> _audioProcessor;
+  std::unique_ptr<AudioFormatReaderSource> _audioFileSource;
+  std::unique_ptr<AudioProcessor> _audioProcessor;
   AudioSourceProcessorPlayer _audioSourceProcessorPlayer;
 
 };
@@ -301,5 +296,3 @@ private:
 
 // This macro generates the main() routine that starts the app.
 START_JUCE_APPLICATION(DevelopmentApplication)
-
-#endif // JucePlugin_Name

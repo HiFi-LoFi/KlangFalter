@@ -26,21 +26,6 @@ CustomLookAndFeel::CustomLookAndFeel() :
 }
 
 
-const CustomLookAndFeel& CustomLookAndFeel::GetCustomLookAndFeel(juce::Component* component)
-{
-  CustomLookAndFeel* customLookAndFeel = component ? dynamic_cast<CustomLookAndFeel*>(&component->getLookAndFeel()) : nullptr;
-  if (customLookAndFeel)
-  {
-    return *customLookAndFeel;
-  }
-  else
-  {
-    static CustomLookAndFeel customLookAndFeel;
-    return customLookAndFeel;
-  }
-}
-
-
 // ==============================================
 // Waveform
 // ==============================================

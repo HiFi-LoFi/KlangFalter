@@ -29,7 +29,7 @@ LevelMeasurement::LevelMeasurement(float decay) :
 
 LevelMeasurement::LevelMeasurement(const LevelMeasurement& other) :
   _decay(other._decay),
-  _level(other._level)
+  _level(other._level.load())
 {
 }
 
@@ -44,7 +44,7 @@ LevelMeasurement& LevelMeasurement::operator=(const LevelMeasurement& other)
   if (this != &other)
   {
     _decay = other._decay;
-    _level = other._level;
+    _level = other._level.load();
   }
   return (*this);
 }
@@ -54,7 +54,7 @@ void LevelMeasurement::process(size_t len, const float* data)
 {
   if (len > 0)
   {
-    float level = _level.get();
+    float level = _level.load();
     if (data)
     {
       for (size_t i=0; i<len; ++i)
@@ -92,18 +92,18 @@ void LevelMeasurement::process(size_t len, const float* data)
         }
       }
     }    
-    _level.set(level);
+    _level.store(level);
   }
 }
 
 
 float LevelMeasurement::getLevel() const
 {
-  return _level.get();
+  return _level.load();
 }
 
 
 void LevelMeasurement::reset()
 {
-  _level.set(0.0f);
+  _level.store(0.0f);
 }

@@ -53,170 +53,154 @@ SettingsDialogComponent::SettingsDialogComponent (Processor& processor)
       _tailBlockSizePrefixLabel (0),
       _tailBlockSizeLabel (0),
       _selectIRDirectoryButton (0),
-      cachedImage_hifilofi_jpg (0)
+      cachedImage_hifilofi_jpg (Image())
 {
-    addAndMakeVisible (_irDirectoryGroupComponent = new GroupComponent (String::empty,
-                                                                        L"Impulse Response Directory"));
-    _irDirectoryGroupComponent->setColour (GroupComponent::textColourId, Colour (0xff202020));
+    addAndMakeVisible(_irDirectoryGroupComponent = new GroupComponent({}, L"Impulse Response Directory"));
+    _irDirectoryGroupComponent->setColour(GroupComponent::textColourId, Colour(0xff202020));
 
-    addAndMakeVisible (_aboutGroupComponent = new GroupComponent (String::empty,
-                                                                  L"About"));
-    _aboutGroupComponent->setColour (GroupComponent::textColourId, Colour (0xff202020));
+    addAndMakeVisible(_aboutGroupComponent = new GroupComponent({}, L"About"));
+    _aboutGroupComponent->setColour(GroupComponent::textColourId, Colour(0xff202020));
 
-    addAndMakeVisible (_nameVersionLabel = new Label (String::empty,
-                                                      L"KlangFalter - Version <Unknown>"));
-    _nameVersionLabel->setFont (Font (15.0000f, Font::plain));
-    _nameVersionLabel->setJustificationType (Justification::centredLeft);
-    _nameVersionLabel->setEditable (false, false, false);
-    _nameVersionLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _nameVersionLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _nameVersionLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_nameVersionLabel = new Label({}, L"KlangFalter - Version <Unknown>"));
+    _nameVersionLabel->setFont(Font(15.0000f, Font::plain));
+    _nameVersionLabel->setJustificationType(Justification::centredLeft);
+    _nameVersionLabel->setEditable(false, false, false);
+    _nameVersionLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _nameVersionLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _nameVersionLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_copyrightLabel = new Label (String::empty,
-                                                    L"Copyright (c) 2013 HiFi-LoFi"));
-    _copyrightLabel->setFont (Font (15.0000f, Font::plain));
-    _copyrightLabel->setJustificationType (Justification::centredLeft);
-    _copyrightLabel->setEditable (false, false, false);
-    _copyrightLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _copyrightLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _copyrightLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_copyrightLabel = new Label({}, L"Copyright (c) 2013 HiFi-LoFi"));
+    _copyrightLabel->setFont(Font(15.0000f, Font::plain));
+    _copyrightLabel->setJustificationType(Justification::centredLeft);
+    _copyrightLabel->setEditable(false, false, false);
+    _copyrightLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _copyrightLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _copyrightLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_licenseHyperlink = new HyperlinkButton (L"Licensed under GPL3",
-                                                                URL (L"http://www.gnu.org/licenses")));
-    _licenseHyperlink->setTooltip (L"http://www.gnu.org/licenses");
-    _licenseHyperlink->setButtonText (L"Licensed under GPL3");
+    addAndMakeVisible(_licenseHyperlink = new HyperlinkButton(L"Licensed under GPL3", URL(L"http://www.gnu.org/licenses")));
+    _licenseHyperlink->setTooltip(L"http://www.gnu.org/licenses");
+    _licenseHyperlink->setButtonText(L"Licensed under GPL3");
 
-    addAndMakeVisible (_infoGroupComponent = new GroupComponent (String::empty,
-                                                                 L"Plugin Information"));
-    _infoGroupComponent->setColour (GroupComponent::textColourId, Colour (0xff202020));
+    addAndMakeVisible(_infoGroupComponent = new GroupComponent({}, L"Plugin Information"));
+    _infoGroupComponent->setColour(GroupComponent::textColourId, Colour(0xff202020));
 
-    addAndMakeVisible (_juceVersionPrefixLabel = new Label (String::empty,
-                                                            L"JUCE Version:"));
-    _juceVersionPrefixLabel->setFont (Font (15.0000f, Font::plain));
-    _juceVersionPrefixLabel->setJustificationType (Justification::centredLeft);
-    _juceVersionPrefixLabel->setEditable (false, false, false);
-    _juceVersionPrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _juceVersionPrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _juceVersionPrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_juceVersionPrefixLabel = new Label({}, L"JUCE Version:"));
+    _juceVersionPrefixLabel->setFont(Font(15.0000f, Font::plain));
+    _juceVersionPrefixLabel->setJustificationType(Justification::centredLeft);
+    _juceVersionPrefixLabel->setEditable(false, false, false);
+    _juceVersionPrefixLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _juceVersionPrefixLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _juceVersionPrefixLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_juceVersionLabel = new Label (String::empty,
-                                                      L"<Unknown>"));
-    _juceVersionLabel->setFont (Font (15.0000f, Font::plain));
-    _juceVersionLabel->setJustificationType (Justification::centredLeft);
-    _juceVersionLabel->setEditable (false, false, false);
-    _juceVersionLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _juceVersionLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _juceVersionLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_juceVersionLabel = new Label({}, L"<Unknown>"));
+    _juceVersionLabel->setFont(Font(15.0000f, Font::plain));
+    _juceVersionLabel->setJustificationType(Justification::centredLeft);
+    _juceVersionLabel->setEditable(false, false, false);
+    _juceVersionLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _juceVersionLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _juceVersionLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_numberInputsPrefixLabel = new Label (String::empty,
-                                                             L"Input Channels:"));
-    _numberInputsPrefixLabel->setFont (Font (15.0000f, Font::plain));
-    _numberInputsPrefixLabel->setJustificationType (Justification::centredLeft);
-    _numberInputsPrefixLabel->setEditable (false, false, false);
-    _numberInputsPrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _numberInputsPrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _numberInputsPrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_numberInputsPrefixLabel = new Label({}, L"Input Channels:"));
+    _numberInputsPrefixLabel->setFont(Font(15.0000f, Font::plain));
+    _numberInputsPrefixLabel->setJustificationType(Justification::centredLeft);
+    _numberInputsPrefixLabel->setEditable(false, false, false);
+    _numberInputsPrefixLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _numberInputsPrefixLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _numberInputsPrefixLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_numberInputsLabel = new Label (String::empty,
-                                                       L"<Unknown>"));
-    _numberInputsLabel->setFont (Font (15.0000f, Font::plain));
-    _numberInputsLabel->setJustificationType (Justification::centredLeft);
-    _numberInputsLabel->setEditable (false, false, false);
-    _numberInputsLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _numberInputsLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _numberInputsLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_numberInputsLabel = new Label({}, L"<Unknown>"));
+    _numberInputsLabel->setFont(Font(15.0000f, Font::plain));
+    _numberInputsLabel->setJustificationType(Justification::centredLeft);
+    _numberInputsLabel->setEditable(false, false, false);
+    _numberInputsLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _numberInputsLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _numberInputsLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_numberOutputsPrefixLabel = new Label (String::empty,
-                                                              L"Output Channels:"));
-    _numberOutputsPrefixLabel->setFont (Font (15.0000f, Font::plain));
-    _numberOutputsPrefixLabel->setJustificationType (Justification::centredLeft);
-    _numberOutputsPrefixLabel->setEditable (false, false, false);
-    _numberOutputsPrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _numberOutputsPrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _numberOutputsPrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_numberOutputsPrefixLabel = new Label({}, L"Output Channels:"));
+    _numberOutputsPrefixLabel->setFont(Font(15.0000f, Font::plain));
+    _numberOutputsPrefixLabel->setJustificationType(Justification::centredLeft);
+    _numberOutputsPrefixLabel->setEditable(false, false, false);
+    _numberOutputsPrefixLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _numberOutputsPrefixLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _numberOutputsPrefixLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_numberOutputsLabel = new Label (String::empty,
-                                                        L"<Unknown>"));
-    _numberOutputsLabel->setFont (Font (15.0000f, Font::plain));
-    _numberOutputsLabel->setJustificationType (Justification::centredLeft);
-    _numberOutputsLabel->setEditable (false, false, false);
-    _numberOutputsLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _numberOutputsLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _numberOutputsLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_numberOutputsLabel = new Label({}, L"<Unknown>"));
+    _numberOutputsLabel->setFont(Font(15.0000f, Font::plain));
+    _numberOutputsLabel->setJustificationType(Justification::centredLeft);
+    _numberOutputsLabel->setEditable(false, false, false);
+    _numberOutputsLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _numberOutputsLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _numberOutputsLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_sseOptimizationPrefixLabel = new Label (String::empty,
-                                                                L"SSE Optimization:"));
-    _sseOptimizationPrefixLabel->setFont (Font (15.0000f, Font::plain));
-    _sseOptimizationPrefixLabel->setJustificationType (Justification::centredLeft);
-    _sseOptimizationPrefixLabel->setEditable (false, false, false);
-    _sseOptimizationPrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _sseOptimizationPrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _sseOptimizationPrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_sseOptimizationPrefixLabel = new Label({}, L"SSE Optimization:"));
+    _sseOptimizationPrefixLabel->setFont(Font(15.0000f, Font::plain));
+    _sseOptimizationPrefixLabel->setJustificationType(Justification::centredLeft);
+    _sseOptimizationPrefixLabel->setEditable(false, false, false);
+    _sseOptimizationPrefixLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _sseOptimizationPrefixLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _sseOptimizationPrefixLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_sseOptimizationLabel = new Label (String::empty,
-                                                          L"<Unknown>"));
-    _sseOptimizationLabel->setFont (Font (15.0000f, Font::plain));
-    _sseOptimizationLabel->setJustificationType (Justification::centredLeft);
-    _sseOptimizationLabel->setEditable (false, false, false);
-    _sseOptimizationLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _sseOptimizationLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _sseOptimizationLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_sseOptimizationLabel = new Label({}, L"<Unknown>"));
+    _sseOptimizationLabel->setFont(Font(15.0000f, Font::plain));
+    _sseOptimizationLabel->setJustificationType(Justification::centredLeft);
+    _sseOptimizationLabel->setEditable(false, false, false);
+    _sseOptimizationLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _sseOptimizationLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _sseOptimizationLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_headBlockSizePrefixLabel = new Label (String::empty,
-                                                              L"Head Block Size:"));
-    _headBlockSizePrefixLabel->setFont (Font (15.0000f, Font::plain));
-    _headBlockSizePrefixLabel->setJustificationType (Justification::centredLeft);
-    _headBlockSizePrefixLabel->setEditable (false, false, false);
-    _headBlockSizePrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _headBlockSizePrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _headBlockSizePrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_headBlockSizePrefixLabel = new Label({}, L"Head Block Size:"));
+    _headBlockSizePrefixLabel->setFont(Font(15.0000f, Font::plain));
+    _headBlockSizePrefixLabel->setJustificationType(Justification::centredLeft);
+    _headBlockSizePrefixLabel->setEditable(false, false, false);
+    _headBlockSizePrefixLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _headBlockSizePrefixLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _headBlockSizePrefixLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_headBlockSizeLabel = new Label (String::empty,
-                                                        L"<Unknown>"));
-    _headBlockSizeLabel->setFont (Font (15.0000f, Font::plain));
-    _headBlockSizeLabel->setJustificationType (Justification::centredLeft);
-    _headBlockSizeLabel->setEditable (false, false, false);
-    _headBlockSizeLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _headBlockSizeLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _headBlockSizeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_headBlockSizeLabel = new Label({}, L"<Unknown>"));
+    _headBlockSizeLabel->setFont(Font(15.0000f, Font::plain));
+    _headBlockSizeLabel->setJustificationType(Justification::centredLeft);
+    _headBlockSizeLabel->setEditable(false, false, false);
+    _headBlockSizeLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _headBlockSizeLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _headBlockSizeLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_tailBlockSizePrefixLabel = new Label (String::empty,
-                                                              L"Tail Block Size:"));
-    _tailBlockSizePrefixLabel->setFont (Font (15.0000f, Font::plain));
-    _tailBlockSizePrefixLabel->setJustificationType (Justification::centredLeft);
-    _tailBlockSizePrefixLabel->setEditable (false, false, false);
-    _tailBlockSizePrefixLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _tailBlockSizePrefixLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _tailBlockSizePrefixLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_tailBlockSizePrefixLabel = new Label({}, L"Tail Block Size:"));
+    _tailBlockSizePrefixLabel->setFont(Font(15.0000f, Font::plain));
+    _tailBlockSizePrefixLabel->setJustificationType(Justification::centredLeft);
+    _tailBlockSizePrefixLabel->setEditable(false, false, false);
+    _tailBlockSizePrefixLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _tailBlockSizePrefixLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _tailBlockSizePrefixLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_tailBlockSizeLabel = new Label (String::empty,
-                                                        L"<Unknown>"));
-    _tailBlockSizeLabel->setFont (Font (15.0000f, Font::plain));
-    _tailBlockSizeLabel->setJustificationType (Justification::centredLeft);
-    _tailBlockSizeLabel->setEditable (false, false, false);
-    _tailBlockSizeLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _tailBlockSizeLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _tailBlockSizeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_tailBlockSizeLabel = new Label({}, L"<Unknown>"));
+    _tailBlockSizeLabel->setFont(Font(15.0000f, Font::plain));
+    _tailBlockSizeLabel->setJustificationType(Justification::centredLeft);
+    _tailBlockSizeLabel->setEditable(false, false, false);
+    _tailBlockSizeLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _tailBlockSizeLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _tailBlockSizeLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    addAndMakeVisible (_selectIRDirectoryButton = new TextButton (String::empty));
-    _selectIRDirectoryButton->setButtonText (L"Select Directory");
-    _selectIRDirectoryButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _selectIRDirectoryButton->addListener (this);
+    addAndMakeVisible(_selectIRDirectoryButton = new TextButton);
+    _selectIRDirectoryButton->setButtonText(L"Select Directory");
+    _selectIRDirectoryButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _selectIRDirectoryButton->addListener(this);
 
-    cachedImage_hifilofi_jpg = ImageCache::getFromMemory (hifilofi_jpg, hifilofi_jpgSize);
+    cachedImage_hifilofi_jpg = ImageCache::getFromMemory(hifilofi_jpg, hifilofi_jpgSize);
 
     //[UserPreSize]
     const juce::File irDirectory = _processor.getSettings().getImpulseResponseDirectory();
-    _irDirectoryBrowserComponent = new juce::FileBrowserComponent(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories | juce::FileBrowserComponent::filenameBoxIsReadOnly,
-                                                                  irDirectory,
-                                                                  nullptr,
-                                                                  nullptr);
+    _irDirectoryBrowserComponent.reset(new juce::FileBrowserComponent(juce::FileBrowserComponent::openMode |
+                                                                      juce::FileBrowserComponent::canSelectDirectories |
+                                                                      juce::FileBrowserComponent::filenameBoxIsReadOnly,
+                                                                      irDirectory,
+                                                                      nullptr,
+                                                                      nullptr));
     _irDirectoryBrowserComponent->setFilenameBoxLabel(juce::String("Folder:"));
     _irDirectoryBrowserComponent->setFileName(irDirectory.getFullPathName());
-    _irDirectoryGroupComponent->addAndMakeVisible(_irDirectoryBrowserComponent);
+    _irDirectoryGroupComponent->addAndMakeVisible(_irDirectoryBrowserComponent.get());
     //[/UserPreSize]
 
-    setSize (504, 580);
+    setSize(504, 580);
 
 
     //[Constructor] You can add your own custom stuff here..

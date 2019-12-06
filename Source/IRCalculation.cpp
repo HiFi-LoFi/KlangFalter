@@ -121,7 +121,7 @@ void IRCalculation::run()
   for (size_t i=0; i<agents.size(); ++i)
   {
     const juce::File file = agents[i]->getFile();
-    if (file != juce::File::nonexistent)
+    if (file.existsAsFile())
     {
       double sampleRate;
       FloatBuffer::Ptr buffer = importAudioFile(file, agents[i]->getFileChannel(), sampleRate);
@@ -227,10 +227,10 @@ void IRCalculation::run()
   _processor.setParameter(Parameters::AutoGainDecibels, DecibelScaling::Gain2Db(autoGain));
   for (size_t i=0; i<agents.size(); ++i)
   {
-    juce::ScopedPointer<Convolver> convolver(new Convolver());
+    std::unique_ptr<Convolver> convolver(new Convolver());
     if (buffers[i] != nullptr && buffers[i]->getSize() > 0)
     {        
-      convolver = new Convolver();
+      convolver.reset(new Convolver());
       const bool successInit = convolver->init(headBlockSize, tailBlockSize, buffers[i]->data(), buffers[i]->getSize());
       if (!successInit || threadShouldExit())
       {
@@ -256,7 +256,7 @@ FloatBuffer::Ptr IRCalculation::importAudioFile(const File& file, size_t fileCha
 {
   fileSampleRate = 0.0;
 
-  if (file == File::nonexistent)
+  if (!file.existsAsFile())
   {
     return FloatBuffer::Ptr();
   }

@@ -18,7 +18,7 @@
 #ifndef _CHANGENOTIFIER_H
 #define _CHANGENOTIFIER_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include <set>
 
@@ -62,7 +62,7 @@ public:
 private:
   juce::CriticalSection _listenersMutex;
   std::set<Listener*> _listeners;
-  juce::Atomic<juce::int32> _changePending;
+  std::atomic<int32> _changePending;
   int _timerInterval;
   
   ChangeNotifier (const ChangeNotifier&);

@@ -23,7 +23,7 @@
 #define __JUCER_HEADER_IRCOMPONENT_IRCOMPONENT_7F964DEC__
 
 //[Headers]     -- You can add your own extra header files here --
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "WaveformComponent.h"
 #include "../IRAgent.h"
@@ -40,10 +40,10 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class IRComponent  : public Component,
-                     public ChangeNotifier::Listener,
-                     public ButtonListener,
-                     public ComboBoxListener
+class IRComponent	: public Component,
+					  public ChangeNotifier::Listener,
+					   public Button::Listener,
+					   public ComboBox::Listener
 {
 public:
     //==============================================================================

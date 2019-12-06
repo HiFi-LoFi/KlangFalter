@@ -133,554 +133,521 @@ KlangFalterEditor::KlangFalterEditor (Processor& processor)
       _impulseResponseHeaderLabel (0),
       _stereoHeaderLabel (0)
 {
-    addAndMakeVisible (_decibelScaleDry = new DecibelScale());
-
-    addAndMakeVisible (_irTabComponent = new TabbedComponent (TabbedButtonBar::TabsAtTop));
-    _irTabComponent->setTabBarDepth (30);
-    _irTabComponent->addTab (L"Placeholder", Colour (0xffb0b0b6), new IRComponent(), true);
-    _irTabComponent->setCurrentTabIndex (0);
-
-    addAndMakeVisible (_levelMeterDry = new LevelMeter());
-
-    addAndMakeVisible (_dryLevelLabel = new Label (L"DryLevelLabel",
-                                                   L"-inf"));
-    _dryLevelLabel->setFont (Font (11.0000f, Font::plain));
-    _dryLevelLabel->setJustificationType (Justification::centredRight);
-    _dryLevelLabel->setEditable (false, false, false);
-    _dryLevelLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _dryLevelLabel->setColour (TextEditor::textColourId, Colours::black);
-    _dryLevelLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_wetLevelLabel = new Label (L"WetLevelLabel",
-                                                   L"-inf"));
-    _wetLevelLabel->setFont (Font (11.0000f, Font::plain));
-    _wetLevelLabel->setJustificationType (Justification::centredRight);
-    _wetLevelLabel->setEditable (false, false, false);
-    _wetLevelLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _wetLevelLabel->setColour (TextEditor::textColourId, Colours::black);
-    _wetLevelLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_drySlider = new Slider (String::empty));
-    _drySlider->setRange (0, 10, 0);
-    _drySlider->setSliderStyle (Slider::LinearVertical);
-    _drySlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _drySlider->addListener (this);
-
-    addAndMakeVisible (_decibelScaleOut = new DecibelScale());
-
-    addAndMakeVisible (_wetSlider = new Slider (String::empty));
-    _wetSlider->setRange (0, 10, 0);
-    _wetSlider->setSliderStyle (Slider::LinearVertical);
-    _wetSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _wetSlider->addListener (this);
-
-    addAndMakeVisible (_browseButton = new TextButton (String::empty));
-    _browseButton->setTooltip (L"Show Browser For Impulse Response Selection");
-    _browseButton->setButtonText (L"Show Browser");
-    _browseButton->setConnectedEdges (Button::ConnectedOnBottom);
-    _browseButton->addListener (this);
-    _browseButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
-
-    addAndMakeVisible (_irBrowserComponent = new IRBrowserComponent());
-
-    addAndMakeVisible (_settingsButton = new TextButton (String::empty));
-    _settingsButton->setButtonText (L"Settings");
-    _settingsButton->setConnectedEdges (Button::ConnectedOnRight | Button::ConnectedOnTop);
-    _settingsButton->addListener (this);
-    _settingsButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _settingsButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_wetButton = new TextButton (String::empty));
-    _wetButton->setTooltip (L"Wet Signal On/Off");
-    _wetButton->setButtonText (L"Wet");
-    _wetButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _wetButton->addListener (this);
-    _wetButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
-    _wetButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
-    _wetButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _wetButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_dryButton = new TextButton (String::empty));
-    _dryButton->setTooltip (L"Dry Signal On/Off");
-    _dryButton->setButtonText (L"Dry");
-    _dryButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _dryButton->addListener (this);
-    _dryButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
-    _dryButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
-    _dryButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _dryButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_autogainButton = new TextButton (String::empty));
-    _autogainButton->setTooltip (L"Autogain On/Off");
-    _autogainButton->setButtonText (L"Autogain 0.0dB");
-    _autogainButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _autogainButton->addListener (this);
-    _autogainButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
-    _autogainButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
-    _autogainButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _autogainButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_reverseButton = new TextButton (String::empty));
-    _reverseButton->setTooltip (L"Reverse Impulse Response");
-    _reverseButton->setButtonText (L"Reverse");
-    _reverseButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _reverseButton->addListener (this);
-    _reverseButton->setColour (TextButton::buttonColourId, Colour (0x80bcbcbc));
-    _reverseButton->setColour (TextButton::buttonOnColourId, Colour (0xffbcbcff));
-    _reverseButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _reverseButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_hiFreqLabel = new Label (String::empty,
-                                                 L"15.2kHz"));
-    _hiFreqLabel->setFont (Font (11.0000f, Font::plain));
-    _hiFreqLabel->setJustificationType (Justification::centred);
-    _hiFreqLabel->setEditable (false, false, false);
-    _hiFreqLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _hiFreqLabel->setColour (TextEditor::textColourId, Colours::black);
-    _hiFreqLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_hiGainLabel = new Label (String::empty,
-                                                 L"0.0dB"));
-    _hiGainLabel->setFont (Font (11.0000f, Font::plain));
-    _hiGainLabel->setJustificationType (Justification::centred);
-    _hiGainLabel->setEditable (false, false, false);
-    _hiGainLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _hiGainLabel->setColour (TextEditor::textColourId, Colours::black);
-    _hiGainLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_hiGainHeaderLabel = new Label (String::empty,
-                                                       L"Gain"));
-    _hiGainHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _hiGainHeaderLabel->setJustificationType (Justification::centred);
-    _hiGainHeaderLabel->setEditable (false, false, false);
-    _hiGainHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _hiGainHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _hiGainHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_hiFreqHeaderLabel = new Label (String::empty,
-                                                       L"Freq"));
-    _hiFreqHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _hiFreqHeaderLabel->setJustificationType (Justification::centred);
-    _hiFreqHeaderLabel->setEditable (false, false, false);
-    _hiFreqHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _hiFreqHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _hiFreqHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_hiGainSlider = new Slider (String::empty));
-    _hiGainSlider->setRange (-30, 30, 0);
-    _hiGainSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _hiGainSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _hiGainSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _hiGainSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _hiGainSlider->addListener (this);
-
-    addAndMakeVisible (_hiFreqSlider = new Slider (String::empty));
-    _hiFreqSlider->setRange (2000, 20000, 0);
-    _hiFreqSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _hiFreqSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _hiFreqSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _hiFreqSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _hiFreqSlider->addListener (this);
-
-    addAndMakeVisible (_loFreqLabel = new Label (String::empty,
-                                                 L"1234Hz"));
-    _loFreqLabel->setFont (Font (11.0000f, Font::plain));
-    _loFreqLabel->setJustificationType (Justification::centred);
-    _loFreqLabel->setEditable (false, false, false);
-    _loFreqLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _loFreqLabel->setColour (TextEditor::textColourId, Colours::black);
-    _loFreqLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_loGainLabel = new Label (String::empty,
-                                                 L"0.0dB"));
-    _loGainLabel->setFont (Font (11.0000f, Font::plain));
-    _loGainLabel->setJustificationType (Justification::centred);
-    _loGainLabel->setEditable (false, false, false);
-    _loGainLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _loGainLabel->setColour (TextEditor::textColourId, Colours::black);
-    _loGainLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_loGainHeaderLabel = new Label (String::empty,
-                                                       L"Gain"));
-    _loGainHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _loGainHeaderLabel->setJustificationType (Justification::centred);
-    _loGainHeaderLabel->setEditable (false, false, false);
-    _loGainHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _loGainHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _loGainHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_loFreqHeaderLabel = new Label (String::empty,
-                                                       L"Freq"));
-    _loFreqHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _loFreqHeaderLabel->setJustificationType (Justification::centred);
-    _loFreqHeaderLabel->setEditable (false, false, false);
-    _loFreqHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _loFreqHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _loFreqHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_loGainSlider = new Slider (String::empty));
-    _loGainSlider->setRange (-30, 30, 0);
-    _loGainSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _loGainSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _loGainSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _loGainSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _loGainSlider->addListener (this);
-
-    addAndMakeVisible (_loFreqSlider = new Slider (String::empty));
-    _loFreqSlider->setRange (20, 2000, 0);
-    _loFreqSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _loFreqSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _loFreqSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _loFreqSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _loFreqSlider->addListener (this);
-
-    addAndMakeVisible (_levelMeterOut = new LevelMeter());
-
-    addAndMakeVisible (_levelMeterOutLabelButton = new TextButton (String::empty));
-    _levelMeterOutLabelButton->setTooltip (L"Switches Between Out/Wet Level Measurement");
-    _levelMeterOutLabelButton->setButtonText (L"Out");
-    _levelMeterOutLabelButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _levelMeterOutLabelButton->addListener (this);
-    _levelMeterOutLabelButton->setColour (TextButton::buttonColourId, Colour (0xbbbbff));
-    _levelMeterOutLabelButton->setColour (TextButton::buttonOnColourId, Colour (0xbcbcff));
-    _levelMeterOutLabelButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _levelMeterOutLabelButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_levelMeterDryLabel = new Label (String::empty,
-                                                        L"Dry"));
-    _levelMeterDryLabel->setFont (Font (11.0000f, Font::plain));
-    _levelMeterDryLabel->setJustificationType (Justification::centred);
-    _levelMeterDryLabel->setEditable (false, false, false);
-    _levelMeterDryLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _levelMeterDryLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _levelMeterDryLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_lowEqButton = new TextButton (String::empty));
-    _lowEqButton->setButtonText (L"Low Cut");
-    _lowEqButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _lowEqButton->addListener (this);
-    _lowEqButton->setColour (TextButton::buttonColourId, Colour (0xbbbbff));
-    _lowEqButton->setColour (TextButton::buttonOnColourId, Colour (0x2c2cff));
-    _lowEqButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _lowEqButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_lowCutFreqLabel = new Label (String::empty,
-                                                     L"1234Hz"));
-    _lowCutFreqLabel->setFont (Font (11.0000f, Font::plain));
-    _lowCutFreqLabel->setJustificationType (Justification::centred);
-    _lowCutFreqLabel->setEditable (false, false, false);
-    _lowCutFreqLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _lowCutFreqLabel->setColour (TextEditor::textColourId, Colours::black);
-    _lowCutFreqLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_lowCutFreqHeaderLabel = new Label (String::empty,
-                                                           L"Freq"));
-    _lowCutFreqHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _lowCutFreqHeaderLabel->setJustificationType (Justification::centred);
-    _lowCutFreqHeaderLabel->setEditable (false, false, false);
-    _lowCutFreqHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _lowCutFreqHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _lowCutFreqHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_lowCutFreqSlider = new Slider (String::empty));
-    _lowCutFreqSlider->setRange (20, 2000, 0);
-    _lowCutFreqSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _lowCutFreqSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _lowCutFreqSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _lowCutFreqSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _lowCutFreqSlider->addListener (this);
-
-    addAndMakeVisible (_highCutFreqLabel = new Label (String::empty,
-                                                      L"15.2kHz"));
-    _highCutFreqLabel->setFont (Font (11.0000f, Font::plain));
-    _highCutFreqLabel->setJustificationType (Justification::centred);
-    _highCutFreqLabel->setEditable (false, false, false);
-    _highCutFreqLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _highCutFreqLabel->setColour (TextEditor::textColourId, Colours::black);
-    _highCutFreqLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_highCutFreqHeaderLabel = new Label (String::empty,
-                                                            L"Freq"));
-    _highCutFreqHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _highCutFreqHeaderLabel->setJustificationType (Justification::centred);
-    _highCutFreqHeaderLabel->setEditable (false, false, false);
-    _highCutFreqHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _highCutFreqHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _highCutFreqHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_highCutFreqSlider = new Slider (String::empty));
-    _highCutFreqSlider->setRange (2000, 20000, 0);
-    _highCutFreqSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _highCutFreqSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _highCutFreqSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _highCutFreqSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _highCutFreqSlider->addListener (this);
-
-    addAndMakeVisible (_highEqButton = new TextButton (String::empty));
-    _highEqButton->setButtonText (L"High Cut");
-    _highEqButton->setConnectedEdges (Button::ConnectedOnLeft | Button::ConnectedOnRight);
-    _highEqButton->addListener (this);
-    _highEqButton->setColour (TextButton::buttonColourId, Colour (0xbbbbff));
-    _highEqButton->setColour (TextButton::buttonOnColourId, Colour (0x2c2cff));
-    _highEqButton->setColour (TextButton::textColourOnId, Colour (0xff202020));
-    _highEqButton->setColour (TextButton::textColourOffId, Colour (0xff202020));
-
-    addAndMakeVisible (_attackShapeLabel = new Label (String::empty,
-                                                      L"1.0"));
-    _attackShapeLabel->setFont (Font (11.0000f, Font::plain));
-    _attackShapeLabel->setJustificationType (Justification::centred);
-    _attackShapeLabel->setEditable (false, false, false);
-    _attackShapeLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _attackShapeLabel->setColour (TextEditor::textColourId, Colours::black);
-    _attackShapeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_endLabel = new Label (String::empty,
-                                              L"100%"));
-    _endLabel->setFont (Font (11.0000f, Font::plain));
-    _endLabel->setJustificationType (Justification::centred);
-    _endLabel->setEditable (false, false, false);
-    _endLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _endLabel->setColour (TextEditor::textColourId, Colours::black);
-    _endLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_endSlider = new Slider (String::empty));
-    _endSlider->setRange (0, 1, 0);
-    _endSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _endSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _endSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _endSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _endSlider->addListener (this);
-
-    addAndMakeVisible (_attackShapeSlider = new Slider (String::empty));
-    _attackShapeSlider->setRange (0, 10, 0);
-    _attackShapeSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _attackShapeSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _attackShapeSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _attackShapeSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _attackShapeSlider->addListener (this);
-    _attackShapeSlider->setSkewFactor (0.5);
-
-    addAndMakeVisible (_decayShapeLabel = new Label (String::empty,
-                                                     L"1.0"));
-    _decayShapeLabel->setFont (Font (11.0000f, Font::plain));
-    _decayShapeLabel->setJustificationType (Justification::centred);
-    _decayShapeLabel->setEditable (false, false, false);
-    _decayShapeLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _decayShapeLabel->setColour (TextEditor::textColourId, Colours::black);
-    _decayShapeLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_decayShapeHeaderLabel = new Label (String::empty,
-                                                           L"Shape"));
-    _decayShapeHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _decayShapeHeaderLabel->setJustificationType (Justification::centred);
-    _decayShapeHeaderLabel->setEditable (false, false, false);
-    _decayShapeHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _decayShapeHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _decayShapeHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_decayShapeSlider = new Slider (String::empty));
-    _decayShapeSlider->setRange (0, 10, 0);
-    _decayShapeSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _decayShapeSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _decayShapeSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _decayShapeSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _decayShapeSlider->addListener (this);
-    _decayShapeSlider->setSkewFactor (0.5);
-
-    addAndMakeVisible (_attackShapeHeaderLabel = new Label (String::empty,
-                                                            L"Shape"));
-    _attackShapeHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _attackShapeHeaderLabel->setJustificationType (Justification::centred);
-    _attackShapeHeaderLabel->setEditable (false, false, false);
-    _attackShapeHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _attackShapeHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _attackShapeHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_endHeaderLabel = new Label (String::empty,
-                                                    L"End"));
-    _endHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _endHeaderLabel->setJustificationType (Justification::centred);
-    _endHeaderLabel->setEditable (false, false, false);
-    _endHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _endHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _endHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_beginLabel = new Label (String::empty,
-                                                L"100%"));
-    _beginLabel->setFont (Font (11.0000f, Font::plain));
-    _beginLabel->setJustificationType (Justification::centred);
-    _beginLabel->setEditable (false, false, false);
-    _beginLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _beginLabel->setColour (TextEditor::textColourId, Colours::black);
-    _beginLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_beginSlider = new Slider (String::empty));
-    _beginSlider->setRange (0, 1, 0);
-    _beginSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _beginSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _beginSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _beginSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _beginSlider->addListener (this);
-
-    addAndMakeVisible (_beginHeaderLabel = new Label (String::empty,
-                                                      L"Begin"));
-    _beginHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _beginHeaderLabel->setJustificationType (Justification::centred);
-    _beginHeaderLabel->setEditable (false, false, false);
-    _beginHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _beginHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _beginHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_widthLabel = new Label (String::empty,
-                                                L"1.0"));
-    _widthLabel->setFont (Font (11.0000f, Font::plain));
-    _widthLabel->setJustificationType (Justification::centred);
-    _widthLabel->setEditable (false, false, false);
-    _widthLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _widthLabel->setColour (TextEditor::textColourId, Colours::black);
-    _widthLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_widthHeaderLabel = new Label (String::empty,
-                                                      L"Width"));
-    _widthHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _widthHeaderLabel->setJustificationType (Justification::centred);
-    _widthHeaderLabel->setEditable (false, false, false);
-    _widthHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _widthHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _widthHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_widthSlider = new Slider (String::empty));
-    _widthSlider->setRange (0, 10, 0);
-    _widthSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _widthSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _widthSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _widthSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _widthSlider->addListener (this);
-    _widthSlider->setSkewFactor (0.30102);
-
-    addAndMakeVisible (_predelayLabel = new Label (String::empty,
-                                                   L"0ms"));
-    _predelayLabel->setFont (Font (11.0000f, Font::plain));
-    _predelayLabel->setJustificationType (Justification::centred);
-    _predelayLabel->setEditable (false, false, false);
-    _predelayLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _predelayLabel->setColour (TextEditor::textColourId, Colours::black);
-    _predelayLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_predelayHeaderLabel = new Label (String::empty,
-                                                         L"Gap"));
-    _predelayHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _predelayHeaderLabel->setJustificationType (Justification::centred);
-    _predelayHeaderLabel->setEditable (false, false, false);
-    _predelayHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _predelayHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _predelayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_predelaySlider = new Slider (String::empty));
-    _predelaySlider->setRange (0, 1000, 0);
-    _predelaySlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _predelaySlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _predelaySlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _predelaySlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _predelaySlider->addListener (this);
-
-    addAndMakeVisible (_stretchLabel = new Label (String::empty,
-                                                  L"100%"));
-    _stretchLabel->setFont (Font (11.0000f, Font::plain));
-    _stretchLabel->setJustificationType (Justification::centred);
-    _stretchLabel->setEditable (false, false, false);
-    _stretchLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _stretchLabel->setColour (TextEditor::textColourId, Colours::black);
-    _stretchLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_stretchHeaderLabel = new Label (String::empty,
-                                                        L"Stretch"));
-    _stretchHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _stretchHeaderLabel->setJustificationType (Justification::centred);
-    _stretchHeaderLabel->setEditable (false, false, false);
-    _stretchHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _stretchHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _stretchHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_stretchSlider = new Slider (String::empty));
-    _stretchSlider->setRange (0, 2, 0);
-    _stretchSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _stretchSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _stretchSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _stretchSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _stretchSlider->addListener (this);
-
-    addAndMakeVisible (_attackHeaderLabel = new Label (String::empty,
-                                                       L"Attack"));
-    _attackHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _attackHeaderLabel->setJustificationType (Justification::centred);
-    _attackHeaderLabel->setEditable (false, false, false);
-    _attackHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _attackHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _attackHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_attackLengthLabel = new Label (String::empty,
-                                                       L"0ms"));
-    _attackLengthLabel->setFont (Font (11.0000f, Font::plain));
-    _attackLengthLabel->setJustificationType (Justification::centred);
-    _attackLengthLabel->setEditable (false, false, false);
-    _attackLengthLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _attackLengthLabel->setColour (TextEditor::textColourId, Colours::black);
-    _attackLengthLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_attackLengthSlider = new Slider (String::empty));
-    _attackLengthSlider->setRange (0, 1, 0);
-    _attackLengthSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    _attackLengthSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
-    _attackLengthSlider->setColour (Slider::thumbColourId, Colour (0xffafafff));
-    _attackLengthSlider->setColour (Slider::rotarySliderFillColourId, Colour (0xb1606060));
-    _attackLengthSlider->addListener (this);
-    _attackLengthSlider->setSkewFactor (0.5);
-
-    addAndMakeVisible (_attackLengthHeaderLabel = new Label (String::empty,
-                                                             L"Length"));
-    _attackLengthHeaderLabel->setFont (Font (11.0000f, Font::plain));
-    _attackLengthHeaderLabel->setJustificationType (Justification::centred);
-    _attackLengthHeaderLabel->setEditable (false, false, false);
-    _attackLengthHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _attackLengthHeaderLabel->setColour (TextEditor::textColourId, Colours::black);
-    _attackLengthHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_decayHeaderLabel = new Label (String::empty,
-                                                      L"Decay"));
-    _decayHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _decayHeaderLabel->setJustificationType (Justification::centred);
-    _decayHeaderLabel->setEditable (false, false, false);
-    _decayHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _decayHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _decayHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_impulseResponseHeaderLabel = new Label (String::empty,
-                                                                L"Impulse Response"));
-    _impulseResponseHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _impulseResponseHeaderLabel->setJustificationType (Justification::centred);
-    _impulseResponseHeaderLabel->setEditable (false, false, false);
-    _impulseResponseHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _impulseResponseHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _impulseResponseHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
-    addAndMakeVisible (_stereoHeaderLabel = new Label (String::empty,
-                                                       L"Stereo"));
-    _stereoHeaderLabel->setFont (Font (15.0000f, Font::plain));
-    _stereoHeaderLabel->setJustificationType (Justification::centred);
-    _stereoHeaderLabel->setEditable (false, false, false);
-    _stereoHeaderLabel->setColour (Label::textColourId, Colour (0xff202020));
-    _stereoHeaderLabel->setColour (TextEditor::textColourId, Colour (0xff202020));
-    _stereoHeaderLabel->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(_decibelScaleDry = new DecibelScale());
+
+    addAndMakeVisible(_irTabComponent = new TabbedComponent(TabbedButtonBar::TabsAtTop));
+    _irTabComponent->setTabBarDepth(30);
+    _irTabComponent->addTab(L"Placeholder", Colour(0xffb0b0b6), new IRComponent(), true);
+    _irTabComponent->setCurrentTabIndex(0);
+
+    addAndMakeVisible(_levelMeterDry = new LevelMeter());
+
+    addAndMakeVisible(_dryLevelLabel = new Label(L"DryLevelLabel",
+        L"-inf"));
+    _dryLevelLabel->setFont(Font(11.0000f, Font::plain));
+    _dryLevelLabel->setJustificationType(Justification::centredRight);
+    _dryLevelLabel->setEditable(false, false, false);
+    _dryLevelLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _dryLevelLabel->setColour(TextEditor::textColourId, Colours::black);
+    _dryLevelLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_wetLevelLabel = new Label(L"WetLevelLabel",
+        L"-inf"));
+    _wetLevelLabel->setFont(Font(11.0000f, Font::plain));
+    _wetLevelLabel->setJustificationType(Justification::centredRight);
+    _wetLevelLabel->setEditable(false, false, false);
+    _wetLevelLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _wetLevelLabel->setColour(TextEditor::textColourId, Colours::black);
+    _wetLevelLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_drySlider = new Slider);
+    _drySlider->setRange(0, 10, 0);
+    _drySlider->setSliderStyle(Slider::LinearVertical);
+    _drySlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _drySlider->addListener(this);
+
+    addAndMakeVisible(_decibelScaleOut = new DecibelScale());
+
+    addAndMakeVisible(_wetSlider = new Slider);
+    _wetSlider->setRange(0, 10, 0);
+    _wetSlider->setSliderStyle(Slider::LinearVertical);
+    _wetSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _wetSlider->addListener(this);
+
+    addAndMakeVisible(_browseButton = new TextButton);
+    _browseButton->setTooltip(L"Show Browser For Impulse Response Selection");
+    _browseButton->setButtonText(L"Show Browser");
+    _browseButton->setConnectedEdges(Button::ConnectedOnBottom);
+    _browseButton->addListener(this);
+    _browseButton->setColour(TextButton::buttonOnColourId, Colour(0xffbcbcff));
+
+    addAndMakeVisible(_irBrowserComponent = new IRBrowserComponent());
+
+    addAndMakeVisible(_settingsButton = new TextButton);
+    _settingsButton->setButtonText(L"Settings");
+    _settingsButton->setConnectedEdges(Button::ConnectedOnRight | Button::ConnectedOnTop);
+    _settingsButton->addListener(this);
+    _settingsButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _settingsButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_wetButton = new TextButton);
+    _wetButton->setTooltip(L"Wet Signal On/Off");
+    _wetButton->setButtonText(L"Wet");
+    _wetButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _wetButton->addListener(this);
+    _wetButton->setColour(TextButton::buttonColourId, Colour(0x80bcbcbc));
+    _wetButton->setColour(TextButton::buttonOnColourId, Colour(0xffbcbcff));
+    _wetButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _wetButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_dryButton = new TextButton);
+    _dryButton->setTooltip(L"Dry Signal On/Off");
+    _dryButton->setButtonText(L"Dry");
+    _dryButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _dryButton->addListener(this);
+    _dryButton->setColour(TextButton::buttonColourId, Colour(0x80bcbcbc));
+    _dryButton->setColour(TextButton::buttonOnColourId, Colour(0xffbcbcff));
+    _dryButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _dryButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_autogainButton = new TextButton);
+    _autogainButton->setTooltip(L"Autogain On/Off");
+    _autogainButton->setButtonText(L"Autogain 0.0dB");
+    _autogainButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _autogainButton->addListener(this);
+    _autogainButton->setColour(TextButton::buttonColourId, Colour(0x80bcbcbc));
+    _autogainButton->setColour(TextButton::buttonOnColourId, Colour(0xffbcbcff));
+    _autogainButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _autogainButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_reverseButton = new TextButton);
+    _reverseButton->setTooltip(L"Reverse Impulse Response");
+    _reverseButton->setButtonText(L"Reverse");
+    _reverseButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _reverseButton->addListener(this);
+    _reverseButton->setColour(TextButton::buttonColourId, Colour(0x80bcbcbc));
+    _reverseButton->setColour(TextButton::buttonOnColourId, Colour(0xffbcbcff));
+    _reverseButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _reverseButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_hiFreqLabel = new Label({}, L"15.2kHz"));
+    _hiFreqLabel->setFont(Font(11.0000f, Font::plain));
+    _hiFreqLabel->setJustificationType(Justification::centred);
+    _hiFreqLabel->setEditable(false, false, false);
+    _hiFreqLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _hiFreqLabel->setColour(TextEditor::textColourId, Colours::black);
+    _hiFreqLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_hiGainLabel = new Label({}, L"0.0dB"));
+    _hiGainLabel->setFont(Font(11.0000f, Font::plain));
+    _hiGainLabel->setJustificationType(Justification::centred);
+    _hiGainLabel->setEditable(false, false, false);
+    _hiGainLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _hiGainLabel->setColour(TextEditor::textColourId, Colours::black);
+    _hiGainLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_hiGainHeaderLabel = new Label({}, L"Gain"));
+    _hiGainHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _hiGainHeaderLabel->setJustificationType(Justification::centred);
+    _hiGainHeaderLabel->setEditable(false, false, false);
+    _hiGainHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _hiGainHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _hiGainHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_hiFreqHeaderLabel = new Label({}, L"Freq"));
+    _hiFreqHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _hiFreqHeaderLabel->setJustificationType(Justification::centred);
+    _hiFreqHeaderLabel->setEditable(false, false, false);
+    _hiFreqHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _hiFreqHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _hiFreqHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_hiGainSlider = new Slider);
+    _hiGainSlider->setRange(-30, 30, 0);
+    _hiGainSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _hiGainSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _hiGainSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _hiGainSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _hiGainSlider->addListener(this);
+
+    addAndMakeVisible(_hiFreqSlider = new Slider);
+    _hiFreqSlider->setRange(2000, 20000, 0);
+    _hiFreqSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _hiFreqSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _hiFreqSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _hiFreqSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _hiFreqSlider->addListener(this);
+
+    addAndMakeVisible(_loFreqLabel = new Label({}, L"1234Hz"));
+    _loFreqLabel->setFont(Font(11.0000f, Font::plain));
+    _loFreqLabel->setJustificationType(Justification::centred);
+    _loFreqLabel->setEditable(false, false, false);
+    _loFreqLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _loFreqLabel->setColour(TextEditor::textColourId, Colours::black);
+    _loFreqLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_loGainLabel = new Label({}, L"0.0dB"));
+    _loGainLabel->setFont(Font(11.0000f, Font::plain));
+    _loGainLabel->setJustificationType(Justification::centred);
+    _loGainLabel->setEditable(false, false, false);
+    _loGainLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _loGainLabel->setColour(TextEditor::textColourId, Colours::black);
+    _loGainLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_loGainHeaderLabel = new Label({}, L"Gain"));
+    _loGainHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _loGainHeaderLabel->setJustificationType(Justification::centred);
+    _loGainHeaderLabel->setEditable(false, false, false);
+    _loGainHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _loGainHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _loGainHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_loFreqHeaderLabel = new Label({}, L"Freq"));
+    _loFreqHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _loFreqHeaderLabel->setJustificationType(Justification::centred);
+    _loFreqHeaderLabel->setEditable(false, false, false);
+    _loFreqHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _loFreqHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _loFreqHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_loGainSlider = new Slider);
+    _loGainSlider->setRange(-30, 30, 0);
+    _loGainSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _loGainSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _loGainSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _loGainSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _loGainSlider->addListener(this);
+
+    addAndMakeVisible(_loFreqSlider = new Slider);
+    _loFreqSlider->setRange(20, 2000, 0);
+    _loFreqSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _loFreqSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _loFreqSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _loFreqSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _loFreqSlider->addListener(this);
+
+    addAndMakeVisible(_levelMeterOut = new LevelMeter());
+
+    addAndMakeVisible(_levelMeterOutLabelButton = new TextButton);
+    _levelMeterOutLabelButton->setTooltip(L"Switches Between Out/Wet Level Measurement");
+    _levelMeterOutLabelButton->setButtonText(L"Out");
+    _levelMeterOutLabelButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _levelMeterOutLabelButton->addListener(this);
+    _levelMeterOutLabelButton->setColour(TextButton::buttonColourId, Colour(0xbbbbff));
+    _levelMeterOutLabelButton->setColour(TextButton::buttonOnColourId, Colour(0xbcbcff));
+    _levelMeterOutLabelButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _levelMeterOutLabelButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_levelMeterDryLabel = new Label({}, L"Dry"));
+    _levelMeterDryLabel->setFont(Font(11.0000f, Font::plain));
+    _levelMeterDryLabel->setJustificationType(Justification::centred);
+    _levelMeterDryLabel->setEditable(false, false, false);
+    _levelMeterDryLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _levelMeterDryLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _levelMeterDryLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_lowEqButton = new TextButton);
+    _lowEqButton->setButtonText(L"Low Cut");
+    _lowEqButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _lowEqButton->addListener(this);
+    _lowEqButton->setColour(TextButton::buttonColourId, Colour(0xbbbbff));
+    _lowEqButton->setColour(TextButton::buttonOnColourId, Colour(0x2c2cff));
+    _lowEqButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _lowEqButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_lowCutFreqLabel = new Label({}, L"1234Hz"));
+    _lowCutFreqLabel->setFont(Font(11.0000f, Font::plain));
+    _lowCutFreqLabel->setJustificationType(Justification::centred);
+    _lowCutFreqLabel->setEditable(false, false, false);
+    _lowCutFreqLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _lowCutFreqLabel->setColour(TextEditor::textColourId, Colours::black);
+    _lowCutFreqLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_lowCutFreqHeaderLabel = new Label({}, L"Freq"));
+    _lowCutFreqHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _lowCutFreqHeaderLabel->setJustificationType(Justification::centred);
+    _lowCutFreqHeaderLabel->setEditable(false, false, false);
+    _lowCutFreqHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _lowCutFreqHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _lowCutFreqHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_lowCutFreqSlider = new Slider);
+    _lowCutFreqSlider->setRange(20, 2000, 0);
+    _lowCutFreqSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _lowCutFreqSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _lowCutFreqSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _lowCutFreqSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _lowCutFreqSlider->addListener(this);
+
+    addAndMakeVisible(_highCutFreqLabel = new Label({}, L"15.2kHz"));
+    _highCutFreqLabel->setFont(Font(11.0000f, Font::plain));
+    _highCutFreqLabel->setJustificationType(Justification::centred);
+    _highCutFreqLabel->setEditable(false, false, false);
+    _highCutFreqLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _highCutFreqLabel->setColour(TextEditor::textColourId, Colours::black);
+    _highCutFreqLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_highCutFreqHeaderLabel = new Label({}, L"Freq"));
+    _highCutFreqHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _highCutFreqHeaderLabel->setJustificationType(Justification::centred);
+    _highCutFreqHeaderLabel->setEditable(false, false, false);
+    _highCutFreqHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _highCutFreqHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _highCutFreqHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_highCutFreqSlider = new Slider);
+    _highCutFreqSlider->setRange(2000, 20000, 0);
+    _highCutFreqSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _highCutFreqSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _highCutFreqSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _highCutFreqSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _highCutFreqSlider->addListener(this);
+
+    addAndMakeVisible(_highEqButton = new TextButton);
+    _highEqButton->setButtonText(L"High Cut");
+    _highEqButton->setConnectedEdges(Button::ConnectedOnLeft | Button::ConnectedOnRight);
+    _highEqButton->addListener(this);
+    _highEqButton->setColour(TextButton::buttonColourId, Colour(0xbbbbff));
+    _highEqButton->setColour(TextButton::buttonOnColourId, Colour(0x2c2cff));
+    _highEqButton->setColour(TextButton::textColourOnId, Colour(0xff202020));
+    _highEqButton->setColour(TextButton::textColourOffId, Colour(0xff202020));
+
+    addAndMakeVisible(_attackShapeLabel = new Label({}, L"1.0"));
+    _attackShapeLabel->setFont(Font(11.0000f, Font::plain));
+    _attackShapeLabel->setJustificationType(Justification::centred);
+    _attackShapeLabel->setEditable(false, false, false);
+    _attackShapeLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _attackShapeLabel->setColour(TextEditor::textColourId, Colours::black);
+    _attackShapeLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_endLabel = new Label({}, L"100%"));
+    _endLabel->setFont(Font(11.0000f, Font::plain));
+    _endLabel->setJustificationType(Justification::centred);
+    _endLabel->setEditable(false, false, false);
+    _endLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _endLabel->setColour(TextEditor::textColourId, Colours::black);
+    _endLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_endSlider = new Slider);
+    _endSlider->setRange(0, 1, 0);
+    _endSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _endSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _endSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _endSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _endSlider->addListener(this);
+
+    addAndMakeVisible(_attackShapeSlider = new Slider);
+    _attackShapeSlider->setRange(0, 10, 0);
+    _attackShapeSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _attackShapeSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _attackShapeSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _attackShapeSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _attackShapeSlider->addListener(this);
+    _attackShapeSlider->setSkewFactor(0.5);
+
+    addAndMakeVisible(_decayShapeLabel = new Label({}, L"1.0"));
+    _decayShapeLabel->setFont(Font(11.0000f, Font::plain));
+    _decayShapeLabel->setJustificationType(Justification::centred);
+    _decayShapeLabel->setEditable(false, false, false);
+    _decayShapeLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _decayShapeLabel->setColour(TextEditor::textColourId, Colours::black);
+    _decayShapeLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_decayShapeHeaderLabel = new Label({}, L"Shape"));
+    _decayShapeHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _decayShapeHeaderLabel->setJustificationType(Justification::centred);
+    _decayShapeHeaderLabel->setEditable(false, false, false);
+    _decayShapeHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _decayShapeHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _decayShapeHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_decayShapeSlider = new Slider);
+    _decayShapeSlider->setRange(0, 10, 0);
+    _decayShapeSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _decayShapeSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _decayShapeSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _decayShapeSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _decayShapeSlider->addListener(this);
+    _decayShapeSlider->setSkewFactor(0.5);
+
+    addAndMakeVisible(_attackShapeHeaderLabel = new Label({}, L"Shape"));
+    _attackShapeHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _attackShapeHeaderLabel->setJustificationType(Justification::centred);
+    _attackShapeHeaderLabel->setEditable(false, false, false);
+    _attackShapeHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _attackShapeHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _attackShapeHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_endHeaderLabel = new Label({}, L"End"));
+    _endHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _endHeaderLabel->setJustificationType(Justification::centred);
+    _endHeaderLabel->setEditable(false, false, false);
+    _endHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _endHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _endHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_beginLabel = new Label({}, L"100%"));
+    _beginLabel->setFont(Font(11.0000f, Font::plain));
+    _beginLabel->setJustificationType(Justification::centred);
+    _beginLabel->setEditable(false, false, false);
+    _beginLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _beginLabel->setColour(TextEditor::textColourId, Colours::black);
+    _beginLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_beginSlider = new Slider);
+    _beginSlider->setRange(0, 1, 0);
+    _beginSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _beginSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _beginSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _beginSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _beginSlider->addListener(this);
+
+    addAndMakeVisible(_beginHeaderLabel = new Label({}, L"Begin"));
+    _beginHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _beginHeaderLabel->setJustificationType(Justification::centred);
+    _beginHeaderLabel->setEditable(false, false, false);
+    _beginHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _beginHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _beginHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_widthLabel = new Label({}, L"1.0"));
+    _widthLabel->setFont(Font(11.0000f, Font::plain));
+    _widthLabel->setJustificationType(Justification::centred);
+    _widthLabel->setEditable(false, false, false);
+    _widthLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _widthLabel->setColour(TextEditor::textColourId, Colours::black);
+    _widthLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_widthHeaderLabel = new Label({}, L"Width"));
+    _widthHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _widthHeaderLabel->setJustificationType(Justification::centred);
+    _widthHeaderLabel->setEditable(false, false, false);
+    _widthHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _widthHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _widthHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_widthSlider = new Slider);
+    _widthSlider->setRange(0, 10, 0);
+    _widthSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _widthSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _widthSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _widthSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _widthSlider->addListener(this);
+    _widthSlider->setSkewFactor(0.30102);
+
+    addAndMakeVisible(_predelayLabel = new Label({}, L"0ms"));
+    _predelayLabel->setFont(Font(11.0000f, Font::plain));
+    _predelayLabel->setJustificationType(Justification::centred);
+    _predelayLabel->setEditable(false, false, false);
+    _predelayLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _predelayLabel->setColour(TextEditor::textColourId, Colours::black);
+    _predelayLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_predelayHeaderLabel = new Label({}, L"Gap"));
+    _predelayHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _predelayHeaderLabel->setJustificationType(Justification::centred);
+    _predelayHeaderLabel->setEditable(false, false, false);
+    _predelayHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _predelayHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _predelayHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_predelaySlider = new Slider);
+    _predelaySlider->setRange(0, 1000, 0);
+    _predelaySlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _predelaySlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _predelaySlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _predelaySlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _predelaySlider->addListener(this);
+
+    addAndMakeVisible(_stretchLabel = new Label({}, L"100%"));
+    _stretchLabel->setFont(Font(11.0000f, Font::plain));
+    _stretchLabel->setJustificationType(Justification::centred);
+    _stretchLabel->setEditable(false, false, false);
+    _stretchLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _stretchLabel->setColour(TextEditor::textColourId, Colours::black);
+    _stretchLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_stretchHeaderLabel = new Label({}, L"Stretch"));
+    _stretchHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _stretchHeaderLabel->setJustificationType(Justification::centred);
+    _stretchHeaderLabel->setEditable(false, false, false);
+    _stretchHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _stretchHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _stretchHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_stretchSlider = new Slider);
+    _stretchSlider->setRange(0, 2, 0);
+    _stretchSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _stretchSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _stretchSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _stretchSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _stretchSlider->addListener(this);
+
+    addAndMakeVisible(_attackHeaderLabel = new Label({}, L"Attack"));
+    _attackHeaderLabel->setFont(Font(15.0000f, Font::plain));
+    _attackHeaderLabel->setJustificationType(Justification::centred);
+    _attackHeaderLabel->setEditable(false, false, false);
+    _attackHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _attackHeaderLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _attackHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_attackLengthLabel = new Label({}, L"0ms"));
+    _attackLengthLabel->setFont(Font(11.0000f, Font::plain));
+    _attackLengthLabel->setJustificationType(Justification::centred);
+    _attackLengthLabel->setEditable(false, false, false);
+    _attackLengthLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _attackLengthLabel->setColour(TextEditor::textColourId, Colours::black);
+    _attackLengthLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_attackLengthSlider = new Slider);
+    _attackLengthSlider->setRange(0, 1, 0);
+    _attackLengthSlider->setSliderStyle(Slider::RotaryVerticalDrag);
+    _attackLengthSlider->setTextBoxStyle(Slider::NoTextBox, false, 80, 20);
+    _attackLengthSlider->setColour(Slider::thumbColourId, Colour(0xffafafff));
+    _attackLengthSlider->setColour(Slider::rotarySliderFillColourId, Colour(0xb1606060));
+    _attackLengthSlider->addListener(this);
+    _attackLengthSlider->setSkewFactor(0.5);
+
+    addAndMakeVisible(_attackLengthHeaderLabel = new Label({}, L"Length"));
+    _attackLengthHeaderLabel->setFont(Font(11.0000f, Font::plain));
+    _attackLengthHeaderLabel->setJustificationType(Justification::centred);
+    _attackLengthHeaderLabel->setEditable(false, false, false);
+    _attackLengthHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _attackLengthHeaderLabel->setColour(TextEditor::textColourId, Colours::black);
+    _attackLengthHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_decayHeaderLabel = new Label({}, L"Decay"));
+    _decayHeaderLabel->setFont(Font(15.0000f, Font::plain));
+    _decayHeaderLabel->setJustificationType(Justification::centred);
+    _decayHeaderLabel->setEditable(false, false, false);
+    _decayHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _decayHeaderLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _decayHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_impulseResponseHeaderLabel = new Label({}, L"Impulse Response"));
+    _impulseResponseHeaderLabel->setFont(Font(15.0000f, Font::plain));
+    _impulseResponseHeaderLabel->setJustificationType(Justification::centred);
+    _impulseResponseHeaderLabel->setEditable(false, false, false);
+    _impulseResponseHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _impulseResponseHeaderLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _impulseResponseHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
+
+    addAndMakeVisible(_stereoHeaderLabel = new Label({}, L"Stereo"));
+    _stereoHeaderLabel->setFont(Font(15.0000f, Font::plain));
+    _stereoHeaderLabel->setJustificationType(Justification::centred);
+    _stereoHeaderLabel->setEditable(false, false, false);
+    _stereoHeaderLabel->setColour(Label::textColourId, Colour(0xff202020));
+    _stereoHeaderLabel->setColour(TextEditor::textColourId, Colour(0xff202020));
+    _stereoHeaderLabel->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
 
     //[UserPreSize]
 
-    setLookAndFeel(&_customLookAndFeel);
+    setLookAndFeel(customLookAndFeel);
 
     //[/UserPreSize]
 
-    setSize (760, 330);
+    setSize(760, 330);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -783,7 +750,7 @@ KlangFalterEditor::~KlangFalterEditor()
     deleteAndZero (_impulseResponseHeaderLabel);
     deleteAndZero (_stereoHeaderLabel);
 
-
+    setLookAndFeel(nullptr);
     //[Destructor]. You can add your own custom destruction code here..
     //[/Destructor]
 }

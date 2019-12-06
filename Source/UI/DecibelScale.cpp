@@ -17,7 +17,6 @@
 
 #include "DecibelScale.h"
 
-#include "CustomLookAndFeel.h"
 #include "../DecibelScaling.h"
 
 
@@ -29,9 +28,8 @@ void DecibelScale::paint(Graphics& g)
   const float w = static_cast<float>(width);
   const float h = static_cast<float>(height);
   
-  const CustomLookAndFeel& customLookAndFeel = CustomLookAndFeel::GetCustomLookAndFeel(this);
-  const juce::Font font = customLookAndFeel.getScaleFont();
-  const Colour colour = customLookAndFeel.getScaleColour();
+  const juce::Font font = customLookAndFeel->getScaleFont();
+  const Colour colour = customLookAndFeel->getScaleColour();
   
   const int textWidth = width - 3;
   const int textHeight = static_cast<int>(::ceil(font.getHeight()));

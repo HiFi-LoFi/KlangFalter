@@ -18,7 +18,7 @@
 #ifndef _LEVELMEASUREMENT_H
 #define _LEVELMEASUREMENT_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include <cstddef>
 
@@ -38,7 +38,7 @@ public:
   
 private:
   float _decay;
-  juce::Atomic<float> _level;
+  std::atomic<float> _level;
 };
 
 

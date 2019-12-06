@@ -23,7 +23,7 @@
 #define __JUCER_HEADER_KLANGFALTEREDITOR_KLANGFALTEREDITOR_F5E4498E__
 
 //[Headers]     -- You can add your own extra header files here --
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
 #include "CustomLookAndFeel.h"
 #include "DecibelScale.h"
@@ -48,8 +48,8 @@ class KlangFalterEditor  : public AudioProcessorEditor,
                            public ChangeNotifier::Listener,
                            public ChangeListener,
                            public Timer,
-                           public SliderListener,
-                           public ButtonListener
+                           public Slider::Listener,
+	                       public Button::Listener
 {
 public:
     //==============================================================================
@@ -76,7 +76,7 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-    CustomLookAndFeel _customLookAndFeel;
+    SharedResourcePointer<CustomLookAndFeel> customLookAndFeel;
     Processor& _processor;
     juce::Component::SafePointer<juce::DialogWindow> _settingsDialogWindow;
     std::map<std::pair<size_t, size_t>, IRComponent*> _irComponents;

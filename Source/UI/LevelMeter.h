@@ -18,10 +18,10 @@
 #ifndef _LEVELMETER_H
 #define _LEVELMETER_H
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include "JuceHeader.h"
 
+#include "CustomLookAndFeel.h"
 #include "../LevelMeasurement.h"
-
 
 class LevelMeter : public juce::Component
 {
@@ -36,6 +36,7 @@ public:
   void setLevel(size_t channel, float level);
   
 private:
+  SharedResourcePointer<CustomLookAndFeel> customLookAndFeel;
   std::vector<float> _levels;
   juce::ColourGradient _colourGradient;
   

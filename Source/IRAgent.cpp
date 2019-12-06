@@ -97,7 +97,6 @@ IRAgent::IRAgent(Processor& processor, size_t inputChannel, size_t outputChannel
   _inputChannel(inputChannel),
   _outputChannel(outputChannel),
   _mutex(),
-  _file(File::nonexistent),
   _fileSampleCount(0),
   _fileChannelCount(0),
   _fileSampleRate(0.0),
@@ -181,7 +180,7 @@ void IRAgent::clear()
   setConvolver(nullptr);
   {
     ScopedLock lock(_mutex);
-    _file = File::nonexistent;
+    _file = File();
     _fileSampleCount = 0;
     _fileChannelCount = 0;
     _fileSampleRate = 0.0;
@@ -213,7 +212,7 @@ void IRAgent::setFile(const File& file, size_t fileChannel)
     }
     else
     {
-      _file = File::nonexistent;
+      _file = File();
       _fileSampleCount = 0;
       _fileChannelCount = 0;
       _fileSampleRate = 0.0;
